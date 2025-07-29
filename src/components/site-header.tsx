@@ -17,14 +17,16 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user';
 import { useState } from 'react';
 import { AdminPinDialog } from './admin-pin-dialog';
+import { getAuth, signOut } from 'firebase/auth';
 
 export function SiteHeader() {
   const router = useRouter();
   const { user, setUserRole, switchToAdmin } = useUser();
   const [isPinDialogOpen, setPinDialogOpen] = useState(false);
-  const [showAdminAlert, setShowAdminAlert] = useState(false);
+  const auth = getAuth();
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    await signOut(auth);
     router.push('/login');
   };
 
@@ -35,6 +37,16 @@ export function SiteHeader() {
       setUserRole(value as 'admin' | 'employee');
     }
   };
+
+  if (!user) {
+    return (
+       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
+        <div className="md:hidden">
+          <SidebarTrigger />
+        </div>
+      </header>
+    );
+  }
 
   return (
     <>
@@ -51,7 +63,10 @@ export function SiteHeader() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>My Account ({user.role})</DropdownMenuLabel>
+            <DropdownMenuLabel>
+              <div>My Account</div>
+              <div className="text-xs font-normal text-muted-foreground">{user.email} ({user.role})</div>
+            </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuRadioGroup
               value={user.role}
