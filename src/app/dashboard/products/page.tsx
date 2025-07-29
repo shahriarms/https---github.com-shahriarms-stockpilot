@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -30,7 +30,7 @@ import { useProducts } from '@/hooks/use-products.tsx';
 import type { Product } from '@/lib/types';
 import { AddProductDialog } from '@/components/add-product-dialog';
 import { EditProductDialog } from '@/components/edit-product-dialog';
-import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil, ShieldAlert, Search } from 'lucide-react';
+import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil, ShieldAlert, Search, Upload } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser } from '@/hooks/use-user';
 import {
@@ -42,10 +42,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import * as XLSX from 'xlsx';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function ProductsPage() {
-  const { products, isLoading } = useProducts();
+  const { products, isLoading, addMultipleProducts } = useProducts();
   const { user } = useUser();
+  const { toast } = useToast();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
@@ -54,6 +58,8 @@ export default function ProductsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
+  
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const filteredProducts = useMemo(() => {
     return products
@@ -71,7 +77,7 @@ export default function ProductsPage() {
 
 
   const handleDownload = () => {
-    const headers = "Main Category,Category,Sub-Category,SKU,Name,Price,Stock\n";
+    const headers = ["Main Category,Category,Sub-Category,SKU,Name,Price,Stock\n"];
     const csvContent = filteredProducts
       .map((p) => `${p.mainCategory},${p.category},${p.subCategory},${p.sku},"${p.name.replace(/"/g, '""')}",${p.price},${p.stock}`)
       .join("\n");
@@ -94,6 +100,58 @@ export default function ProductsPage() {
       setShowAdminAlert(true);
     }
   };
+  
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = new Uint8Array(e.target?.result as ArrayBuffer);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const worksheet = workbook.Sheets[sheetName];
+        const json = XLSX.utils.sheet_to_json(worksheet);
+
+        const newProducts: Omit<Product, 'id'>[] = json.map((row: any) => ({
+          name: String(row['Name'] || ''),
+          sku: String(row['SKU'] || ''),
+          price: parseFloat(String(row['Price'] || 0)),
+          stock: parseInt(String(row['Stock'] || 0), 10),
+          mainCategory: (row['Main Category'] === 'Hardware' ? 'Hardware' : 'Material') as 'Material' | 'Hardware',
+          category: String(row['Category'] || ''),
+          subCategory: String(row['Sub-Category'] || ''),
+        })).filter(p => p.name && p.sku);
+
+        if (newProducts.length > 0) {
+          addMultipleProducts(newProducts);
+          toast({
+            title: 'Upload Successful',
+            description: `${newProducts.length} products have been added to the inventory.`,
+          });
+        } else {
+          toast({
+            variant: 'destructive',
+            title: 'Upload Failed',
+            description: 'No valid products found in the file. Please check the file format.',
+          });
+        }
+      } catch (error) {
+        console.error("Error parsing uploaded file:", error);
+        toast({
+          variant: 'destructive',
+          title: 'Upload Error',
+          description: 'Failed to parse the uploaded file. Make sure it is a valid Excel or CSV file.',
+        });
+      }
+    };
+    reader.readAsArrayBuffer(file);
+    // Reset file input
+    if(fileInputRef.current) {
+        fileInputRef.current.value = '';
+    }
+  };
 
   const resetFilters = () => {
     setSearchTerm('');
@@ -106,6 +164,17 @@ export default function ProductsPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold">Products</h1>
         <div className="flex gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            className="hidden"
+            accept=".xlsx, .xls, .csv"
+          />
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
+            <Upload className="mr-2 h-4 w-4" />
+            Upload
+          </Button>
           <Button variant="outline" onClick={handleDownload} disabled={isLoading || filteredProducts.length === 0}>
             <Download className="mr-2 h-4 w-4" />
             Download Report
