@@ -30,7 +30,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <Sidebar>
             <SidebarHeader>
               <div className="flex items-center gap-2 p-2 justify-center group-data-[collapsible=icon]:justify-start">
-                <div className="w-10 h-10">
+                <div className="w-14 h-14">
                   <StockPilotLogo />
                 </div>
                 <h1 className="text-xl font-semibold transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
