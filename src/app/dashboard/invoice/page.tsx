@@ -75,7 +75,7 @@ export default function InvoicePage() {
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       {/* Left Column: Invoice Form */}
       <div className="flex flex-col gap-6">
-        <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+        <Card className="transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-lg">
           <CardHeader>
             <CardTitle>Create Invoice</CardTitle>
           </CardHeader>
@@ -162,7 +162,7 @@ export default function InvoicePage() {
                 <Button><Printer className="mr-2"/> Print</Button>
             </div>
         </div>
-        <Card className="w-full transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+        <Card className="w-full transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-lg">
             <CardContent className="p-8 bg-white text-black font-serif">
                 <div className="text-center mb-6">
                     <h1 className="text-2xl font-bold text-blue-600">ক্যাশ মেমো (Cash Memo)</h1>

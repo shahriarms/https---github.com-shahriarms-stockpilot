@@ -73,7 +73,7 @@ export default function ProductsPage() {
           </Button>
         </div>
       </div>
-      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-lg">
         <CardContent className="p-0 flex-1 flex flex-col">
           <div className="relative overflow-auto flex-1">
             {isLoading ? (
