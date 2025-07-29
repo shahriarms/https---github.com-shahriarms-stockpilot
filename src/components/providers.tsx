@@ -1,3 +1,4 @@
+
 'use client';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -12,7 +13,7 @@ import {
   SidebarFooter,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Package } from 'lucide-react';
+import { LayoutDashboard, Package, FileText } from 'lucide-react';
 import { SiteHeader } from './site-header';
 import { useRouter } from 'next/navigation';
 import { StockPilotLogo } from './stock-pilot-logo';
@@ -51,6 +52,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
                   <Link href="/dashboard/products" legacyBehavior passHref>
                     <SidebarMenuButton isActive={pathname.startsWith('/dashboard/products')} icon={<Package />} tooltip={{children: 'Products'}}>
                       Products
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+                 <SidebarMenuItem>
+                  <Link href="/dashboard/invoice" legacyBehavior passHref>
+                    <SidebarMenuButton isActive={pathname.startsWith('/dashboard/invoice')} icon={<FileText />} tooltip={{children: 'Invoice'}}>
+                      Invoice
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
