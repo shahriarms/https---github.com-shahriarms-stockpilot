@@ -1,8 +1,8 @@
 
 export const StockPilotLogo = () => (
-  <div className="mx-auto mb-4 flex h-40 w-40 items-center justify-center rounded-full bg-primary/20 p-4">
+  <div className="mx-auto mb-4 flex h-40 w-40 items-center justify-center rounded-full bg-white p-4 shadow-md">
     <svg
-      className="h-full w-full text-white"
+      className="h-full w-full text-black"
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -28,9 +28,9 @@ export const StockPilotLogo = () => (
       />
 
       {/* Clock */}
-      <g className="text-white">
-        <circle cx="75" cy="65" r="14" fill="currentColor" fillOpacity="0.2" />
-        <path d="M75 60 V65 H79" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      <g>
+        <circle cx="75" cy="65" r="14" fill="currentColor" fillOpacity="0.1" />
+        <path d="M75 60 V65 H79" stroke="currentColor" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     </svg>
   </div>
