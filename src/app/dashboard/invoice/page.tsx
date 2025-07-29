@@ -38,9 +38,28 @@ export default function InvoicePage() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [today, setToday] = useState('');
 
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [subCategoryFilter, setSubCategoryFilter] = useState('');
+
   useEffect(() => {
     setToday(new Date().toLocaleDateString('en-GB'));
   }, []);
+
+  const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
+  
+  const subCategories = useMemo(() => {
+    if (!categoryFilter) {
+      return [...new Set(products.map(p => p.subCategory))];
+    }
+    return [...new Set(products.filter(p => p.category === categoryFilter).map(p => p.subCategory))];
+  }, [products, categoryFilter]);
+
+  const filteredProducts = useMemo(() => {
+    return products
+      .filter(p => categoryFilter ? p.category === categoryFilter : true)
+      .filter(p => subCategoryFilter ? p.subCategory === subCategoryFilter : true);
+  }, [products, categoryFilter, subCategoryFilter]);
+
 
   const handleAddProduct = (productId: string) => {
     const product = products.find((p) => p.id === productId);
@@ -106,23 +125,43 @@ export default function InvoicePage() {
             
             <div className="space-y-4">
                 <Label>পণ্য যোগ করুন (Add Products)</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); setSubCategoryFilter(''); }}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Filter by Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="">All Categories</SelectItem>
+                          {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                      </SelectContent>
+                  </Select>
+                  <Select value={subCategoryFilter} onValueChange={setSubCategoryFilter} disabled={!categoryFilter}>
+                      <SelectTrigger>
+                          <SelectValue placeholder="Filter by Sub-Category" />
+                      </SelectTrigger>
+                      <SelectContent>
+                          <SelectItem value="">All Sub-Categories</SelectItem>
+                          {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
+                      </SelectContent>
+                  </Select>
+                </div>
                 <div className="flex gap-2">
                     <Select onValueChange={handleAddProduct}>
                         <SelectTrigger>
                             <SelectValue placeholder="পণ্য নির্বাচন করুন (Select Product)" />
                         </SelectTrigger>
                         <SelectContent>
-                            {products.map((p) => (
+                            {filteredProducts.map((p) => (
                                 <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                             ))}
                         </SelectContent>
                     </Select>
-                    <Button><PlusCircle className="mr-2"/> Add Item</Button>
+                    <Button onClick={() => filteredProducts.length > 0 && handleAddProduct(filteredProducts[0].id)}><PlusCircle className="mr-2"/> Add Item</Button>
                 </div>
 
-                <div className="mt-4 space-y-2">
+                <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
                     {invoiceItems.map(item => (
-                        <div key={item.id} className="flex items-center gap-2">
+                        <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
                             <span className="flex-1">{item.name}</span>
                             <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
                             <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
