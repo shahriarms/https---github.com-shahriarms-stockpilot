@@ -28,8 +28,8 @@ export const StockPilotLogo = () => (
       />
 
       {/* Clock */}
-      <g stroke="#90EE90">
-        <circle cx="75" cy="65" r="14" fill="#90EE90" fillOpacity="0.1" />
+      <g stroke="#22C55E">
+        <circle cx="75" cy="65" r="14" fill="#22C55E" fillOpacity="0.1" />
         <path d="M75 60 V65 H79" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     </svg>
