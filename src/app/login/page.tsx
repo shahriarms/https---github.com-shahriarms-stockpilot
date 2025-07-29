@@ -21,8 +21,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <Card className="w-full max-w-sm">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-sm border-white/20 bg-card/60 shadow-2xl backdrop-blur-lg">
         <CardHeader className="text-center">
            <StockPilotLogo />
           <CardTitle className="text-3xl font-bold tracking-tight">
