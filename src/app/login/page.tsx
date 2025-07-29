@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -8,7 +9,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { StockPilotLogo } from '@/components/stock-pilot-logo';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -18,18 +19,6 @@ export default function LoginPage() {
     e.preventDefault();
     router.push('/dashboard');
   };
-  
-  const StockPilotLogo = () => (
-    <Image 
-      src="https://placehold.co/128x128.png" 
-      alt="Stock Pilot Logo" 
-      width={80} 
-      height={80} 
-      className="mx-auto mb-4 rounded-lg"
-      data-ai-hint="logo glass cube"
-    />
-  );
-
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">

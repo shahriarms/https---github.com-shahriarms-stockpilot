@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -12,7 +13,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
-import Image from 'next/image';
+import { StockPilotLogo } from '@/components/stock-pilot-logo';
 
 
 const signupSchema = z.object({
@@ -58,17 +59,6 @@ export default function SignupPage() {
     }, 1500);
   };
   
-  const StockPilotLogo = () => (
-    <Image 
-      src="https://placehold.co/128x128.png" 
-      alt="Stock Pilot Logo" 
-      width={80} 
-      height={80} 
-      className="mx-auto mb-4 rounded-lg"
-      data-ai-hint="logo glass cube"
-    />
-  );
-
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-sm">
@@ -137,7 +127,7 @@ export default function SignupPage() {
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
-                        <div className="relative">
+                        <div className.tsx="relative">
                             <FormControl>
                                 <Input type={showConfirmPassword ? 'text' : 'password'} {...field} />
                             </FormControl>
