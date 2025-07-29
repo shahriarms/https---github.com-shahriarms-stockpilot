@@ -24,6 +24,7 @@ import {
 import { useProducts } from '@/hooks/use-products';
 import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
 import type { Product } from '@/lib/types';
+import { Separator } from '@/components/ui/separator';
 
 interface InvoiceItem extends Product {
   quantity: number;
@@ -76,72 +77,72 @@ export default function InvoicePage() {
       <div className="flex flex-col gap-6">
         <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
           <CardHeader>
-            <CardTitle>চালান তথ্য (Invoice Information)</CardTitle>
+            <CardTitle>Create Invoice</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-             <div className="flex justify-between items-center">
-                <span className="font-medium">Invoice No: 2183</span>
-                <span className="text-muted-foreground">তারিখ (Date): {today}</span>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerName">নাম (Name)</Label>
-              <Input id="customerName" placeholder="ক্রেতার নাম লিখুন" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerAddress">ঠিকানা (Address)</Label>
-              <Input id="customerAddress" placeholder="ক্রেতার ঠিকানা লিখুন" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="customerPhone">ফোন (Phone)</Label>
-              <Input id="customerPhone" placeholder="Enter phone number" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
-          <CardHeader>
-            <CardTitle>পণ্য যোগ করুন (Add Products)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-                <Select onValueChange={handleAddProduct}>
-                    <SelectTrigger>
-                        <SelectValue placeholder="পণ্য নির্বাচন করুন (Select Product)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                        {products.map((p) => (
-                            <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                        ))}
-                    </SelectContent>
-                </Select>
-                <Button><PlusCircle className="mr-2"/> Add Item</Button>
+          <CardContent className="space-y-6">
+             <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                    <span className="font-medium">Invoice No: 2183</span>
+                    <span className="text-muted-foreground">তারিখ (Date): {today}</span>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerName">নাম (Name)</Label>
+                  <Input id="customerName" placeholder="ক্রেতার নাম লিখুন" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerAddress">ঠিকানা (Address)</Label>
+                  <Input id="customerAddress" placeholder="ক্রেতার ঠিকানা লিখুন" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="customerPhone">ফোন (Phone)</Label>
+                  <Input id="customerPhone" placeholder="Enter phone number" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+                </div>
             </div>
 
-            <div className="mt-4 space-y-2">
-                {invoiceItems.map(item => (
-                    <div key={item.id} className="flex items-center gap-2">
-                        <span className="flex-1">{item.name}</span>
-                        <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
-                        <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
-                        <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                            <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+            <Separator />
+            
+            <div className="space-y-4">
+                <Label>পণ্য যোগ করুন (Add Products)</Label>
+                <div className="flex gap-2">
+                    <Select onValueChange={handleAddProduct}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="পণ্য নির্বাচন করুন (Select Product)" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {products.map((p) => (
+                                <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Button><PlusCircle className="mr-2"/> Add Item</Button>
+                </div>
+
+                <div className="mt-4 space-y-2">
+                    {invoiceItems.map(item => (
+                        <div key={item.id} className="flex items-center gap-2">
+                            <span className="flex-1">{item.name}</span>
+                            <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
+                            <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
+                                <Trash2 className="w-4 h-4 text-destructive" />
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+
+                <div className="mt-6 pt-4 border-t space-y-2 text-right">
+                    <div className="flex justify-end items-center gap-4">
+                        <span className="font-medium">উপমোট (Subtotal):</span>
+                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
                     </div>
-                ))}
-            </div>
-
-            <div className="mt-6 pt-4 border-t space-y-2 text-right">
-                <div className="flex justify-end items-center gap-4">
-                    <span className="font-medium">উপমোট (Subtotal):</span>
-                    <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
-                </div>
-                 <div className="flex justify-end items-center gap-4">
-                    <span className="font-medium">জমা (Paid):</span>
-                    <span className="font-bold w-28">$0.00</span>
-                </div>
-                 <div className="flex justify-end items-center gap-4 text-primary">
-                    <span className="font-medium">বাকী (Due):</span>
-                    <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                     <div className="flex justify-end items-center gap-4">
+                        <span className="font-medium">জমা (Paid):</span>
+                        <span className="font-bold w-28">$0.00</span>
+                    </div>
+                     <div className="flex justify-end items-center gap-4 text-primary">
+                        <span className="font-medium">বাকী (Due):</span>
+                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                    </div>
                 </div>
             </div>
             
