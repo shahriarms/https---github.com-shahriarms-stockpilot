@@ -18,25 +18,27 @@ interface User {
 
 interface UserContextType {
   user: User | null;
-  setUserRole: (role: Role) => void;
-  switchToAdmin: (pin: string) => boolean;
   isLoading: boolean;
+  logout: () => Promise<void>;
+  generateAdminCode: () => string;
+  redeemAdminCode: (code: string) => boolean;
+  adminCode: string | null;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
-const ADMIN_PIN = "shahriar.ms1k@gmail.com";
 const ADMIN_EMAIL = "shahriar.ms1k@gmail.com";
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [adminCode, setAdminCode] = useState<string | null>(null);
   const router = useRouter();
   const pathname = usePathname();
+  const auth = getAuth(app);
 
   useEffect(() => {
-    const auth = getAuth(app);
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const isUserAdmin = firebaseUser.email === ADMIN_EMAIL;
@@ -55,40 +57,53 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [router, pathname]);
+  }, [router, pathname, auth]);
 
-  const setUserRole = useCallback((role: Role) => {
-    setUser((prevUser) => (prevUser ? { ...prevUser, role } : null));
-  }, []);
+  const logout = useCallback(async () => {
+    await auth.signOut();
+    setUser(null);
+    setAdminCode(null);
+    router.push('/login');
+  }, [auth, router]);
 
-  const switchToAdmin = useCallback((pin: string): boolean => {
-    if (user && user.email !== ADMIN_EMAIL) {
-        toast({
-            variant: 'destructive',
-            title: 'Permission Denied',
-            description: 'Only the designated admin user can switch to the admin role.',
-        });
-        return false;
-    }
-    
-    if (pin === ADMIN_PIN) {
-      setUserRole('admin');
-      toast({
-        title: 'Success',
-        description: 'You are now in Admin mode.',
+  const generateAdminCode = useCallback(() => {
+    if (user?.email === ADMIN_EMAIL) {
+      const newCode = `ADMIN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      setAdminCode(newCode);
+       toast({
+        title: 'Admin Code Generated',
+        description: 'You can now share this code with an employee.',
       });
-      return true;
-    } else {
+      return newCode;
+    }
+    return '';
+  }, [user, toast]);
+
+  const redeemAdminCode = useCallback((code: string) => {
+    if (code === '' || code !== adminCode) {
       toast({
         variant: 'destructive',
-        title: 'Incorrect PIN',
-        description: 'The PIN you entered is incorrect.',
+        title: 'Invalid Code',
+        description: 'The code you entered is incorrect or has expired.',
       });
       return false;
     }
-  }, [user, setUserRole, toast]);
 
-  const value = useMemo(() => ({ user, setUserRole, switchToAdmin, isLoading }), [user, setUserRole, switchToAdmin, isLoading]);
+    if (user && code === adminCode) {
+      setUser(prevUser => prevUser ? { ...prevUser, role: 'admin' } : null);
+      setAdminCode(null); // Invalidate the code after use
+      toast({
+        title: 'Success!',
+        description: 'You now have admin privileges for this session.',
+      });
+      return true;
+    }
+    
+    return false;
+  }, [user, adminCode, toast]);
+  
+
+  const value = useMemo(() => ({ user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode }), [user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode]);
 
   if (isLoading) {
     return (

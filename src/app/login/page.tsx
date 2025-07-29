@@ -59,8 +59,12 @@ export default function LoginPage() {
         case 'auth/invalid-credential':
             errorMessage = "Invalid credentials. Please check your email and password.";
             break;
+        case 'auth/invalid-email':
+            errorMessage = "Please enter a valid email address.";
+            break;
         default:
-          errorMessage = error.message;
+          errorMessage = "Login failed. Please check your credentials.";
+          console.error("Firebase Auth Error:", error);
           break;
       }
       toast({

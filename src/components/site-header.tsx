@@ -2,7 +2,7 @@
 'use client';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Settings, LifeBuoy, Users } from 'lucide-react';
+import { UserCircle, LogOut, Settings, LifeBuoy, Users, KeyRound, Copy } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,33 +10,23 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
-import { useRouter } from 'next/navigation';
 import { useUser } from '@/hooks/use-user';
 import { useState } from 'react';
-import { AdminPinDialog } from './admin-pin-dialog';
-import { getAuth, signOut } from 'firebase/auth';
+import { RedeemAdminCodeDialog } from './redeem-admin-code-dialog';
+import { ShowAdminCodeDialog } from './show-admin-code-dialog';
+
 
 export function SiteHeader() {
-  const router = useRouter();
-  const { user, setUserRole, switchToAdmin } = useUser();
-  const [isPinDialogOpen, setPinDialogOpen] = useState(false);
-  const auth = getAuth();
+  const { user, logout, generateAdminCode, adminCode } = useUser();
+  const [isRedeemDialogOpen, setRedeemDialogOpen] = useState(false);
+  const [isShowCodeDialogOpen, setShowCodeDialogOpen] = useState(false);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    router.push('/login');
-  };
 
-  const handleRoleChange = (value: string) => {
-    if (value === 'admin') {
-      setPinDialogOpen(true);
-    } else {
-      setUserRole(value as 'admin' | 'employee');
-    }
-  };
+  const handleShowCode = () => {
+    generateAdminCode();
+    setShowCodeDialogOpen(true);
+  }
 
   if (!user) {
     return (
@@ -68,19 +58,17 @@ export function SiteHeader() {
               <div className="text-xs font-normal text-muted-foreground">{user.email} ({user.role})</div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuRadioGroup
-              value={user.role}
-              onValueChange={handleRoleChange}
-            >
-              <DropdownMenuLabel className="flex items-center">
-                <Users className="mr-2" />
-                Change Role
-              </DropdownMenuLabel>
-              <DropdownMenuRadioItem value="employee">
-                Employee
-              </DropdownMenuRadioItem>
-              <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
-            </DropdownMenuRadioGroup>
+            {user.role === 'admin' ? (
+              <DropdownMenuItem onClick={handleShowCode}>
+                <KeyRound className="mr-2" />
+                Generate Admin Code
+              </DropdownMenuItem>
+            ) : (
+              <DropdownMenuItem onClick={() => setRedeemDialogOpen(true)}>
+                 <KeyRound className="mr-2" />
+                Redeem Admin Code
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem>
               <Settings className="mr-2" />
@@ -91,17 +79,21 @@ export function SiteHeader() {
               Support
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout}>
+            <DropdownMenuItem onClick={logout}>
               <LogOut className="mr-2" />
               Logout
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </header>
-      <AdminPinDialog
-        open={isPinDialogOpen}
-        onOpenChange={setPinDialogOpen}
-        onConfirm={switchToAdmin}
+      <RedeemAdminCodeDialog
+        open={isRedeemDialogOpen}
+        onOpenChange={setRedeemDialogOpen}
+      />
+      <ShowAdminCodeDialog
+        open={isShowCodeDialogOpen}
+        onOpenChange={setShowCodeDialogOpen}
+        code={adminCode}
       />
     </>
   );
