@@ -69,10 +69,10 @@ export default function ProductsPage() {
       .filter(p => subCategoryFilter ? p.subCategory === subCategoryFilter : true);
   }, [products, activeTab, searchTerm, categoryFilter, subCategoryFilter]);
 
-  const categories = useMemo(() => [...new Set(products.filter(p => p.mainCategory === activeTab).map(p => p.category))], [products, activeTab]);
+  const categories = useMemo(() => [...new Set(products.filter(p => p.mainCategory === activeTab).map(p => p.category).filter(Boolean))], [products, activeTab]);
   const subCategories = useMemo(() => {
     const relevantProducts = products.filter(p => p.mainCategory === activeTab && (!categoryFilter || p.category === categoryFilter));
-    return [...new Set(relevantProducts.map(p => p.subCategory))];
+    return [...new Set(relevantProducts.map(p => p.subCategory).filter(Boolean))];
   }, [products, activeTab, categoryFilter]);
 
 
