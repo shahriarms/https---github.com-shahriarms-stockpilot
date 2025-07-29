@@ -19,7 +19,7 @@ export const StockPilotLogo = () => (
 
       {/* Graph Line */}
       <path
-        d="M25 60C30 50, 35 70, 40 65C45 60, 50 40, 55 45C60 50, 65 30, 70 35C75 40, 80 25, 85 30"
+        d="M20 60C30 50, 35 70, 40 65C45 60, 50 40, 55 45C60 50, 65 30, 70 35C75 40, 80 25, 85 30"
         stroke="currentColor"
         strokeWidth="2.5"
         fill="none"
