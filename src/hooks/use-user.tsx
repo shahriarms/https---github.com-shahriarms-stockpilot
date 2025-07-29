@@ -20,7 +20,7 @@ interface UserContextType {
   user: User | null;
   isLoading: boolean;
   logout: () => Promise<void>;
-  generateAdminCode: () => string;
+  generateAdminCode: () => void;
   redeemAdminCode: (code: string) => boolean;
   adminCode: string | null;
 }
@@ -28,6 +28,7 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 const ADMIN_EMAIL = "shahriar.ms1k@gmail.com";
+const ADMIN_CODE_STORAGE_KEY = 'stockpilot-admin-code';
 
 export function UserProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
@@ -42,13 +43,24 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const isUserAdmin = firebaseUser.email === ADMIN_EMAIL;
+        const currentRole = sessionStorage.getItem('user-role') as Role;
+
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          role: isUserAdmin ? 'admin' : 'employee',
+          role: currentRole || (isUserAdmin ? 'admin' : 'employee'),
         });
+        
+        if (isUserAdmin) {
+            const storedCode = localStorage.getItem(ADMIN_CODE_STORAGE_KEY);
+            if(storedCode) {
+                setAdminCode(storedCode);
+            }
+        }
+
       } else {
         setUser(null);
+        sessionStorage.removeItem('user-role');
         if (pathname !== '/login' && pathname !== '/signup') {
             router.push('/login');
         }
@@ -62,25 +74,27 @@ export function UserProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(async () => {
     await auth.signOut();
     setUser(null);
-    setAdminCode(null);
+    setAdminCode(null); 
+    sessionStorage.removeItem('user-role');
     router.push('/login');
   }, [auth, router]);
 
   const generateAdminCode = useCallback(() => {
     if (user?.email === ADMIN_EMAIL) {
       const newCode = `ADMIN-${Math.random().toString(36).substring(2, 10).toUpperCase()}`;
+      localStorage.setItem(ADMIN_CODE_STORAGE_KEY, newCode);
       setAdminCode(newCode);
        toast({
         title: 'Admin Code Generated',
-        description: 'You can now share this code with an employee.',
+        description: 'You can now share this persistent code with an employee.',
       });
-      return newCode;
     }
-    return '';
   }, [user, toast]);
 
   const redeemAdminCode = useCallback((code: string) => {
-    if (code === '' || code !== adminCode) {
+    const storedCode = localStorage.getItem(ADMIN_CODE_STORAGE_KEY);
+    
+    if (!code || code !== storedCode) {
       toast({
         variant: 'destructive',
         title: 'Invalid Code',
@@ -89,9 +103,14 @@ export function UserProvider({ children }: { children: ReactNode }) {
       return false;
     }
 
-    if (user && code === adminCode) {
-      setUser(prevUser => prevUser ? { ...prevUser, role: 'admin' } : null);
-      setAdminCode(null); // Invalidate the code after use
+    if (user && code === storedCode) {
+      const updatedUser = { ...user, role: 'admin' as Role };
+      setUser(updatedUser);
+      sessionStorage.setItem('user-role', 'admin');
+      
+      localStorage.removeItem(ADMIN_CODE_STORAGE_KEY); // Invalidate the code after use
+      setAdminCode(null);
+
       toast({
         title: 'Success!',
         description: 'You now have admin privileges for this session.',
@@ -100,7 +119,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
     }
     
     return false;
-  }, [user, adminCode, toast]);
+  }, [user, toast]);
   
 
   const value = useMemo(() => ({ user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode }), [user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode]);
