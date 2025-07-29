@@ -5,12 +5,12 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
 const initialProducts: Product[] = [
-    { id: 'prod-1', name: 'Classic T-Shirt', sku: 'TS-BLK-M', price: 25.99, stock: 150 },
-    { id: 'prod-2', name: 'Running Shoes', sku: 'SHOE-RUN-10', price: 89.99, stock: 75 },
-    { id: 'prod-3', name: 'Denim Jeans', sku: 'JEAN-BLU-32', price: 59.50, stock: 90 },
-    { id: 'prod-4', name: 'Leather Wallet', sku: 'ACC-LW-BRN', price: 45.00, stock: 200 },
-    { id: 'prod-5', name: 'Stainless Steel Watch', sku: 'WTCH-STL-01', price: 199.99, stock: 40 },
-    { id: 'prod-6', name: 'Canvas Backpack', sku: 'BAG-CNVS-GRY', price: 75.00, stock: 0 },
+    { id: 'prod-1', name: 'Classic T-Shirt', sku: 'TS-BLK-M', price: 25.99, stock: 150, category: 'Apparel' },
+    { id: 'prod-2', name: 'Running Shoes', sku: 'SHOE-RUN-10', price: 89.99, stock: 75, category: 'Footwear' },
+    { id: 'prod-3', name: 'Denim Jeans', sku: 'JEAN-BLU-32', price: 59.50, stock: 90, category: 'Apparel' },
+    { id: 'prod-4', name: 'Leather Wallet', sku: 'ACC-LW-BRN', price: 45.00, stock: 200, category: 'Accessories' },
+    { id: 'prod-5', name: 'Stainless Steel Watch', sku: 'WTCH-STL-01', price: 199.99, stock: 40, category: 'Accessories' },
+    { id: 'prod-6', name: 'Canvas Backpack', sku: 'BAG-CNVS-GRY', price: 75.00, stock: 0, category: 'Bags' },
 ];
 
 interface ProductContextType {

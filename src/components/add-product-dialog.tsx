@@ -27,6 +27,7 @@ import {
 const productSchema = z.object({
   name: z.string().min(2, { message: 'Product name must be at least 2 characters.' }),
   sku: z.string().min(2, { message: 'SKU must be at least 2 characters.' }),
+  category: z.string().min(2, { message: 'Category must be at least 2 characters.'}),
   price: z.coerce.number().positive({ message: 'Price must be a positive number.' }),
   stock: z.coerce.number().int().nonnegative({ message: 'Stock must be a non-negative integer.' }),
 });
@@ -45,6 +46,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     defaultValues: {
       name: '',
       sku: '',
+      category: '',
       price: 0,
       stock: 0,
     },
@@ -87,19 +89,34 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="sku"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SKU (Stock Keeping Unit)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., TS-BLK-M" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="sku"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SKU</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., TS-BLK-M" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g., Apparel" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}

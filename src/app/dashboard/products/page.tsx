@@ -38,9 +38,9 @@ export default function ProductsPage() {
 
 
   const handleDownload = () => {
-    const headers = "SKU,Name,Price,Stock\n";
+    const headers = "SKU,Name,Category,Price,Stock\n";
     const csvContent = products
-      .map((p) => `${p.sku},"${p.name.replace(/"/g, '""')}",${p.price},${p.stock}`)
+      .map((p) => `${p.sku},"${p.name.replace(/"/g, '""')}",${p.category},${p.price},${p.stock}`)
       .join("\n");
     
     const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -86,6 +86,7 @@ export default function ProductsPage() {
                 <TableRow>
                   <TableHead>Name</TableHead>
                   <TableHead>SKU</TableHead>
+                  <TableHead>Category</TableHead>
                   <TableHead className="text-right">Price</TableHead>
                   <TableHead className="text-right">Stock</TableHead>
                   <TableHead className="w-[50px]"></TableHead>
@@ -96,6 +97,7 @@ export default function ProductsPage() {
                   <TableRow key={product.id}>
                     <TableCell className="font-medium">{product.name}</TableCell>
                     <TableCell>{product.sku}</TableCell>
+                    <TableCell>{product.category}</TableCell>
                     <TableCell className="text-right">
                       ${product.price.toFixed(2)}
                     </TableCell>
