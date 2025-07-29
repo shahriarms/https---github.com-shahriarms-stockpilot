@@ -1,7 +1,8 @@
 'use client';
-import { useState, useEffect, createContext, useContext, ReactNode, useMemo } from 'react';
+import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { Product } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import { useRouter } from 'next/navigation';
 
 const initialProducts: Product[] = [
     { id: 'prod-1', name: 'Classic T-Shirt', sku: 'TS-BLK-M', price: 25.99, stock: 150 },
@@ -26,6 +27,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
     try {
@@ -48,7 +50,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   }, [products, isLoading]);
 
-  const addProduct = (productData: Omit<Product, 'id' | 'stock'> & { stock: number }) => {
+  const addProduct = useCallback((productData: Omit<Product, 'id' | 'stock'> & { stock: number }) => {
     const newProduct: Product = {
       ...productData,
       id: `prod-${Date.now()}`,
@@ -58,30 +60,31 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       title: "Product Added",
       description: `${newProduct.name} has been added to your inventory.`,
     });
-  };
+  }, [toast]);
 
-  const updateStock = (productId: string, quantityChange: number, type: 'increase' | 'decrease') => {
+  const updateStock = useCallback((productId: string, quantityChange: number, type: 'increase' | 'decrease') => {
+    let productName = '';
     setProducts(prev =>
       prev.map(p => {
         if (p.id === productId) {
+          productName = p.name;
           const newStock = type === 'increase' ? p.stock + quantityChange : p.stock - quantityChange;
           return { ...p, stock: Math.max(0, newStock) };
         }
         return p;
       })
     );
-    const product = products.find(p => p.id === productId);
-    if(product) {
+    if(productName) {
         toast({
             title: "Stock Updated",
-            description: `Stock for ${product.name} has been updated.`,
+            description: `Stock for ${productName} has been updated.`,
         });
     }
-  };
+  }, [toast]);
     
-  const getProductById = (productId: string) => {
+  const getProductById = useCallback((productId: string) => {
     return products.find(p => p.id === productId);
-  };
+  }, [products]);
   
   const value = useMemo(() => ({ products, addProduct, updateStock, getProductById, isLoading }), [products, addProduct, updateStock, getProductById, isLoading]);
 

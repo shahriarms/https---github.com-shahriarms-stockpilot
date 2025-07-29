@@ -12,15 +12,19 @@ import {
   SidebarFooter,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { ProductProvider } from '@/hooks/use-products.tsx';
 import { LayoutDashboard, Package, Bot } from 'lucide-react';
 import { SiteHeader } from './site-header';
+import { useRouter } from 'next/navigation';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  if (pathname === '/login') {
+    return <>{children}</>;
+  }
 
   return (
-    <ProductProvider>
       <SidebarProvider>
           <Sidebar>
             <SidebarHeader>
@@ -34,15 +38,15 @@ export function Providers({ children }: { children: React.ReactNode }) {
             <SidebarContent>
               <SidebarMenu>
                 <SidebarMenuItem>
-                  <Link href="/" legacyBehavior passHref>
-                    <SidebarMenuButton isActive={pathname === '/'} icon={<LayoutDashboard />} tooltip={{children: 'Dashboard'}}>
+                  <Link href="/dashboard" legacyBehavior passHref>
+                    <SidebarMenuButton isActive={pathname === '/dashboard'} icon={<LayoutDashboard />} tooltip={{children: 'Dashboard'}}>
                       Dashboard
                     </SidebarMenuButton>
                   </Link>
                 </SidebarMenuItem>
                 <SidebarMenuItem>
-                  <Link href="/products" legacyBehavior passHref>
-                    <SidebarMenuButton isActive={pathname.startsWith('/products')} icon={<Package />} tooltip={{children: 'Products'}}>
+                  <Link href="/dashboard/products" legacyBehavior passHref>
+                    <SidebarMenuButton isActive={pathname.startsWith('/dashboard/products')} icon={<Package />} tooltip={{children: 'Products'}}>
                       Products
                     </SidebarMenuButton>
                   </Link>
@@ -61,6 +65,5 @@ export function Providers({ children }: { children: React.ReactNode }) {
             </div>
           </SidebarInset>
       </SidebarProvider>
-    </ProductProvider>
   );
 }
