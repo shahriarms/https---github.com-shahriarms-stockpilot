@@ -126,21 +126,21 @@ export default function InvoicePage() {
             <div className="space-y-4">
                 <Label>পণ্য যোগ করুন (Add Products)</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                  <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value); setSubCategoryFilter(''); }}>
+                  <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setSubCategoryFilter(''); }}>
                       <SelectTrigger>
                           <SelectValue placeholder="Filter by Category" />
                       </SelectTrigger>
                       <SelectContent>
-                          <SelectItem value="">All Categories</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
                           {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                       </SelectContent>
                   </Select>
-                  <Select value={subCategoryFilter} onValueChange={setSubCategoryFilter} disabled={!categoryFilter}>
+                  <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)} disabled={!categoryFilter}>
                       <SelectTrigger>
                           <SelectValue placeholder="Filter by Sub-Category" />
                       </SelectTrigger>
                       <SelectContent>
-                          <SelectItem value="">All Sub-Categories</SelectItem>
+                          <SelectItem value="all">All Sub-Categories</SelectItem>
                           {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
                       </SelectContent>
                   </Select>
