@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -56,7 +57,7 @@ export default function Dashboard() {
   return (
     <div className="flex flex-col gap-8">
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        <Card>
+        <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Total Products</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
@@ -68,7 +69,7 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
               Total Stock Value
@@ -84,7 +85,7 @@ export default function Dashboard() {
             </p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
             <PackageX className="h-4 w-4 text-muted-foreground" />
@@ -97,7 +98,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
       </div>
-      <Card>
+      <Card className="transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
         <CardHeader>
           <CardTitle>Top 5 Stocked Products</CardTitle>
         </CardHeader>
