@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Bot } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -17,14 +17,34 @@ export default function LoginPage() {
     e.preventDefault();
     router.push('/dashboard');
   };
+  
+  const StockPilotLogo = () => (
+    <div className="mx-auto mb-4 inline-block rounded-lg bg-primary p-3">
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="h-8 w-8 text-primary-foreground"
+        >
+          <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
+          <path d="m3.3 7 8.7 5 8.7-5" />
+          <path d="M12 22V12" />
+          <path d="m17 13.5 4-2.5" />
+          <path d="M7 13.5 3 11" />
+        </svg>
+    </div>
+  );
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-           <div className="mx-auto mb-4 inline-block rounded-lg bg-primary p-3">
-              <Bot className="h-8 w-8 text-primary-foreground" />
-           </div>
+           <StockPilotLogo />
           <CardTitle className="text-3xl font-bold tracking-tight">
             <span className="text-foreground">Stock</span><span className="text-primary">Pilot</span>
           </CardTitle>
