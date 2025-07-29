@@ -1,45 +1,37 @@
 
 export const StockPilotLogo = () => (
-  <div className="mx-auto mb-4 flex h-28 w-28 items-center justify-center rounded-full bg-primary/10 p-4">
+  <div className="mx-auto mb-4 flex h-40 w-40 items-center justify-center rounded-full bg-primary/10 p-4">
     <svg
-      className="h-full w-full text-primary"
-      viewBox="0 0 24 24"
+      className="h-full w-full text-foreground"
+      viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
+      {/* Graph Axis */}
+      <path d="M20 80H80" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 20V80" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 35H25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 50H25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M20 65H25" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M35 80V75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M50 80V75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <path d="M65 80V75" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+
+      {/* Graph Line */}
       <path
-        d="M21 16.5C21 17.3284 20.3284 18 19.5 18H4.5C3.67157 18 3 17.3284 3 16.5V7.5C3 6.67157 3.67157 6 4.5 6H19.5C20.3284 6 21 6.67157 21 7.5V16.5Z"
+        d="M25 60C30 50, 35 70, 40 65C45 60, 50 40, 55 45C60 50, 65 30, 70 35C75 40, 80 25, 85 30"
         stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M3 10L12 14L21 10"
-        stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2.5"
+        fill="none"
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path
-        d="M12 6V18"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M16 4.5L21 7.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M8 4.5L3 7.5"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+
+      {/* Clock */}
+      <g className="text-primary">
+        <circle cx="75" cy="65" r="14" fill="currentColor" />
+        <path d="M75 60 V65 H79" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" strokeLinejoin="round" />
+      </g>
     </svg>
   </div>
 );
