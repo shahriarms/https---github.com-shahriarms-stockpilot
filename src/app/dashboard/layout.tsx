@@ -1,5 +1,7 @@
+
 'use client';
 import { ProductProvider } from '@/hooks/use-products.tsx';
+import { UserProvider } from '@/hooks/use-user.tsx';
 import { Providers } from '@/components/providers';
 
 export default function DashboardLayout({
@@ -8,8 +10,10 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ProductProvider>
-        <Providers>{children}</Providers>
-    </ProductProvider>
+    <UserProvider>
+      <ProductProvider>
+          <Providers>{children}</Providers>
+      </ProductProvider>
+    </UserProvider>
   );
 }

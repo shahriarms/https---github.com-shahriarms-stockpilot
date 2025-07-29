@@ -1,7 +1,8 @@
+
 'use client';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import { Button } from '@/components/ui/button';
-import { UserCircle } from 'lucide-react';
+import { UserCircle, LogOut, Settings, LifeBuoy, Users } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -9,11 +10,15 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from '@/components/ui/dropdown-menu';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@/hooks/use-user';
 
 export function SiteHeader() {
   const router = useRouter();
+  const { user, setUserRole } = useUser();
 
   const handleLogout = () => {
     router.push('/login');
@@ -34,12 +39,27 @@ export function SiteHeader() {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
+          <DropdownMenuLabel>My Account ({user.role})</DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuItem>Settings</DropdownMenuItem>
-          <DropdownMenuItem>Support</DropdownMenuItem>
+           <DropdownMenuRadioGroup value={user.role} onValueChange={(value) => setUserRole(value as 'admin' | 'employee')}>
+            <DropdownMenuLabel className="flex items-center"><Users className="mr-2"/>Change Role</DropdownMenuLabel>
+            <DropdownMenuRadioItem value="admin">Admin</DropdownMenuRadioItem>
+            <DropdownMenuRadioItem value="employee">Employee</DropdownMenuRadioItem>
+          </DropdownMenuRadioGroup>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+          <DropdownMenuItem>
+            <Settings className="mr-2" />
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <LifeBuoy className="mr-2" />
+            Support
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem onClick={handleLogout}>
+            <LogOut className="mr-2"/>
+            Logout
+          </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     </header>

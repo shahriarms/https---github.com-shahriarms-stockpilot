@@ -21,14 +21,26 @@ import { useProducts } from '@/hooks/use-products.tsx';
 import type { Product } from '@/lib/types';
 import { AddProductDialog } from '@/components/add-product-dialog';
 import { EditProductDialog } from '@/components/edit-product-dialog';
-import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil } from 'lucide-react';
+import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil, ShieldAlert } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { useUser } from '@/hooks/use-user';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 
 
 export default function ProductsPage() {
   const { products, isLoading } = useProducts();
+  const { user } = useUser();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [showAdminAlert, setShowAdminAlert] = useState(false);
 
   const handleDownload = () => {
     const headers = "SKU,Name,Category,Price,Stock\n";
@@ -46,6 +58,15 @@ export default function ProductsPage() {
     link.click();
     document.body.removeChild(link);
   };
+  
+  const handleEditClick = (product: Product) => {
+    if (user.role === 'admin') {
+      setEditProduct(product);
+    } else {
+      setShowAdminAlert(true);
+    }
+  };
+
 
   return (
     <div className="flex flex-col gap-4 h-full">
@@ -62,7 +83,7 @@ export default function ProductsPage() {
           </Button>
         </div>
       </div>
-      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-101 hover:shadow-xl">
+      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-[1.01] hover:shadow-xl">
         <CardContent className="p-0 flex-1 flex flex-col">
           <div className="relative overflow-auto flex-1">
             {isLoading ? (
@@ -102,7 +123,7 @@ export default function ProductsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => setEditProduct(product)}>
+                          <DropdownMenuItem onClick={() => handleEditClick(product)}>
                             <Pencil className="mr-2 h-4 w-4" />
                             Edit Product
                           </DropdownMenuItem>
@@ -132,7 +153,7 @@ export default function ProductsPage() {
         </CardContent>
       </Card>
       <AddProductDialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen} />
-      {editProduct && (
+      {editProduct && user.role === 'admin' && (
         <EditProductDialog
             key={editProduct.id}
             open={!!editProduct}
@@ -144,6 +165,23 @@ export default function ProductsPage() {
             product={editProduct}
         />
       )}
+       <AlertDialog open={showAdminAlert} onOpenChange={setShowAdminAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <ShieldAlert className="text-destructive"/> Access Denied
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              You do not have permission to edit products. Please log in as an administrator to perform this action.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowAdminAlert(false)}>
+              OK
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
