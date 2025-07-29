@@ -15,6 +15,9 @@ import {
 } from '@/components/ui/sidebar';
 import { LayoutDashboard, Package, FileText } from 'lucide-react';
 import { StockPilotLogo } from './stock-pilot-logo';
+import { SiteHeader } from './site-header';
+import { ProductProvider } from '@/hooks/use-products';
+import { UserProvider } from '@/hooks/use-user';
 
 export function Providers({
   children,
@@ -46,7 +49,7 @@ export function Providers({
         <SidebarContent>
           <SidebarMenu>
             <SidebarMenuItem>
-              <Link href="/dashboard" legacyBehavior passHref>
+              <Link href="/dashboard">
                 <SidebarMenuButton
                   isActive={pathname === '/dashboard'}
                   icon={<LayoutDashboard />}
@@ -57,7 +60,7 @@ export function Providers({
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/dashboard/products" legacyBehavior passHref>
+              <Link href="/dashboard/products">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/products')}
                   icon={<Package />}
@@ -68,7 +71,7 @@ export function Providers({
               </Link>
             </SidebarMenuItem>
             <SidebarMenuItem>
-              <Link href="/dashboard/invoice" legacyBehavior passHref>
+              <Link href="/dashboard/invoice">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/invoice')}
                   icon={<FileText />}
