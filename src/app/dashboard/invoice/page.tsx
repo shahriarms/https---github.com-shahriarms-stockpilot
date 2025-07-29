@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -36,6 +36,11 @@ export default function InvoicePage() {
   const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
+  const [today, setToday] = useState('');
+
+  useEffect(() => {
+    setToday(new Date().toLocaleDateString('en-GB'));
+  }, []);
 
   const handleAddProduct = (productId: string) => {
     const product = products.find((p) => p.id === productId);
@@ -68,8 +73,6 @@ export default function InvoicePage() {
   const subtotal = useMemo(() => {
     return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   }, [invoiceItems]);
-
-  const today = new Date().toLocaleDateString('en-GB');
 
   return (
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
