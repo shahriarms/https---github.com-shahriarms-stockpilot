@@ -20,22 +20,15 @@ import {
 import { useProducts } from '@/hooks/use-products.tsx';
 import type { Product } from '@/lib/types';
 import { AddProductDialog } from '@/components/add-product-dialog';
-import { UpdateStockDialog } from '@/components/update-stock-dialog';
-import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { EditProductDialog } from '@/components/edit-product-dialog';
+import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 
 export default function ProductsPage() {
   const { products, isLoading } = useProducts();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
-  const [updateDialogState, setUpdateDialogState] = useState<{
-    open: boolean;
-    product: Product | null;
-    type: 'increase' | 'decrease';
-  }>({ open: false, product: null, type: 'increase' });
-  const router = useRouter();
-
+  const [editProduct, setEditProduct] = useState<Product | null>(null);
 
   const handleDownload = () => {
     const headers = "SKU,Name,Category,Price,Stock\n";
@@ -54,10 +47,6 @@ export default function ProductsPage() {
     document.body.removeChild(link);
   };
 
-  const openUpdateDialog = (product: Product, type: 'increase' | 'decrease') => {
-    setUpdateDialogState({ open: true, product, type });
-  };
-
   return (
     <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center justify-between">
@@ -73,7 +62,7 @@ export default function ProductsPage() {
           </Button>
         </div>
       </div>
-      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-xl">
+      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-101 hover:shadow-xl">
         <CardContent className="p-0 flex-1 flex flex-col">
           <div className="relative overflow-auto flex-1">
             {isLoading ? (
@@ -113,11 +102,9 @@ export default function ProductsPage() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => openUpdateDialog(product, 'increase')}>
-                            Increase Stock
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openUpdateDialog(product, 'decrease')}>
-                            Decrease Stock
+                          <DropdownMenuItem onClick={() => setEditProduct(product)}>
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Edit Product
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -145,13 +132,18 @@ export default function ProductsPage() {
         </CardContent>
       </Card>
       <AddProductDialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen} />
-      <UpdateStockDialog
-        key={`${updateDialogState.product?.id}-${updateDialogState.type}`}
-        open={updateDialogState.open}
-        onOpenChange={(open) => setUpdateDialogState((prev) => ({ ...prev, open }))}
-        product={updateDialogState.product}
-        type={updateDialogState.type}
-      />
+      {editProduct && (
+        <EditProductDialog
+            key={editProduct.id}
+            open={!!editProduct}
+            onOpenChange={(open) => {
+                if (!open) {
+                    setEditProduct(null);
+                }
+            }}
+            product={editProduct}
+        />
+      )}
     </div>
   );
 }

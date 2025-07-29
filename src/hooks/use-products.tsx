@@ -1,8 +1,8 @@
+
 'use client';
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { Product } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from 'next/navigation';
 
 const initialProducts: Product[] = [
     { id: 'prod-1', name: 'Classic T-Shirt', sku: 'TS-BLK-M', price: 25.99, stock: 150, category: 'Apparel' },
@@ -16,7 +16,7 @@ const initialProducts: Product[] = [
 interface ProductContextType {
   products: Product[];
   addProduct: (product: Omit<Product, 'id' | 'stock'> & { stock: number }) => void;
-  updateStock: (productId: string, quantityChange: number, type: 'increase' | 'decrease') => void;
+  updateProduct: (productId: string, updatedData: Omit<Product, 'id'>) => void;
   getProductById: (productId: string) => Product | undefined;
   isLoading: boolean;
 }
@@ -27,7 +27,6 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const router = useRouter();
 
   useEffect(() => {
     try {
@@ -62,22 +61,21 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     });
   }, [toast]);
 
-  const updateStock = useCallback((productId: string, quantityChange: number, type: 'increase' | 'decrease') => {
+  const updateProduct = useCallback((productId: string, updatedData: Omit<Product, 'id'>) => {
     let productName = '';
     setProducts(prev =>
       prev.map(p => {
         if (p.id === productId) {
-          productName = p.name;
-          const newStock = type === 'increase' ? p.stock + quantityChange : p.stock - quantityChange;
-          return { ...p, stock: Math.max(0, newStock) };
+          productName = updatedData.name;
+          return { ...p, ...updatedData };
         }
         return p;
       })
     );
     if(productName) {
         toast({
-            title: "Stock Updated",
-            description: `Stock for ${productName} has been updated.`,
+            title: "Product Updated",
+            description: `Details for ${productName} have been updated.`,
         });
     }
   }, [toast]);
@@ -86,7 +84,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     return products.find(p => p.id === productId);
   }, [products]);
   
-  const value = useMemo(() => ({ products, addProduct, updateStock, getProductById, isLoading }), [products, addProduct, updateStock, getProductById, isLoading]);
+  const value = useMemo(() => ({ products, addProduct, updateProduct, getProductById, isLoading }), [products, addProduct, updateProduct, getProductById, isLoading]);
 
   return (
     <ProductContext.Provider value={value}>
