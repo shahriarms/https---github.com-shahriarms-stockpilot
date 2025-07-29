@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -22,6 +23,7 @@ import { AddProductDialog } from '@/components/add-product-dialog';
 import { UpdateStockDialog } from '@/components/update-stock-dialog';
 import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { Card, CardContent } from '@/components/ui/card';
 
 
 export default function ProductsPage() {
@@ -71,73 +73,75 @@ export default function ProductsPage() {
           </Button>
         </div>
       </div>
-      <div className="border rounded-lg w-full flex-1 overflow-hidden flex flex-col">
-        <div className="relative overflow-auto flex-1">
-          {isLoading ? (
-             <div className="absolute inset-0 flex justify-center items-center">
-               <Loader2 className="w-8 h-8 animate-spin text-primary" />
-             </div>
-          ) : products.length > 0 ? (
-          <Table>
-            <TableHeader className="sticky top-0 bg-card z-10">
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>SKU</TableHead>
-                <TableHead className="text-right">Price</TableHead>
-                <TableHead className="text-right">Stock</TableHead>
-                <TableHead className="w-[50px]"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {products.map((product) => (
-                <TableRow key={product.id}>
-                  <TableCell className="font-medium">{product.name}</TableCell>
-                  <TableCell>{product.sku}</TableCell>
-                  <TableCell className="text-right">
-                    ${product.price.toFixed(2)}
-                  </TableCell>
-                  <TableCell className={`text-right font-medium ${product.stock === 0 ? 'text-destructive' : ''}`}>
-                    {product.stock}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openUpdateDialog(product, 'increase')}>
-                          Increase Stock
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openUpdateDialog(product, 'decrease')}>
-                          Decrease Stock
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
+      <Card className="w-full flex-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-105 hover:shadow-lg">
+        <CardContent className="p-0 flex-1 flex flex-col">
+          <div className="relative overflow-auto flex-1">
+            {isLoading ? (
+               <div className="absolute inset-0 flex justify-center items-center">
+                 <Loader2 className="w-8 h-8 animate-spin text-primary" />
+               </div>
+            ) : products.length > 0 ? (
+            <Table>
+              <TableHeader className="sticky top-0 bg-card z-10">
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>SKU</TableHead>
+                  <TableHead className="text-right">Price</TableHead>
+                  <TableHead className="text-right">Stock</TableHead>
+                  <TableHead className="w-[50px]"></TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          ) : (
-            <div className="absolute inset-0 flex justify-center items-center text-center">
-              <div>
-                <PackageOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-                <h3 className="mt-4 text-lg font-semibold">No Products Found</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Get started by adding your first product.
-                </p>
-                <Button className="mt-4" onClick={() => setAddDialogOpen(true)}>
-                  <PlusCircle className="mr-2 h-4 w-4" />
-                  Add Product
-                </Button>
+              </TableHeader>
+              <TableBody>
+                {products.map((product) => (
+                  <TableRow key={product.id}>
+                    <TableCell className="font-medium">{product.name}</TableCell>
+                    <TableCell>{product.sku}</TableCell>
+                    <TableCell className="text-right">
+                      ${product.price.toFixed(2)}
+                    </TableCell>
+                    <TableCell className={`text-right font-medium ${product.stock === 0 ? 'text-destructive' : ''}`}>
+                      {product.stock}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Open menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => openUpdateDialog(product, 'increase')}>
+                            Increase Stock
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openUpdateDialog(product, 'decrease')}>
+                            Decrease Stock
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            ) : (
+              <div className="absolute inset-0 flex justify-center items-center text-center">
+                <div>
+                  <PackageOpen className="mx-auto h-12 w-12 text-muted-foreground" />
+                  <h3 className="mt-4 text-lg font-semibold">No Products Found</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Get started by adding your first product.
+                  </p>
+                  <Button className="mt-4" onClick={() => setAddDialogOpen(true)}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Add Product
+                  </Button>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
       <AddProductDialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen} />
       <UpdateStockDialog
         key={`${updateDialogState.product?.id}-${updateDialogState.type}`}
