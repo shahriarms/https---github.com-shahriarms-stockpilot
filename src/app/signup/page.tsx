@@ -61,12 +61,12 @@ export default function SignupPage() {
     <div className="flex min-h-screen items-center justify-center bg-background">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <div className="mb-4 inline-block">
-             <div className="bg-primary rounded-lg p-3 flex items-center justify-center w-16 h-16 mx-auto">
-                <UserPlus className="w-8 h-8 text-primary-foreground" />
-             </div>
+          <div className="mx-auto mb-4 inline-block rounded-lg bg-primary p-3">
+             <UserPlus className="h-8 w-8 text-primary-foreground" />
           </div>
-          <CardTitle className="text-2xl">Create an Account</CardTitle>
+          <CardTitle className="text-3xl font-bold tracking-tight">
+            <span className="text-foreground">Stock</span><span className="text-primary">Pilot</span>
+          </CardTitle>
           <CardDescription>Enter your details below to get started.</CardDescription>
         </CardHeader>
         <CardContent>
