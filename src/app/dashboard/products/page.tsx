@@ -139,21 +139,21 @@ export default function ProductsPage() {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-[180px]">
                             <SelectValue placeholder="Filter by Category" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">All Categories</SelectItem>
+                             <SelectItem value="all">All Categories</SelectItem>
                             {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                     </Select>
-                    <Select value={subCategoryFilter} onValueChange={setSubCategoryFilter}>
+                    <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-[180px]">
                             <SelectValue placeholder="Filter by Sub-Category" />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="">All Sub-Categories</SelectItem>
+                             <SelectItem value="all">All Sub-Categories</SelectItem>
                             {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
                         </SelectContent>
                     </Select>
