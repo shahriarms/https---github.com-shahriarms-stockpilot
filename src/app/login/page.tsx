@@ -7,9 +7,16 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Eye, EyeOff, Bot } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+
+  const handleLogin = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    router.push('/dashboard');
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
@@ -50,7 +57,7 @@ export default function LoginPage() {
                 <span className="sr-only">{showPassword ? 'Hide' : 'Show'} password</span>
               </button>
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" onClick={handleLogin}>
               Login
             </Button>
           </form>
