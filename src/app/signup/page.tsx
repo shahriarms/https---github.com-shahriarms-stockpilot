@@ -14,6 +14,9 @@ import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
 import { StockPilotLogo } from '@/components/stock-pilot-logo';
+import { getAuth, createUserWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
+import app from '@/lib/firebase/firebase';
+import { useRouter } from 'next/navigation';
 
 
 const signupSchema = z.object({
@@ -34,6 +37,8 @@ export default function SignupPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const auth = getAuth(app);
 
   const form = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
@@ -45,18 +50,34 @@ export default function SignupPage() {
     },
   });
 
-  const onSubmit = (data: SignupFormValues) => {
+  const onSubmit = async (data: SignupFormValues) => {
     setIsLoading(true);
-    console.log(data);
-    // Simulate API call
-    setTimeout(() => {
-        setIsLoading(false);
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      await sendEmailVerification(userCredential.user);
+      
+      toast({
+        title: "Verification Email Sent",
+        description: "Your account has been created. Please check your inbox to verify your email address.",
+      });
+      router.push('/login');
+
+    } catch (error: any) {
+        let errorMessage = "An unknown error occurred.";
+        if (error.code === 'auth/email-already-in-use') {
+            errorMessage = 'This email address is already in use.';
+        } else if (error.message) {
+            errorMessage = error.message;
+        }
+        
         toast({
-            title: "Account Created!",
-            description: "You have successfully created your account.",
+            variant: "destructive",
+            title: "Signup Failed",
+            description: errorMessage,
         });
-        // Redirect to login or dashboard
-    }, 1500);
+    } finally {
+        setIsLoading(false);
+    }
   };
   
   return (
