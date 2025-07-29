@@ -23,6 +23,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -30,12 +31,13 @@ import { useProducts } from '@/hooks/use-products.tsx';
 import type { Product } from '@/lib/types';
 import { AddProductDialog } from '@/components/add-product-dialog';
 import { EditProductDialog } from '@/components/edit-product-dialog';
-import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil, ShieldAlert, Search, Upload } from 'lucide-react';
+import { Download, PlusCircle, MoreHorizontal, Loader2, PackageOpen, Pencil, ShieldAlert, Search, Upload, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { useUser } from '@/hooks/use-user';
 import {
   AlertDialog,
   AlertDialogAction,
+  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
@@ -47,11 +49,12 @@ import { useToast } from '@/hooks/use-toast';
 
 
 export default function ProductsPage() {
-  const { products, isLoading, addMultipleProducts } = useProducts();
+  const { products, isLoading, addMultipleProducts, deleteProduct } = useProducts();
   const { user } = useUser();
   const { toast } = useToast();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [showAdminAlert, setShowAdminAlert] = useState(false);
   const [activeTab, setActiveTab] = useState<'Material' | 'Hardware'>('Material');
 
@@ -100,6 +103,21 @@ export default function ProductsPage() {
       setShowAdminAlert(true);
     }
   };
+  
+  const handleDeleteClick = (product: Product) => {
+     if (user.role === 'admin') {
+      setProductToDelete(product);
+    } else {
+      setShowAdminAlert(true);
+    }
+  }
+
+  const confirmDelete = () => {
+    if(productToDelete) {
+        deleteProduct(productToDelete.id);
+        setProductToDelete(null);
+    }
+  }
   
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -272,6 +290,11 @@ export default function ProductsPage() {
                                 <Pencil className="mr-2 h-4 w-4" />
                                 Edit Product
                                 </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDeleteClick(product)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete Product
+                                </DropdownMenuItem>
                             </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -320,7 +343,7 @@ export default function ProductsPage() {
               <ShieldAlert className="text-destructive"/> Access Denied
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You do not have permission to edit products. Please log in as an administrator to perform this action.
+              You do not have permission to perform this action. Please log in as an administrator.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -330,6 +353,25 @@ export default function ProductsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+       <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the product
+              <span className="font-semibold"> {productToDelete?.name}</span> from your inventory.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
+
+    

@@ -39,6 +39,7 @@ interface ProductContextType {
   addProduct: (product: Omit<Product, 'id'>) => void;
   addMultipleProducts: (products: Omit<Product, 'id'>[]) => void;
   updateProduct: (productId: string, updatedData: Omit<Product, 'id'>) => void;
+  deleteProduct: (productId: string) => void;
   getProductById: (productId: string) => Product | undefined;
   isLoading: boolean;
 }
@@ -110,11 +111,29 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
     
+  const deleteProduct = useCallback((productId: string) => {
+    let productName = '';
+    setProducts(prev => prev.filter(p => {
+        if(p.id === productId) {
+            productName = p.name;
+            return false;
+        }
+        return true;
+    }));
+
+     if(productName) {
+        toast({
+            title: "Product Deleted",
+            description: `${productName} has been removed from your inventory.`,
+        });
+    }
+  }, [toast]);
+
   const getProductById = useCallback((productId: string) => {
     return products.find(p => p.id === productId);
   }, [products]);
   
-  const value = useMemo(() => ({ products, addProduct, addMultipleProducts, updateProduct, getProductById, isLoading }), [products, addProduct, addMultipleProducts, updateProduct, getProductById, isLoading]);
+  const value = useMemo(() => ({ products, addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById, isLoading }), [products, addProduct, addMultipleProducts, updateProduct, deleteProduct, getProductById, isLoading]);
 
   return (
     <ProductContext.Provider value={value}>
@@ -130,3 +149,5 @@ export function useProducts() {
   }
   return context;
 }
+
+    
