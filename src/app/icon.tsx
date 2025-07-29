@@ -13,7 +13,7 @@ export default function Icon() {
     (
       <div
         style={{
-          fontSize: 24,
+          fontSize: 18,
           background: '#79A3B1',
           width: '100%',
           height: '100%',
@@ -22,6 +22,7 @@ export default function Icon() {
           justifyContent: 'center',
           color: 'white',
           borderRadius: 6,
+          fontWeight: 'bold',
         }}
       >
         SP
