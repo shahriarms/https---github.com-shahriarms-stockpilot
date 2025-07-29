@@ -14,7 +14,7 @@ export default function Icon() {
       <div
         style={{
           fontSize: 18,
-          background: '#79A3B1',
+          background: 'black',
           width: '100%',
           height: '100%',
           display: 'flex',
@@ -22,7 +22,6 @@ export default function Icon() {
           justifyContent: 'center',
           color: 'white',
           borderRadius: 6,
-          fontWeight: 'bold',
         }}
       >
         SP

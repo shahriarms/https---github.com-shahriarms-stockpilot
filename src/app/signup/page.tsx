@@ -12,6 +12,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { useToast } from "@/hooks/use-toast";
+import Image from 'next/image';
 
 
 const signupSchema = z.object({
@@ -58,9 +59,14 @@ export default function SignupPage() {
   };
   
   const StockPilotLogo = () => (
-    <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-lg bg-primary">
-        <span className="text-2xl font-bold text-primary-foreground">SP</span>
-    </div>
+    <Image 
+      src="https://placehold.co/128x128.png" 
+      alt="Stock Pilot Logo" 
+      width={80} 
+      height={80} 
+      className="mx-auto mb-4 rounded-lg"
+      data-ai-hint="logo glass cube"
+    />
   );
 
   return (
