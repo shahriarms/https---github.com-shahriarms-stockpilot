@@ -61,7 +61,7 @@ export default function SignupPage() {
   
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm border-white/20 bg-card/60 shadow-2xl backdrop-blur-lg transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-[-0_25px_50px_-12px_rgba(0,0,0,0.4)]">
+      <Card className="w-full max-w-sm border-white/20 bg-card/60 shadow-2xl backdrop-blur-lg transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-xl">
         <CardHeader className="text-center">
           <StockPilotLogo />
           <CardTitle className="text-3xl font-bold tracking-tight">
