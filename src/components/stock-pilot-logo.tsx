@@ -3,7 +3,7 @@ import Image from 'next/image';
 
 export const StockPilotLogo = () => (
   <Image 
-    src="https://placehold.co/128x128.png" 
+    src="/logo.png" 
     alt="Stock Pilot Logo" 
     width={80} 
     height={80} 
