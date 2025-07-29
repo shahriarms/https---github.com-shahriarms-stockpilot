@@ -12,9 +12,10 @@ import {
   SidebarFooter,
   SidebarInset,
 } from '@/components/ui/sidebar';
-import { LayoutDashboard, Package, Bot } from 'lucide-react';
+import { LayoutDashboard, Package } from 'lucide-react';
 import { SiteHeader } from './site-header';
 import { useRouter } from 'next/navigation';
+import { StockPilotLogo } from './stock-pilot-logo';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -29,10 +30,12 @@ export function Providers({ children }: { children: React.ReactNode }) {
           <Sidebar>
             <SidebarHeader>
               <div className="flex items-center gap-2 p-2 justify-center group-data-[collapsible=icon]:justify-start">
-                <div className="bg-primary rounded-lg p-2 flex items-center justify-center">
-                  <Bot className="w-6 h-6 text-primary-foreground" />
+                <div className="w-10 h-10">
+                  <StockPilotLogo />
                 </div>
-                <h1 className="text-xl font-semibold transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">StockPilot</h1>
+                <h1 className="text-xl font-semibold transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0">
+                   <span className="text-foreground">Stock</span><span className="text-primary">Pilot</span>
+                </h1>
               </div>
             </SidebarHeader>
             <SidebarContent>
