@@ -127,7 +127,7 @@ export default function SignupPage() {
                 render={({ field }) => (
                     <FormItem>
                         <FormLabel>Confirm Password</FormLabel>
-                        <div className.tsx="relative">
+                        <div className="relative">
                             <FormControl>
                                 <Input type={showConfirmPassword ? 'text' : 'password'} {...field} />
                             </FormControl>
