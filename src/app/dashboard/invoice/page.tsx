@@ -25,6 +25,7 @@ import { useProducts } from '@/hooks/use-products';
 import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface InvoiceItem extends Product {
   quantity: number;
@@ -38,27 +39,36 @@ export default function InvoicePage() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [today, setToday] = useState('');
 
+  const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
 
   useEffect(() => {
     setToday(new Date().toLocaleDateString('en-GB'));
   }, []);
+  
+  const resetFilters = () => {
+    setCategoryFilter('');
+    setSubCategoryFilter('');
+  };
 
-  const categories = useMemo(() => [...new Set(products.map(p => p.category))], [products]);
+  const categories = useMemo(() => {
+      return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter).map(p => p.category))];
+  }, [products, mainCategoryFilter]);
   
   const subCategories = useMemo(() => {
     if (!categoryFilter) {
-      return [...new Set(products.map(p => p.subCategory))];
+      return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter).map(p => p.subCategory))];
     }
-    return [...new Set(products.filter(p => p.category === categoryFilter).map(p => p.subCategory))];
-  }, [products, categoryFilter]);
+    return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter && p.category === categoryFilter).map(p => p.subCategory))];
+  }, [products, mainCategoryFilter, categoryFilter]);
 
   const filteredProducts = useMemo(() => {
     return products
+      .filter(p => p.mainCategory === mainCategoryFilter)
       .filter(p => categoryFilter ? p.category === categoryFilter : true)
       .filter(p => subCategoryFilter ? p.subCategory === subCategoryFilter : true);
-  }, [products, categoryFilter, subCategoryFilter]);
+  }, [products, mainCategoryFilter, categoryFilter, subCategoryFilter]);
 
 
   const handleAddProduct = (productId: string) => {
@@ -125,6 +135,25 @@ export default function InvoicePage() {
             
             <div className="space-y-4">
                 <Label>পণ্য যোগ করুন (Add Products)</Label>
+                
+                <RadioGroup
+                    value={mainCategoryFilter}
+                    onValueChange={(value) => {
+                        setMainCategoryFilter(value as 'Material' | 'Hardware');
+                        resetFilters();
+                    }}
+                    className="flex space-x-4"
+                    >
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Material" id="r-material" />
+                        <Label htmlFor="r-material">Material</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="Hardware" id="r-hardware" />
+                        <Label htmlFor="r-hardware">Hardware</Label>
+                    </div>
+                </RadioGroup>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setSubCategoryFilter(''); }}>
                       <SelectTrigger>
