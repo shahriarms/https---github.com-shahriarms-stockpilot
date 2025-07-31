@@ -26,7 +26,6 @@ import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { useCalculator } from '@/hooks/use-calculator';
 
 
 interface InvoiceItem extends Product {
@@ -35,7 +34,6 @@ interface InvoiceItem extends Product {
 
 export default function InvoicePage() {
   const { products } = useProducts();
-  const { setTargetValue } = useCalculator();
 
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [customerName, setCustomerName] = useState('');
@@ -52,13 +50,6 @@ export default function InvoicePage() {
   useEffect(() => {
     setToday(new Date().toLocaleDateString('en-GB'));
   }, []);
-  
-  // Connect the paid amount input to the global calculator
-  useEffect(() => {
-    setTargetValue(() => (value: number) => setPaidAmount(value));
-    // Clean up when the component unmounts
-    return () => setTargetValue(null);
-  }, [setTargetValue]);
 
   const resetFilters = () => {
     setCategoryFilter('');
