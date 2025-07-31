@@ -1,6 +1,11 @@
 
-export const StockPilotLogo = () => (
-  <div className="flex h-full w-full items-center justify-center rounded-full bg-white p-1 shadow-md">
+export const StockPilotLogo = ({ className }: { className?: string }) => (
+  <div
+    className={
+      className +
+      ' flex items-center justify-center rounded-full bg-white p-1 shadow-md'
+    }
+  >
     <svg
       className="h-full w-full text-black"
       viewBox="0 0 100 100"
