@@ -21,12 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useProducts } from '@/hooks/use-products';
-import { PlusCircle, Trash2, Printer, FileText, Calculator } from 'lucide-react';
+import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useCalculator } from '@/hooks/use-calculator';
+
 
 interface InvoiceItem extends Product {
   quantity: number;
@@ -34,6 +35,8 @@ interface InvoiceItem extends Product {
 
 export default function InvoicePage() {
   const { products } = useProducts();
+  const { setTargetValue } = useCalculator();
+
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
@@ -45,16 +48,17 @@ export default function InvoicePage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
 
-  // Calculator State
-  const [calculatorInput, setCalculatorInput] = useState('0');
-  const [operator, setOperator] = useState<string | null>(null);
-  const [previousValue, setPreviousValue] = useState<number | null>(null);
-  const [isPopoverOpen, setPopoverOpen] = useState(false);
-
   useEffect(() => {
     setToday(new Date().toLocaleDateString('en-GB'));
   }, []);
   
+  // Connect the paid amount input to the global calculator
+  useEffect(() => {
+    setTargetValue(() => (value: number) => setPaidAmount(value));
+    // Clean up when the component unmounts
+    return () => setTargetValue(null);
+  }, [setTargetValue]);
+
   const resetFilters = () => {
     setCategoryFilter('');
     setSubCategoryFilter('');
@@ -114,62 +118,6 @@ export default function InvoicePage() {
   const dueAmount = useMemo(() => {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
-
-  // Calculator Logic
-  const handleNumberClick = (num: string) => {
-    setCalculatorInput(prev => (prev === '0' || prev === 'Error' ? num : prev + num));
-  };
-
-  const handleDecimalClick = () => {
-    if (!calculatorInput.includes('.')) {
-      setCalculatorInput(prev => prev + '.');
-    }
-  };
-
-  const handleOperatorClick = (op: string) => {
-    if (previousValue !== null && operator) {
-      handleEqualsClick();
-      setOperator(op);
-    } else {
-      setPreviousValue(parseFloat(calculatorInput));
-      setCalculatorInput('0');
-      setOperator(op);
-    }
-  };
-
-  const handleEqualsClick = () => {
-    if (!operator || previousValue === null) return;
-    const currentValue = parseFloat(calculatorInput);
-    let result;
-    switch (operator) {
-      case '+': result = previousValue + currentValue; break;
-      case '-': result = previousValue - currentValue; break;
-      case '×': result = previousValue * currentValue; break;
-      case '÷': result = currentValue === 0 ? 'Error' : previousValue / currentValue; break;
-      default: return;
-    }
-    if (result === 'Error') {
-      setCalculatorInput('Error');
-    } else {
-      setCalculatorInput(String(result));
-    }
-    setPreviousValue(result === 'Error' ? null : result as number);
-    setOperator(null);
-  };
-  
-  const handleClear = () => {
-    setCalculatorInput('0');
-    setOperator(null);
-    setPreviousValue(null);
-  };
-
-  const handleUseResult = () => {
-    const value = parseFloat(calculatorInput);
-    if (!isNaN(value)) {
-        setPaidAmount(value);
-    }
-    setPopoverOpen(false);
-  }
 
   return (
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -285,36 +233,6 @@ export default function InvoicePage() {
                                 className="font-bold pl-5 text-right"
                                 placeholder="0.00"
                             />
-                             <Popover open={isPopoverOpen} onOpenChange={setPopoverOpen}>
-                                <PopoverTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-10 w-10">
-                                        <Calculator className="w-4 h-4"/>
-                                    </Button>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-64 p-2">
-                                    <div className="space-y-2">
-                                        <Input readOnly value={calculatorInput} className="text-right text-2xl font-mono h-12" />
-                                        <div className="grid grid-cols-4 gap-2">
-                                            <Button onClick={handleClear} variant="destructive" className="col-span-2">C</Button>
-                                            <Button onClick={() => handleOperatorClick('÷')} variant="outline">÷</Button>
-                                            <Button onClick={() => handleOperatorClick('×')} variant="outline">×</Button>
-                                            
-                                            {['7','8','9'].map(n => <Button key={n} onClick={() => handleNumberClick(n)}>{n}</Button>)}
-                                            <Button onClick={() => handleOperatorClick('-')} variant="outline">-</Button>
-
-                                            {['4','5','6'].map(n => <Button key={n} onClick={() => handleNumberClick(n)}>{n}</Button>)}
-                                            <Button onClick={() => handleOperatorClick('+')} variant="outline">+</Button>
-                                            
-                                            {['1','2','3'].map(n => <Button key={n} onClick={() => handleNumberClick(n)}>{n}</Button>)}
-                                            <Button onClick={handleEqualsClick} variant="secondary" className="row-span-2">=</Button>
-
-                                            <Button onClick={() => handleNumberClick('0')} className="col-span-2">0</Button>
-                                            <Button onClick={handleDecimalClick}>.</Button>
-                                        </div>
-                                        <Button onClick={handleUseResult} className="w-full">Use this value</Button>
-                                    </div>
-                                </PopoverContent>
-                            </Popover>
                         </div>
                     </div>
                      <div className="flex justify-end items-center gap-4 text-primary">
@@ -409,4 +327,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
