@@ -23,6 +23,7 @@ export default function BuyersPage() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
+  const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
 
 
   const handleSelectBuyer = (buyer: Buyer) => {
@@ -44,6 +45,14 @@ export default function BuyersPage() {
         invoice.date.toLowerCase().includes(invoiceSearchTerm.toLowerCase())
     );
   }, [invoices, invoiceSearchTerm]);
+  
+  const filteredBuyers = useMemo(() => {
+    if (!buyerSearchTerm) return buyers;
+    return buyers.filter(buyer => 
+        buyer.name.toLowerCase().includes(buyerSearchTerm.toLowerCase()) ||
+        (buyer.phone && buyer.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))
+    );
+  }, [buyers, buyerSearchTerm]);
 
 
   return (
@@ -55,13 +64,23 @@ export default function BuyersPage() {
       <div className="grid md:grid-cols-4 gap-6 flex-1">
         {/* Buyers List */}
         <Card className="md:col-span-1 flex flex-col">
-          <CardHeader>
+          <CardHeader className="space-y-4">
             <CardTitle>All Buyers</CardTitle>
+            <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    type="search" 
+                    placeholder="Search by name or phone..." 
+                    className="pl-8" 
+                    value={buyerSearchTerm}
+                    onChange={e => setBuyerSearchTerm(e.target.value)}
+                />
+            </div>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <ScrollArea className="h-full">
               <div className="divide-y">
-                {buyers.map((buyer) => (
+                {filteredBuyers.map((buyer) => (
                   <button
                     key={buyer.id}
                     onClick={() => handleSelectBuyer(buyer)}
