@@ -91,7 +91,7 @@ export function Providers({
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader>
-          <div className="flex items-center gap-2 p-2 justify-center group-data-[collapsible=icon]:justify-start">
+          <div className="flex items-center gap-2 p-2 justify-center group-data-[collapsible=icon]:justify-center">
             <div className="w-14 h-14">
               <StockPilotLogo />
             </div>
@@ -110,7 +110,7 @@ export function Providers({
                   tooltip={{ children: 'Dashboard' }}
                 >
                   <DashboardIcon />
-                  Dashboard
+                  <span>Dashboard</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -121,7 +121,7 @@ export function Providers({
                   tooltip={{ children: 'Products' }}
                 >
                    <ProductsIcon />
-                  Products
+                  <span>Products</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -132,7 +132,7 @@ export function Providers({
                   tooltip={{ children: 'Invoice' }}
                 >
                    <InvoiceIcon />
-                  Invoice
+                  <span>Invoice</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
