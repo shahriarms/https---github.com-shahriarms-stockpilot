@@ -136,7 +136,7 @@ export default function BuyersDuePage() {
   };
 
   const receiptPaymentHistory = useMemo(() => {
-    if (!selectedInvoice || !paymentAmount) return paymentHistory;
+    if (!selectedInvoice || paymentAmount === '' || typeof paymentAmount !== 'number') return paymentHistory;
     const pendingPayment: Payment = {
         id: 'pending',
         invoiceId: selectedInvoice.id,
@@ -261,34 +261,23 @@ export default function BuyersDuePage() {
             <div className="flex-1 flex flex-col min-h-0">
                 <div className="flex items-center gap-2 px-6 pt-4">
                     <History className="w-5 h-5" />
-                    <h3 className="text-lg font-semibold">Transaction History</h3>
+                    <h3 className="text-lg font-semibold">Live Receipt Preview</h3>
                 </div>
                 <div className="p-6 pt-2 flex-1">
-                    <ScrollArea className="h-full">
-                         {selectedInvoice ? (
-                            paymentHistory.length > 0 ? (
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {paymentHistory.map(payment => (
-                                        <TableRow key={payment.id}>
-                                            <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
-                                            <TableCell className="text-right">${payment.amount.toFixed(2)}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            ) : (
-                                <div className="text-center text-muted-foreground pt-4">No payment history for this invoice.</div>
-                            )
-                         ) : (
-                             <div className="text-center text-muted-foreground pt-4">Select an invoice to see its history.</div>
-                         )}
+                     <ScrollArea className="h-full border rounded-lg">
+                        {selectedBuyer && selectedInvoice ? (
+                            <PaymentReceipt
+                                buyer={selectedBuyer}
+                                invoice={selectedInvoice}
+                                paymentHistory={receiptPaymentHistory}
+                                newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
+                            />
+                        ) : (
+                            <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full">
+                                <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
+                                <p>Select an invoice to see a receipt preview.</p>
+                           </div>
+                        )}
                     </ScrollArea>
                 </div>
             </div>
