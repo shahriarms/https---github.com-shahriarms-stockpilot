@@ -111,14 +111,6 @@ export default function InvoicePage() {
 
   const handleCustomerCashChange = (amount: number) => {
     setCustomerCash(amount);
-    if (amount > 0 && amount >= subtotal) {
-      setPaidAmount(subtotal);
-    } else if (amount > 0 && amount < subtotal) {
-      setPaidAmount(amount)
-    } 
-    else {
-      setPaidAmount(0);
-    }
   };
 
   const dueAmount = useMemo(() => {
@@ -126,8 +118,11 @@ export default function InvoicePage() {
   }, [subtotal, paidAmount]);
 
   const change = useMemo(() => {
-    const calculatedChange = customerCash - subtotal;
-    return calculatedChange > 0 ? calculatedChange : 0;
+    // Change is only calculated if customer cash is entered and is more than subtotal
+    if (customerCash > 0 && customerCash >= subtotal) {
+      return customerCash - subtotal;
+    }
+    return 0;
   }, [subtotal, customerCash]);
 
   const handleSaveInvoice = () => {
@@ -381,3 +376,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
