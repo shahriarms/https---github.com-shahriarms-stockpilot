@@ -37,7 +37,7 @@ export function Providers({
       <Sidebar>
         <SidebarHeader>
           <div className="flex items-center gap-2 p-2 justify-center">
-            <div className="w-14 h-14">
+            <div className="w-14 h-14 group-data-[collapsible=icon]:w-10 group-data-[collapsible=icon]:h-10 transition-all duration-200">
               <StockPilotLogo />
             </div>
             <h1 className="text-xl font-semibold transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0">
