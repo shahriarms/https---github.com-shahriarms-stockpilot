@@ -1,3 +1,4 @@
+
 export interface Product {
   id: string;
   name: string;
@@ -7,4 +8,29 @@ export interface Product {
   mainCategory: 'Material' | 'Hardware';
   category: string;
   subCategory: string;
+}
+
+export interface InvoiceItem extends Product {
+  quantity: number;
+}
+
+export interface Invoice {
+  id: string;
+  customerName: string;
+  customerAddress: string;
+  customerPhone: string;
+  items: InvoiceItem[];
+  subtotal: number;
+  paidAmount: number;
+  dueAmount: number;
+  change: number;
+  date: string;
+}
+
+export interface Buyer {
+  id: string;
+  name: string;
+  address: string;
+  phone: string;
+  invoiceIds: string[];
 }

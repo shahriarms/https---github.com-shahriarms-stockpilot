@@ -22,24 +22,25 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useProducts } from '@/hooks/use-products';
+import { useInvoices } from '@/hooks/use-invoices';
 import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
-import type { Product } from '@/lib/types';
+import type { Product, InvoiceItem } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { useRouter } from 'next/navigation';
 
-
-interface InvoiceItem extends Product {
-  quantity: number;
-}
 
 export default function InvoicePage() {
   const { products } = useProducts();
+  const { saveInvoice } = useInvoices();
+  const router = useRouter();
 
   const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [today, setToday] = useState('');
+  const [invoiceId, setInvoiceId] = useState('');
   const [paidAmount, setPaidAmount] = useState(0);
   const [customerCash, setCustomerCash] = useState(0);
 
@@ -49,6 +50,7 @@ export default function InvoicePage() {
 
   useEffect(() => {
     setToday(new Date().toLocaleDateString('en-GB'));
+    setInvoiceId(`INV-${Date.now()}`);
   }, []);
 
   const resetFilters = () => {
@@ -128,6 +130,30 @@ export default function InvoicePage() {
     return calculatedChange > 0 ? calculatedChange : 0;
   }, [subtotal, customerCash]);
 
+  const handleSaveInvoice = () => {
+    if (!customerName || invoiceItems.length === 0) {
+      // Maybe show a toast message here
+      alert("Please enter customer name and add at least one item.");
+      return;
+    }
+
+    const invoiceData = {
+      id: invoiceId,
+      customerName,
+      customerAddress,
+      customerPhone,
+      items: invoiceItems,
+      subtotal,
+      paidAmount,
+      dueAmount,
+      change,
+      date: today,
+    };
+    
+    saveInvoice(invoiceData);
+    router.push('/dashboard/buyers');
+  };
+
 
   return (
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -140,7 +166,7 @@ export default function InvoicePage() {
           <CardContent className="space-y-6">
              <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <span className="font-medium">Invoice No: 2183</span>
+                    <span className="font-medium">Invoice No: {invoiceId.slice(-6)}</span>
                     <span className="text-muted-foreground">তারিখ (Date): {today}</span>
                 </div>
                 <div className="space-y-2">
@@ -266,7 +292,7 @@ export default function InvoicePage() {
                 </div>
             </div>
             
-             <Button className="w-full mt-6">
+             <Button className="w-full mt-6" onClick={handleSaveInvoice}>
                 চালান সেভ করুন (Save Invoice)
             </Button>
           </CardContent>
@@ -291,7 +317,7 @@ export default function InvoicePage() {
                     <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
                 </div>
                 <div className="flex justify-between border-b pb-2 mb-4">
-                    <span>ক্রঃ নং (Inv No): 2183</span>
+                    <span>ক্রঃ নং (Inv No): {invoiceId.slice(-6)}</span>
                     <span>তারিখ (Date): {today}</span>
                 </div>
                 <div className="mb-4">
