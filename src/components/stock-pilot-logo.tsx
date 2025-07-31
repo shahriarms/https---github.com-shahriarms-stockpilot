@@ -7,7 +7,7 @@ export const StockPilotLogo = ({ className }: { className?: string }) => (
     }
   >
     <svg
-      className="h-full w-full text-black"
+      className="text-black"
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
