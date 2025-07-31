@@ -43,6 +43,7 @@ export default function InvoicePage() {
   const [customerPhone, setCustomerPhone] = useState('');
   const [today, setToday] = useState('');
   const [paidAmount, setPaidAmount] = useState(0);
+  const [customerCash, setCustomerCash] = useState(0);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -115,14 +116,26 @@ export default function InvoicePage() {
     return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   }, [invoiceItems]);
 
+  const handleCustomerCashChange = (amount: number) => {
+    setCustomerCash(amount);
+    if (amount > 0 && amount >= subtotal) {
+      setPaidAmount(subtotal);
+    } else if (amount > 0 && amount < subtotal) {
+      setPaidAmount(amount)
+    } 
+    else {
+      setPaidAmount(0);
+    }
+  };
+
   const dueAmount = useMemo(() => {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
 
   const change = useMemo(() => {
-    const calculatedChange = paidAmount - subtotal;
+    const calculatedChange = customerCash - subtotal;
     return calculatedChange > 0 ? calculatedChange : 0;
-  }, [subtotal, paidAmount]);
+  }, [subtotal, customerCash]);
 
 
   return (
@@ -223,31 +236,41 @@ export default function InvoicePage() {
                     ))}
                 </div>
 
-                <div className="mt-6 pt-4 border-t space-y-2 text-right">
-                    <div className="flex justify-end items-center gap-4">
-                        <span className="font-medium">উপমোট (Subtotal):</span>
-                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                <div className="mt-6 pt-4 border-t flex items-end justify-between">
+                    <div className="border rounded-lg p-3 space-y-2 w-52">
+                      <Label htmlFor="customerCash" className="text-xs font-semibold">ENTER CUSTOMER MONEY</Label>
+                      <Input 
+                        id="customerCash" 
+                        type="number"
+                        placeholder="e.g., 500"
+                        value={customerCash || ''}
+                        onChange={e => handleCustomerCashChange(parseFloat(e.target.value) || 0)}
+                      />
+                      <p className="text-lg font-bold">CHANGE = ${change.toFixed(2)}</p>
                     </div>
-                     <div className="flex justify-end items-center gap-4">
-                        <span className="font-medium">জমা (Paid):</span>
-                        <div className="relative w-28 flex items-center gap-1">
-                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                            <Input
-                                type="number"
-                                value={paidAmount}
-                                onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                                className="font-bold pl-5 text-right"
-                                placeholder="0.00"
-                            />
+
+                    <div className="space-y-2 text-right">
+                        <div className="flex justify-end items-center gap-4">
+                            <span className="font-medium">উপমোট (Subtotal):</span>
+                            <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
                         </div>
-                    </div>
-                     <div className="flex justify-end items-center gap-4 text-primary">
-                        <span className="font-medium">বাকী (Due):</span>
-                        <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                    </div>
-                     <div className="flex justify-end items-center gap-4">
-                        <span className="font-medium">ফেরত (Change):</span>
-                        <span className="font-bold w-28">${change.toFixed(2)}</span>
+                         <div className="flex justify-end items-center gap-4">
+                            <span className="font-medium">জমা (Paid):</span>
+                            <div className="relative w-28 flex items-center gap-1">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                <Input
+                                    type="number"
+                                    value={paidAmount}
+                                    onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                                    className="font-bold pl-5 text-right"
+                                    placeholder="0.00"
+                                />
+                            </div>
+                        </div>
+                         <div className="flex justify-end items-center gap-4 text-primary">
+                            <span className="font-medium">বাকী (Due):</span>
+                            <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -341,5 +364,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
