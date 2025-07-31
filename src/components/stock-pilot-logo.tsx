@@ -1,7 +1,8 @@
 
 export const StockPilotLogo = () => (
+  <div className="flex h-full w-full items-center justify-center rounded-full bg-white p-1 shadow-md">
     <svg
-      className="h-full w-full text-black bg-white rounded-full p-1 shadow-md"
+      className="h-full w-full text-black"
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
@@ -33,4 +34,5 @@ export const StockPilotLogo = () => (
         <path d="M75 60 V65 H79" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     </svg>
+  </div>
 );
