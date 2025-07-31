@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { usePayments } from '@/hooks/use-payments';
@@ -60,24 +60,8 @@ export default function BuyersDuePage() {
     setPaymentAmount('');
   };
   
-  const handleAddPayment = () => {
-    if (!selectedInvoice || !paymentAmount || paymentAmount <= 0) {
-      toast({
-        variant: 'destructive',
-        title: 'Invalid Amount',
-        description: 'Please enter a valid payment amount.',
-      });
-      return;
-    }
-
-    if (paymentAmount > selectedInvoice.dueAmount) {
-        toast({
-          variant: 'destructive',
-          title: 'Overpayment Error',
-          description: `Payment cannot be greater than the due amount of $${selectedInvoice.dueAmount.toFixed(2)}.`,
-        });
-        return;
-    }
+  const completePaymentTransaction = useCallback(() => {
+    if (!selectedInvoice || !paymentAmount || paymentAmount <= 0) return;
 
     addPayment({
       invoiceId: selectedInvoice.id,
@@ -99,11 +83,48 @@ export default function BuyersDuePage() {
         const freshBuyerData = JSON.parse(JSON.stringify(buyers.find(b => b.id === selectedBuyer!.id)));
         setSelectedBuyer(freshBuyerData);
     }
-  };
+  }, [addPayment, paymentAmount, selectedBuyer, selectedInvoice, toast, buyers]);
 
   const handlePrint = useReactToPrint({
     content: () => receiptRef.current,
+    onAfterPrint: () => {
+      completePaymentTransaction();
+    },
   });
+
+  const handleAddPaymentAndPrint = () => {
+    if (!selectedInvoice || !paymentAmount || paymentAmount <= 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid Amount',
+        description: 'Please enter a valid payment amount.',
+      });
+      return;
+    }
+
+    if (paymentAmount > selectedInvoice.dueAmount) {
+        toast({
+          variant: 'destructive',
+          title: 'Overpayment Error',
+          description: `Payment cannot be greater than the due amount of $${selectedInvoice.dueAmount.toFixed(2)}.`,
+        });
+        return;
+    }
+    
+    handlePrint();
+  };
+
+  const receiptPaymentHistory = useMemo(() => {
+    if (!selectedInvoice || !paymentAmount) return paymentHistory;
+    const pendingPayment: Payment = {
+        id: 'pending',
+        invoiceId: selectedInvoice.id,
+        buyerId: selectedBuyer!.id,
+        amount: paymentAmount as number,
+        date: new Date().toISOString(),
+    };
+    return [pendingPayment, ...paymentHistory];
+  }, [paymentHistory, paymentAmount, selectedInvoice, selectedBuyer]);
 
 
   return (
@@ -169,7 +190,7 @@ export default function BuyersDuePage() {
                             <span>Inv: {invoice.id.slice(-6)}</span>
                             <span className="text-destructive">${invoice.dueAmount.toFixed(2)}</span>
                         </div>
-                        <div className="text-sm text-muted-foreground">{invoice.date}</div>
+                        <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
                       </button>
                     ))
                   ) : (
@@ -197,7 +218,6 @@ export default function BuyersDuePage() {
                               <p>Invoice: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
                               <p>Due Amount: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
                            </div>
-                           <Button variant="outline" size="icon" onClick={handlePrint}><Printer className="h-4 w-4"/></Button>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="relative flex-1">
@@ -210,7 +230,7 @@ export default function BuyersDuePage() {
                                     onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
                                 />
                             </div>
-                            <Button onClick={handleAddPayment}>Receive</Button>
+                            <Button onClick={handleAddPaymentAndPrint}><Printer className="mr-2 h-4 w-4"/> Receive & Print</Button>
                         </div>
                     </>
                 ) : (
@@ -259,7 +279,8 @@ export default function BuyersDuePage() {
             <PaymentReceipt 
               buyer={selectedBuyer}
               invoice={selectedInvoice}
-              paymentHistory={paymentHistory}
+              paymentHistory={receiptPaymentHistory}
+              newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
             />
           </div>
         )}
