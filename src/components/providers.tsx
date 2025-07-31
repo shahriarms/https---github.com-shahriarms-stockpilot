@@ -83,10 +83,10 @@ export function Providers({
               <Link href="/dashboard/buyers">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/buyers')}
-                  tooltip={{ children: 'Buyers' }}
+                  tooltip={{ children: 'Buyer purchases' }}
                 >
                    <Users className="h-6 w-6" />
-                  <span>Buyers</span>
+                  <span>Buyer purchases</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
