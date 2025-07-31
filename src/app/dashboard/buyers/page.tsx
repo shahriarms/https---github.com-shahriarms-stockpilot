@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useInvoices } from '@/hooks/use-invoices';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
@@ -13,25 +13,38 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, FileText, ChevronRight, Hash, Calendar, DollarSign } from 'lucide-react';
+import { Users, FileText, ChevronRight, Calendar, DollarSign, Search } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
+import { Input } from '@/components/ui/input';
 
 export default function BuyersPage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
+
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
     const buyerInvoices = getInvoicesForBuyer(buyer.id);
     setInvoices(buyerInvoices);
     setSelectedInvoice(buyerInvoices.length > 0 ? buyerInvoices[0] : null);
+    setInvoiceSearchTerm('');
   };
   
   const handleSelectInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
   }
+
+  const filteredInvoices = useMemo(() => {
+    if (!invoiceSearchTerm) return invoices;
+    return invoices.filter(invoice => 
+        invoice.id.toLowerCase().includes(invoiceSearchTerm.toLowerCase()) ||
+        invoice.date.toLowerCase().includes(invoiceSearchTerm.toLowerCase())
+    );
+  }, [invoices, invoiceSearchTerm]);
+
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -72,16 +85,26 @@ export default function BuyersPage() {
 
         {/* Invoice Log List */}
         <Card className="md:col-span-1 flex flex-col">
-           <CardHeader>
+           <CardHeader className="space-y-4">
              <CardTitle className="truncate">{selectedBuyer ? `${selectedBuyer.name}'s Invoices` : 'Invoice Log'}</CardTitle>
-             <CardDescription>Select an invoice to view details.</CardDescription>
+             <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    type="search" 
+                    placeholder="Search by invoice no or date..." 
+                    className="pl-8" 
+                    value={invoiceSearchTerm}
+                    onChange={e => setInvoiceSearchTerm(e.target.value)}
+                    disabled={!selectedBuyer}
+                />
+            </div>
            </CardHeader>
            <CardContent className="p-0 flex-1">
               <ScrollArea className="h-full">
                  <div className="divide-y">
                   {selectedBuyer ? (
-                    invoices.length > 0 ? (
-                      invoices.map((invoice) => (
+                    filteredInvoices.length > 0 ? (
+                      filteredInvoices.map((invoice) => (
                         <button
                           key={invoice.id}
                           onClick={() => handleSelectInvoice(invoice)}
@@ -119,7 +142,7 @@ export default function BuyersPage() {
                      <Card key={selectedInvoice.id} className="w-full">
                         <CardContent className="p-8 bg-white text-black font-serif">
                             <div className="text-center mb-6">
-                                <h1 className="text-2xl font-bold text-blue-600">ক্যাশ মেমো (Cash Memo)</h1>
+                                <h1 className="text-2xl font-bold text-primary">ক্যাশ মেমো (Cash Memo)</h1>
                                 <h2 className="text-xl font-bold">মাহমুদ ইঞ্জিনিয়ারিং শপ</h2>
                                 <p className="text-xs">এখানে ওয়েডিং, জিন, শিট সহ সকল প্রকার ওয়র্কশপ এর মালামাল এবং ফার্নিচার সামগ্রি বিক্রয় করা হয়।</p>
                                 <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
