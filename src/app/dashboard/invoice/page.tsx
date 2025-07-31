@@ -119,6 +119,12 @@ export default function InvoicePage() {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
 
+  const change = useMemo(() => {
+    const calculatedChange = paidAmount - subtotal;
+    return calculatedChange > 0 ? calculatedChange : 0;
+  }, [subtotal, paidAmount]);
+
+
   return (
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       {/* Left Column: Invoice Form */}
@@ -237,7 +243,11 @@ export default function InvoicePage() {
                     </div>
                      <div className="flex justify-end items-center gap-4 text-primary">
                         <span className="font-medium">বাকী (Due):</span>
-                        <span className="font-bold w-28">${dueAmount.toFixed(2)}</span>
+                        <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                    </div>
+                     <div className="flex justify-end items-center gap-4">
+                        <span className="font-medium">ফেরত (Change):</span>
+                        <span className="font-bold w-28">${change.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -313,7 +323,11 @@ export default function InvoicePage() {
                         </div>
                         <div className="flex justify-between font-bold border-t pt-2">
                             <span>বাকী (Due):</span>
-                            <span>${dueAmount.toFixed(2)}</span>
+                            <span>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                        </div>
+                         <div className="flex justify-between">
+                            <span>ফেরত (Change):</span>
+                            <span>${change.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
@@ -327,3 +341,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
