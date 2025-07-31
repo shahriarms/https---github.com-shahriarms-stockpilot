@@ -14,6 +14,14 @@ export interface InvoiceItem extends Product {
   quantity: number;
 }
 
+export interface Payment {
+    id: string;
+    invoiceId: string;
+    buyerId: string;
+    amount: number;
+    date: string;
+}
+
 export interface Invoice {
   id: string;
   customerName: string;
@@ -24,6 +32,7 @@ export interface Invoice {
   paidAmount: number;
   dueAmount: number;
   date: string;
+  payments: Payment[];
 }
 
 export interface Buyer {

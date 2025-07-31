@@ -8,7 +8,8 @@ import { useToast } from "@/hooks/use-toast";
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveInvoice: (invoice: Omit<Invoice, 'items' | 'id'> & { items: any[], id: string }) => void;
+  saveInvoice: (invoice: Omit<Invoice, 'items' | 'id' | 'payments'> & { items: any[], id: string }) => void;
+  updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
 }
@@ -44,8 +45,10 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   }, [invoices, buyers, isLoading]);
 
-  const saveInvoice = useCallback((invoiceData: Invoice) => {
-    setInvoices(prev => [...prev, invoiceData]);
+  const saveInvoice = useCallback((invoiceData: Omit<Invoice, 'payments'>) => {
+    const fullInvoice: Invoice = {...invoiceData, payments: [] };
+    
+    setInvoices(prev => [...prev, fullInvoice]);
     
     setBuyers(prevBuyers => {
       const existingBuyerIndex = prevBuyers.findIndex(b => b.name === invoiceData.customerName && b.phone === invoiceData.customerPhone);
@@ -73,14 +76,38 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     });
   }, [toast]);
   
+  const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
+    setInvoices(prevInvoices => 
+        prevInvoices.map(inv => {
+            if (inv.id === invoiceId) {
+                const newPaidAmount = inv.paidAmount + amountPaid;
+                const newDueAmount = inv.subtotal - newPaidAmount;
+                return {
+                    ...inv,
+                    paidAmount: newPaidAmount,
+                    dueAmount: newDueAmount < 0 ? 0 : newDueAmount,
+                };
+            }
+            return inv;
+        })
+    );
+  }, []);
+
   const getInvoicesForBuyer = useCallback((buyerId: string) => {
     const buyer = buyers.find(b => b.id === buyerId);
     if (!buyer) return [];
     
-    return invoices.filter(inv => buyer.invoiceIds.includes(inv.id)).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    // Create a map for quick invoice lookup
+    const invoiceMap = new Map(invoices.map(inv => [inv.id, inv]));
+    
+    return buyer.invoiceIds
+        .map(id => invoiceMap.get(id))
+        .filter((inv): inv is Invoice => !!inv) // Type guard to filter out undefined
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
   }, [buyers, invoices]);
 
-  const value = useMemo(() => ({ invoices, buyers, saveInvoice, getInvoicesForBuyer, isLoading }), [invoices, buyers, saveInvoice, getInvoicesForBuyer, isLoading]);
+  const value = useMemo(() => ({ invoices, buyers, saveInvoice, getInvoicesForBuyer, updateInvoiceDue, isLoading }), [invoices, buyers, saveInvoice, getInvoicesForBuyer, updateInvoiceDue, isLoading]);
 
   return (
     <InvoiceContext.Provider value={value}>
