@@ -34,6 +34,9 @@ export function SiteHeader() {
         <div>
           <SidebarTrigger />
         </div>
+         <div className="flex-1 flex justify-center items-center">
+          <h1 className="text-xl font-bold text-foreground">Mahmud Engineering Shop</h1>
+        </div>
       </header>
     );
   }
@@ -44,7 +47,9 @@ export function SiteHeader() {
         <div>
           <SidebarTrigger />
         </div>
-        <div className="flex-1"></div>
+        <div className="flex-1 flex justify-center items-center">
+          <h1 className="text-xl font-bold text-foreground">Mahmud Engineering Shop</h1>
+        </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="rounded-full">
