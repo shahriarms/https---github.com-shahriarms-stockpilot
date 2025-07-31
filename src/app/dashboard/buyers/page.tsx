@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useInvoices } from '@/hooks/use-invoices';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -13,19 +13,25 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, FileText, ChevronRight } from 'lucide-react';
+import { Users, FileText, ChevronRight, Hash, Calendar, DollarSign } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
 
 export default function BuyersPage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
     const buyerInvoices = getInvoicesForBuyer(buyer.id);
     setInvoices(buyerInvoices);
+    setSelectedInvoice(buyerInvoices.length > 0 ? buyerInvoices[0] : null);
   };
+  
+  const handleSelectInvoice = (invoice: Invoice) => {
+    setSelectedInvoice(invoice);
+  }
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -33,9 +39,9 @@ export default function BuyersPage() {
         <Users className="w-6 h-6" />
         Buyers &amp; Invoice History
       </h1>
-      <div className="grid md:grid-cols-3 gap-6 flex-1">
+      <div className="grid md:grid-cols-4 gap-6 flex-1">
         {/* Buyers List */}
-        <Card className="md:col-span-1 flex flex-col transition-transform duration-300 ease-in-out hover:scale-101 hover:shadow-xl">
+        <Card className="md:col-span-1 flex flex-col">
           <CardHeader>
             <CardTitle>All Buyers</CardTitle>
           </CardHeader>
@@ -46,7 +52,7 @@ export default function BuyersPage() {
                   <button
                     key={buyer.id}
                     onClick={() => handleSelectBuyer(buyer)}
-                    className={`w-full text-left p-4 hover:bg-muted ${
+                    className={`w-full text-left p-4 hover:bg-muted transition-colors ${
                       selectedBuyer?.id === buyer.id ? 'bg-muted' : ''
                     }`}
                   >
@@ -64,18 +70,53 @@ export default function BuyersPage() {
           </CardContent>
         </Card>
 
+        {/* Invoice Log List */}
+        <Card className="md:col-span-1 flex flex-col">
+           <CardHeader>
+             <CardTitle className="truncate">{selectedBuyer ? `${selectedBuyer.name}'s Invoices` : 'Invoice Log'}</CardTitle>
+             <CardDescription>Select an invoice to view details.</CardDescription>
+           </CardHeader>
+           <CardContent className="p-0 flex-1">
+              <ScrollArea className="h-full">
+                 <div className="divide-y">
+                  {selectedBuyer ? (
+                    invoices.length > 0 ? (
+                      invoices.map((invoice) => (
+                        <button
+                          key={invoice.id}
+                          onClick={() => handleSelectInvoice(invoice)}
+                          className={`w-full text-left p-4 hover:bg-muted transition-colors ${
+                            selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
+                          }`}
+                        >
+                            <div className="font-medium">Inv: {invoice.id.slice(-6)}</div>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                                <Calendar className="w-3.5 h-3.5"/>
+                                <span>{invoice.date}</span>
+                            </div>
+                            <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
+                               <DollarSign className="w-3.5 h-3.5"/>
+                               <span>${invoice.subtotal.toFixed(2)}</span>
+                            </div>
+                        </button>
+                      ))
+                    ) : (
+                      <div className="text-center p-4 text-sm text-muted-foreground">No invoices found.</div>
+                    )
+                  ) : (
+                    <div className="text-center p-4 text-sm text-muted-foreground">Select a buyer.</div>
+                  )}
+                 </div>
+              </ScrollArea>
+           </CardContent>
+        </Card>
+
         {/* Invoice Display */}
         <div className="md:col-span-2 flex flex-col gap-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="w-5 h-5" />
-            {selectedBuyer ? `${selectedBuyer.name}'s Invoices` : 'Select a Buyer'}
-          </h2>
           <ScrollArea className="flex-1 rounded-lg border">
             <div className="p-4 space-y-4 bg-background">
-              {selectedBuyer ? (
-                invoices.length > 0 ? (
-                  invoices.map((invoice) => (
-                     <Card key={invoice.id} className="w-full transition-transform duration-300 ease-in-out hover:scale-101 hover:shadow-xl">
+              {selectedInvoice ? (
+                     <Card key={selectedInvoice.id} className="w-full">
                         <CardContent className="p-8 bg-white text-black font-serif">
                             <div className="text-center mb-6">
                                 <h1 className="text-2xl font-bold text-blue-600">ক্যাশ মেমো (Cash Memo)</h1>
@@ -84,13 +125,13 @@ export default function BuyersPage() {
                                 <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
                             </div>
                             <div className="flex justify-between border-b pb-2 mb-4">
-                                <span>ক্রঃ নং (Inv No): {invoice.id.slice(-6)}</span>
-                                <span>তারিখ (Date): {invoice.date}</span>
+                                <span>ক্রঃ নং (Inv No): {selectedInvoice.id.slice(-6)}</span>
+                                <span>তারিখ (Date): {selectedInvoice.date}</span>
                             </div>
                             <div className="mb-4">
-                                <p>নাম (Name): {invoice.customerName}</p>
-                                <p>ঠিকানা (Address): {invoice.customerAddress}</p>
-                                <p>ফোন (Phone): {invoice.customerPhone}</p>
+                                <p>নাম (Name): {selectedInvoice.customerName}</p>
+                                <p>ঠিকানা (Address): {selectedInvoice.customerAddress}</p>
+                                <p>ফোন (Phone): {selectedInvoice.customerPhone}</p>
                             </div>
 
                             <Table>
@@ -103,7 +144,7 @@ export default function BuyersPage() {
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {invoice.items.map(item => (
+                                    {selectedInvoice.items.map(item => (
                                         <TableRow key={item.id}>
                                             <TableCell className="text-black">{item.name}</TableCell>
                                             <TableCell className="text-black text-center">{item.quantity}</TableCell>
@@ -118,29 +159,25 @@ export default function BuyersPage() {
                                 <div className="w-64 space-y-2">
                                     <div className="flex justify-between">
                                         <span>উপমোট (Subtotal):</span>
-                                        <span>${invoice.subtotal.toFixed(2)}</span>
+                                        <span>${selectedInvoice.subtotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between">
                                         <span>জমা (Paid):</span>
-                                        <span>${invoice.paidAmount.toFixed(2)}</span>
+                                        <span>${selectedInvoice.paidAmount.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between font-bold border-t pt-2">
                                         <span>বাকী (Due):</span>
-                                        <span>${invoice.dueAmount < 0 ? `($${Math.abs(invoice.dueAmount).toFixed(2)})` : `$${invoice.dueAmount.toFixed(2)}`}</span>
+                                        <span>${selectedInvoice.dueAmount < 0 ? `($${Math.abs(selectedInvoice.dueAmount).toFixed(2)})` : `$${selectedInvoice.dueAmount.toFixed(2)}`}</span>
                                     </div>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
-                  ))
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>No invoices found for this buyer.</p>
-                  </div>
-                )
               ) : (
-                <div className="text-center py-12 text-muted-foreground">
-                  <p>Select a buyer from the list to view their invoice history.</p>
+                <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center">
+                    <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
+                    <p className="font-semibold">No Invoice Selected</p>
+                    <p className="text-sm">Please select a buyer and then an invoice to view its details.</p>
                 </div>
               )}
             </div>
