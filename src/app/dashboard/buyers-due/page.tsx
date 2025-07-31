@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { usePayments } from '@/hooks/use-payments';
 import type { Buyer, Invoice, Payment } from '@/lib/types';
@@ -17,8 +18,9 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, ChevronRight, DollarSign, HandCoins, History } from 'lucide-react';
+import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { PaymentReceipt } from '@/components/payment-receipt';
 
 export default function BuyersDuePage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
@@ -28,6 +30,8 @@ export default function BuyersDuePage() {
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
+  
+  const receiptRef = useRef<HTMLDivElement>(null);
 
   const buyersWithDue = useMemo(() => {
     return buyers.filter(buyer => {
@@ -94,6 +98,10 @@ export default function BuyersDuePage() {
         setSelectedBuyer(JSON.parse(JSON.stringify(updatedBuyer))); // Deep copy to trigger state update
     }
   };
+
+  const handlePrint = useReactToPrint({
+    content: () => receiptRef.current,
+  });
 
 
   return (
@@ -182,9 +190,12 @@ export default function BuyersDuePage() {
             <CardContent className="space-y-4">
                 {selectedInvoice ? (
                     <>
-                        <div>
-                            <p>Invoice: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
-                            <p>Due Amount: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                        <div className="flex justify-between items-start">
+                           <div>
+                              <p>Invoice: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
+                              <p>Due Amount: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                           </div>
+                           <Button variant="outline" size="icon" onClick={handlePrint}><Printer className="h-4 w-4"/></Button>
                         </div>
                         <div className="flex items-center gap-2">
                             <div className="relative flex-1">
@@ -239,7 +250,16 @@ export default function BuyersDuePage() {
                 </div>
             </div>
         </Card>
-
+      </div>
+       <div className="hidden">
+        {selectedBuyer && selectedInvoice && (
+          <PaymentReceipt 
+            ref={receiptRef}
+            buyer={selectedBuyer}
+            invoice={selectedInvoice}
+            paymentHistory={paymentHistory}
+          />
+        )}
       </div>
     </div>
   );
