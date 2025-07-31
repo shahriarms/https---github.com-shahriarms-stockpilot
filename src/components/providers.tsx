@@ -38,7 +38,7 @@ export function Providers({
         <SidebarHeader>
           <div className="p-2">
             <div className="flex items-center gap-2">
-              <StockPilotLogo className="w-14 h-14 transition-all duration-200" />
+              <StockPilotLogo className="w-10 h-10 transition-all duration-200" />
               <h1 className="text-xl font-semibold transition-opacity duration-200 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:w-0">
                 <span className="text-foreground">Stock</span>
                 <span className="text-primary">Pilot</span>
