@@ -1,11 +1,11 @@
 
 export const StockPilotLogo = () => (
-  <div className="mx-auto flex h-full w-full items-center justify-center rounded-full bg-white p-1 shadow-md">
     <svg
-      className="h-full w-full text-black"
+      className="h-full w-full text-black bg-white rounded-full p-1 shadow-md"
       viewBox="0 0 100 100"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
+      preserveAspectRatio="xMidYMid meet"
     >
       {/* Graph Axis */}
       <path d="M20 80H80" stroke="currentColor" strokeWidth="4" strokeLinecap="round" />
@@ -33,5 +33,4 @@ export const StockPilotLogo = () => (
         <path d="M75 60 V65 H79" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round" />
       </g>
     </svg>
-  </div>
 );
