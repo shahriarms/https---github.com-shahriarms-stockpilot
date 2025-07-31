@@ -17,6 +17,7 @@ import { StockPilotLogo } from './stock-pilot-logo';
 import { SiteHeader } from './site-header';
 import { ProductProvider } from '@/hooks/use-products.tsx';
 import { UserProvider } from '@/hooks/use-user.tsx';
+import { LayoutDashboard, Package, FileText } from 'lucide-react';
 
 export function Providers({
   children,
@@ -52,9 +53,8 @@ export function Providers({
                 <SidebarMenuButton
                   isActive={pathname === '/dashboard'}
                   tooltip={{ children: 'Dashboard' }}
-                  data-icon="dashboard"
                 >
-                  <span className="css-icon"></span>
+                  <LayoutDashboard />
                   Dashboard
                 </SidebarMenuButton>
               </Link>
@@ -64,9 +64,8 @@ export function Providers({
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/products')}
                   tooltip={{ children: 'Products' }}
-                  data-icon="products"
                 >
-                   <span className="css-icon"></span>
+                   <Package />
                   Products
                 </SidebarMenuButton>
               </Link>
@@ -76,9 +75,8 @@ export function Providers({
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/invoice')}
                   tooltip={{ children: 'Invoice' }}
-                  data-icon="invoice"
                 >
-                   <span className="css-icon"></span>
+                   <FileText />
                   Invoice
                 </SidebarMenuButton>
               </Link>
