@@ -31,7 +31,7 @@ export function SiteHeader() {
   if (!user) {
     return (
        <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
-        <div className="md:hidden">
+        <div>
           <SidebarTrigger />
         </div>
       </header>
@@ -41,7 +41,7 @@ export function SiteHeader() {
   return (
     <>
       <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b bg-card px-4 sm:px-6">
-        <div className="md:hidden">
+        <div>
           <SidebarTrigger />
         </div>
         <div className="flex-1"></div>
