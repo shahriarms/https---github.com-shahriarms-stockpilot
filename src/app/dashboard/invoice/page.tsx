@@ -119,7 +119,7 @@ export default function InvoicePage() {
       return;
     }
 
-    const invoiceData = {
+    saveInvoice({
       id: invoiceId,
       customerName,
       customerAddress,
@@ -128,10 +128,8 @@ export default function InvoicePage() {
       subtotal,
       paidAmount,
       dueAmount,
-      date: today,
-    };
+    });
     
-    saveInvoice(invoiceData);
     router.push('/dashboard/buyers');
   };
 

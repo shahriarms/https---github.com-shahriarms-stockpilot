@@ -29,16 +29,16 @@ export function PaymentProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('stockpilot-payments', JSON.stringify(payments));
+    if(payments.length > 0) {
+      localStorage.setItem('stockpilot-payments', JSON.stringify(payments));
+    }
   }, [payments]);
 
   const addPayment = useCallback((paymentData: Omit<Payment, 'id' | 'date'>) => {
     const newPayment: Payment = {
       ...paymentData,
       id: `pay-${Date.now()}`,
-      date: new Date().toLocaleDateString('en-US', {
-        year: 'numeric', month: 'short', day: 'numeric'
-      }),
+      date: new Date().toISOString(),
     };
     setPayments(prev => [...prev, newPayment]);
     updateInvoiceDue(paymentData.invoiceId, paymentData.amount);

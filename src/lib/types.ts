@@ -19,7 +19,7 @@ export interface Payment {
     invoiceId: string;
     buyerId: string;
     amount: number;
-    date: string;
+    date: string; // ISO 8601 date string
 }
 
 export interface Invoice {
@@ -31,7 +31,7 @@ export interface Invoice {
   subtotal: number;
   paidAmount: number;
   dueAmount: number;
-  date: string;
+  date: string; // ISO 8601 date string
   payments: Payment[];
 }
 

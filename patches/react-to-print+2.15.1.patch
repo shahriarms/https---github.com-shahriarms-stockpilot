@@ -1,0 +1,206 @@
+diff --git a/node_modules/react-to-print/lib/index.es.js b/node_modules/react-to-print/lib/index.es.js
+index 995de1e..4a7b539 100644
+--- a/node_modules/react-to-print/lib/index.es.js
++++ b/node_modules/react-to-print/lib/index.es.js
+@@ -1,5 +1,5 @@
+ import {
+-  findDOMNode
++  findDOMNode as a
+ } from "react-dom";
+ import React, {
+   useRef,
+@@ -10,6 +10,12 @@
+   forwardRef,
+   useImperativeHandle
+ } from "react";
++var e = a;
++try {
++  e = require("react-dom/client").findDOMNode
++} catch (a) {
++  e = a
++}
+ var t = {
+   "&": "&amp;",
+   "<": "&lt;",
+@@ -102,7 +108,7 @@
+       (this.callCallback("onBeforeGetContent"), "function" == typeof this.props.content ? this.props.content() : this.contentRef.current)
+     }, this.handleAfterPrint = function () {
+       var a;
+-      (a = this.props.onAfterPrint) && a()
++      (a = this.props.onAfterPrint) && a(), this.props.removeAfterPrint && this.iframe.parentNode.removeChild(this.iframe), this.setState({
++        isPrinting: !1
++      })
+     }, this.handleBeforePrint = function () {
+       var a;
+       (a = this.props.onBeforePrint) && a()
+@@ -144,7 +150,7 @@
+       return this.setState({
+         isPrinting: !0,
+         isLoading: !1
+-      }), findDOMNode(this.contentRef.current)
++      }), e(this.contentRef.current)
+     }, this.setRef = function (a) {
+       this.contentRef.current = a
+     }, this.isPrinting = !1, this.state = {
+diff --git a/node_modules/react-to-print/lib/index.js b/node_modules/react-to-print/lib/index.js
+index 7a268b8..78d5231 100644
+--- a/node_modules/react-to-print/lib/index.js
++++ b/node_modules/react-to-print/lib/index.js
+@@ -1,13 +1,19 @@
+ "use strict";
+ var e = require("react-dom"),
+   t = require("react");
++var r = e.findDOMNode;
++try {
++  r = require("react-dom/client").findDOMNode
++} catch (e) {
++  r = e.findDOMNode
++}
+ 
+ function n(e) {
+   return e && "object" == typeof e && "default" in e ? e : {
+     default: e
+   }
+ }
+-var r = n(e),
++var a = n(e),
+   o = n(t).default,
+   i = {
+     "&": "&amp;",
+@@ -118,7 +124,7 @@
+         (t = this.props.onAfterPrint) && t()
+       }, this.props.removeAfterPrint && this.iframe.parentNode.removeChild(this.iframe), this.setState({
+         isPrinting: !1
+-      })
++      }), this.iframe = null
+     }, this.handleBeforePrint = function () {
+       var e;
+       (e = this.props.onBeforePrint) && e()
+@@ -160,7 +166,7 @@
+       return this.setState({
+         isPrinting: !0,
+         isLoading: !1
+-      }), e.findDOMNode(this.contentRef.current)
++      }), r(this.contentRef.current)
+     }, this.setRef = function (e) {
+       this.contentRef.current = e
+     }, this.isPrinting = !1, this.state = {
+@@ -172,4 +178,4 @@
+     }
+   }
+ }
+-exports.PrintContextConsumer = function (e) {
+-  return o.createElement(m.Consumer, null, function (t) {
+-    return o.createElement(e.children, t)
+-  })
+-}, exports.ReactToPrint = function (e) {
+-  return o.createElement(y, {
+-    forwardedRef: t.createRef(),
+-    trigger: e.trigger,
+-    content: e.content,
+-    print: e.print,
+-    onBeforeGetContent: e.onBeforeGetContent,
+-    onBeforePrint: e.onBeforePrint,
+-    onAfterPrint: e.onAfterPrint,
+-    onPrintError: e.onPrintError,
+-    removeAfterPrint: e.removeAfterPrint,
+-    suppressErrors: e.suppressErrors,
+-    pageStyle: e.pageStyle,
+-    documentTitle: e.documentTitle,
+-    copyStyles: e.copyStyles,
+-    bodyClass: e.bodyClass,
+-    nonce: e.nonce
+-  })
+-}, exports.useReactToPrint = function (e) {
+-  var n = t.useRef(null),
+-    r = t.useState(!1),
+-    i = r[0],
+-    a = r[1],
+-    l = t.useState(!1),
+-    s = l[0],
+-    c = l[1],
+-    u = t.useCallback(function () {
+-      i || (e.onBeforeGetContent && e.onBeforeGetContent(), a(!0), n.current = setTimeout(function () {
+-        c(!0)
+-      }, 500))
+-    }, [i, e.onBeforeGetContent]);
+-  return t.useEffect(function () {
+-    if (s) {
+-      var t = e.content();
+-      if (t) {
+-        var r = new y({
+-          props: e
+-        });
+-        r.handlePrint(t)
+-      } else console.error("To use `react-to-print` with a function for `content`, the function must return a component reference to print."), console.error("To use `react-to-print` with a function for `content`, the function must return a component reference to print.");
+-      a(!1), c(!1), clearTimeout(n.current)
+-    }
+-  }, [s]), u
+-};
++exports.PrintContextConsumer = function (t) {
++  return o.createElement(m.Consumer, null, function (e) {
++    return o.createElement(t.children, e)
++  })
++}, exports.ReactToPrint = t.forwardRef(function (e, t) {
++  return o.createElement(y, babelHelpers.extends({}, e, {
++    ref: t
++  }))
++}), exports.useReactToPrint = function (e) {
++  var n = t.useRef({
++      isPrinting: !1
++    }),
++    a = t.useRef(),
++    l = t.useState(!1),
++    s = l[0],
++    c = l[1],
++    u = t.useCallback(function () {
++      a.current && a.current()
++    }, []),
++    d = t.useCallback(function () {
++      if (!n.current.isPrinting) {
++        var t, r = function () {
++            n.current.isPrinting = !1, e.onAfterPrint && e.onAfterPrint(), c(!1)
++          },
++          o = function (t) {
++            e.onPrintError && e.onPrintError("print", t), r()
++          };
++        n.current.isPrinting = !0, c(!0);
++        try {
++          Promise.resolve().then(function () {
++            if (e.onBeforeGetContent) return Promise.resolve(e.onBeforeGetContent()).then(function () {})
++          }).then(function () {
++            var n = e.content();
++            if (void 0 !== n && null !== n) {
++              if (e.onBeforePrint) {
++                var i = e.onBeforePrint();
++                if (i && "function" == typeof i.then) return i.then(function () {
++                  return n
++                })
++              }
++              return n
++            }
++            o("`react-to-print` could not locate the DOM node corresponding with the `content` prop")
++          }).then(function (e) {
++            if (e) {
++              var n = new f({
++                props: {
++                  copyStyles: !0,
++                  pageStyle: e.pageStyle,
++                  removeAfterPrint: !1
++                }
++              });
++              a.current = n.handlePrint(e, r, o)
++            }
++          })
++        } catch (e) {
++          o(e)
++        }
++      }
++    }, [e]);
++  return t.useEffect(function () {
++    return function () {
++      u()
++    }
++  }, [u]), d
++};
+//# sourceMappingURL=index.js.map

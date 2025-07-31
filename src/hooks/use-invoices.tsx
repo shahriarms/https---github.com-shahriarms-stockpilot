@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveInvoice: (invoice: Omit<Invoice, 'items' | 'id' | 'payments'> & { items: any[], id: string }) => void;
+  saveInvoice: (invoice: Omit<Invoice, 'items' | 'id' | 'payments' | 'date'> & { items: any[], id: string }) => void;
   updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
@@ -45,8 +45,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   }, [invoices, buyers, isLoading]);
 
-  const saveInvoice = useCallback((invoiceData: Omit<Invoice, 'payments'>) => {
-    const fullInvoice: Invoice = {...invoiceData, payments: [] };
+  const saveInvoice = useCallback((invoiceData: Omit<Invoice, 'payments' | 'items' | 'id' | 'date'> & { items: any[], id: string }) => {
+    const fullInvoice: Invoice = {...invoiceData, payments: [], date: new Date().toISOString() };
     
     setInvoices(prev => [...prev, fullInvoice]);
     

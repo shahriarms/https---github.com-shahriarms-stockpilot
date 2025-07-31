@@ -42,7 +42,7 @@ export default function BuyersPage() {
     if (!invoiceSearchTerm) return invoices;
     return invoices.filter(invoice => 
         invoice.id.toLowerCase().includes(invoiceSearchTerm.toLowerCase()) ||
-        invoice.date.toLowerCase().includes(invoiceSearchTerm.toLowerCase())
+        new Date(invoice.date).toLocaleDateString().toLowerCase().includes(invoiceSearchTerm.toLowerCase())
     );
   }, [invoices, invoiceSearchTerm]);
   
@@ -134,7 +134,7 @@ export default function BuyersPage() {
                             <div className="font-medium">Inv: {invoice.id.slice(-6)}</div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                 <Calendar className="w-3.5 h-3.5"/>
-                                <span>{invoice.date}</span>
+                                <span>{new Date(invoice.date).toLocaleDateString()}</span>
                             </div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                <DollarSign className="w-3.5 h-3.5"/>
@@ -168,7 +168,7 @@ export default function BuyersPage() {
                             </div>
                             <div className="flex justify-between border-b pb-2 mb-4">
                                 <span>ক্রঃ নং (Inv No): {selectedInvoice.id.slice(-6)}</span>
-                                <span>তারিখ (Date): {selectedInvoice.date}</span>
+                                <span>তারিখ (Date): {new Date(selectedInvoice.date).toLocaleDateString()}</span>
                             </div>
                             <div className="mb-4">
                                 <p>নাম (Name): {selectedInvoice.customerName}</p>

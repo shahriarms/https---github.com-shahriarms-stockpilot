@@ -95,7 +95,9 @@ export default function BuyersDuePage() {
     // Refresh data - a bit of a trick to force re-render with updated due amounts
     const updatedBuyer = buyers.find(b => b.id === selectedBuyer!.id);
     if(updatedBuyer) {
-        setSelectedBuyer(JSON.parse(JSON.stringify(updatedBuyer))); // Deep copy to trigger state update
+        // Find the specific buyer and re-set it to trigger updates
+        const freshBuyerData = JSON.parse(JSON.stringify(buyers.find(b => b.id === selectedBuyer!.id)));
+        setSelectedBuyer(freshBuyerData);
     }
   };
 
@@ -234,7 +236,7 @@ export default function BuyersDuePage() {
                                 <TableBody>
                                     {paymentHistory.map(payment => (
                                         <TableRow key={payment.id}>
-                                            <TableCell>{payment.date}</TableCell>
+                                            <TableCell>{new Date(payment.date).toLocaleDateString()}</TableCell>
                                             <TableCell className="text-right">${payment.amount.toFixed(2)}</TableCell>
                                         </TableRow>
                                     ))}
@@ -253,12 +255,13 @@ export default function BuyersDuePage() {
       </div>
        <div className="hidden">
         {selectedBuyer && selectedInvoice && (
-          <PaymentReceipt 
-            ref={receiptRef}
-            buyer={selectedBuyer}
-            invoice={selectedInvoice}
-            paymentHistory={paymentHistory}
-          />
+          <div ref={receiptRef}>
+            <PaymentReceipt 
+              buyer={selectedBuyer}
+              invoice={selectedInvoice}
+              paymentHistory={paymentHistory}
+            />
+          </div>
         )}
       </div>
     </div>
