@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef, useCallback } from 'react';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
 import { useReactToPrint } from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { usePayments } from '@/hooks/use-payments';
@@ -21,6 +21,27 @@ import { Button } from '@/components/ui/button';
 import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
+
+// Define the printable component separately. This is a robust way to avoid findDOMNode errors.
+const PrintableReceipt = React.forwardRef<HTMLDivElement, { 
+    buyer: Buyer;
+    invoice: Invoice;
+    paymentHistory: Payment[];
+    newPaymentAmount: number;
+}>(({ buyer, invoice, paymentHistory, newPaymentAmount }, ref) => {
+    return (
+        <div ref={ref}>
+            <PaymentReceipt
+                buyer={buyer}
+                invoice={invoice}
+                paymentHistory={paymentHistory}
+                newPaymentAmount={newPaymentAmount}
+            />
+        </div>
+    );
+});
+PrintableReceipt.displayName = 'PrintableReceipt';
+
 
 export default function BuyersDuePage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
@@ -275,14 +296,13 @@ export default function BuyersDuePage() {
       </div>
        <div className="hidden">
         {selectedBuyer && selectedInvoice && (
-          <div ref={receiptRef}>
-            <PaymentReceipt 
-              buyer={selectedBuyer}
-              invoice={selectedInvoice}
-              paymentHistory={receiptPaymentHistory}
-              newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
-            />
-          </div>
+          <PrintableReceipt 
+            ref={receiptRef}
+            buyer={selectedBuyer}
+            invoice={selectedInvoice}
+            paymentHistory={receiptPaymentHistory}
+            newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
+          />
         )}
       </div>
     </div>
