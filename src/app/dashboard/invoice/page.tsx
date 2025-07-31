@@ -38,6 +38,7 @@ export default function InvoicePage() {
   const [customerAddress, setCustomerAddress] = useState('');
   const [customerPhone, setCustomerPhone] = useState('');
   const [today, setToday] = useState('');
+  const [paidAmount, setPaidAmount] = useState(0);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -102,6 +103,10 @@ export default function InvoicePage() {
   const subtotal = useMemo(() => {
     return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   }, [invoiceItems]);
+
+  const dueAmount = useMemo(() => {
+    return subtotal - paidAmount;
+  }, [subtotal, paidAmount]);
 
   return (
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
@@ -208,11 +213,20 @@ export default function InvoicePage() {
                     </div>
                      <div className="flex justify-end items-center gap-4">
                         <span className="font-medium">জমা (Paid):</span>
-                        <span className="font-bold w-28">$0.00</span>
+                        <div className="relative w-28">
+                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                            <Input
+                                type="number"
+                                value={paidAmount}
+                                onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
+                                className="font-bold pl-5 text-right"
+                                placeholder="0.00"
+                            />
+                        </div>
                     </div>
                      <div className="flex justify-end items-center gap-4 text-primary">
                         <span className="font-medium">বাকী (Due):</span>
-                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                        <span className="font-bold w-28">${dueAmount.toFixed(2)}</span>
                     </div>
                 </div>
             </div>
@@ -284,11 +298,11 @@ export default function InvoicePage() {
                         </div>
                         <div className="flex justify-between">
                             <span>জমা (Paid):</span>
-                            <span>$0.00</span>
+                            <span>${paidAmount.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-bold border-t pt-2">
                             <span>বাকী (Due):</span>
-                            <span>${subtotal.toFixed(2)}</span>
+                            <span>${dueAmount.toFixed(2)}</span>
                         </div>
                     </div>
                 </div>
