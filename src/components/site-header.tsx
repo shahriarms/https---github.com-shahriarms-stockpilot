@@ -65,7 +65,7 @@ export function SiteHeader() {
           <h1 className="text-xl font-bold text-foreground">Mahmud Engineering Shop</h1>
         </div>
         <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center justify-center p-2 rounded-md bg-muted text-muted-foreground font-mono text-sm">
+            <div className="hidden sm:flex items-center justify-center p-2 rounded-md border bg-background text-foreground font-mono text-sm">
                 {currentTime}
             </div>
             <DropdownMenu>
