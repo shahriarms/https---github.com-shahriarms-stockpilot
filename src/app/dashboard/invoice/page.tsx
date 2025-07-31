@@ -42,7 +42,6 @@ export default function InvoicePage() {
   const [today, setToday] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
   const [paidAmount, setPaidAmount] = useState(0);
-  const [customerCash, setCustomerCash] = useState(0);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -109,21 +108,9 @@ export default function InvoicePage() {
     return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
   }, [invoiceItems]);
 
-  const handleCustomerCashChange = (amount: number) => {
-    setCustomerCash(amount);
-  };
-
   const dueAmount = useMemo(() => {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
-
-  const change = useMemo(() => {
-    // Change is only calculated if customer cash is entered and is more than subtotal
-    if (customerCash > 0 && customerCash >= subtotal) {
-      return customerCash - subtotal;
-    }
-    return 0;
-  }, [subtotal, customerCash]);
 
   const handleSaveInvoice = () => {
     if (!customerName || invoiceItems.length === 0) {
@@ -141,7 +128,6 @@ export default function InvoicePage() {
       subtotal,
       paidAmount,
       dueAmount,
-      change,
       date: today,
     };
     
@@ -248,19 +234,7 @@ export default function InvoicePage() {
                     ))}
                 </div>
 
-                <div className="mt-6 pt-4 border-t flex items-end justify-between">
-                    <div className="border rounded-lg p-3 space-y-2 w-52">
-                      <Label htmlFor="customerCash" className="text-xs font-semibold">ENTER CUSTOMER MONEY</Label>
-                      <Input 
-                        id="customerCash" 
-                        type="number"
-                        placeholder="e.g., 500"
-                        value={customerCash || ''}
-                        onChange={e => handleCustomerCashChange(parseFloat(e.target.value) || 0)}
-                      />
-                      <p className="text-lg font-bold">CHANGE = ${change.toFixed(2)}</p>
-                    </div>
-
+                <div className="mt-6 pt-4 border-t flex items-end justify-end">
                     <div className="space-y-2 text-right">
                         <div className="flex justify-end items-center gap-4">
                             <span className="font-medium">উপমোট (Subtotal):</span>
@@ -360,10 +334,6 @@ export default function InvoicePage() {
                             <span>বাকী (Due):</span>
                             <span>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
                         </div>
-                         <div className="flex justify-between">
-                            <span>ফেরত (Change):</span>
-                            <span>${change.toFixed(2)}</span>
-                        </div>
                     </div>
                 </div>
                  <div className="mt-4 border-t pt-2">
@@ -376,5 +346,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    

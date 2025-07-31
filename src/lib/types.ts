@@ -23,7 +23,6 @@ export interface Invoice {
   subtotal: number;
   paidAmount: number;
   dueAmount: number;
-  change: number;
   date: string;
 }
 

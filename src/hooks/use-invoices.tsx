@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveInvoice: (invoice: Invoice) => void;
+  saveInvoice: (invoice: Omit<Invoice, 'items' | 'id'> & { items: any[], id: string }) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
 }

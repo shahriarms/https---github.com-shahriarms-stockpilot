@@ -128,10 +128,6 @@ export default function BuyersPage() {
                                         <span>বাকী (Due):</span>
                                         <span>${invoice.dueAmount < 0 ? `($${Math.abs(invoice.dueAmount).toFixed(2)})` : `$${invoice.dueAmount.toFixed(2)}`}</span>
                                     </div>
-                                    <div className="flex justify-between">
-                                        <span>ফেরত (Change):</span>
-                                        <span>${invoice.change.toFixed(2)}</span>
-                                    </div>
                                 </div>
                             </div>
                         </CardContent>
