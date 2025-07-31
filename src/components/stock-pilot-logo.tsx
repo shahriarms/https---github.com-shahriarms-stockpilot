@@ -6,10 +6,10 @@ export const StockPilotLogo = ({ className }: { className?: string }) => (
       ' flex items-center justify-center rounded-full bg-white shadow-md'
     }
   >
-    <div className="h-full w-full p-1">
+    <div className="h-full w-full">
       <svg
         className="h-full w-full text-black"
-        viewBox="0 0 100 100"
+        viewBox="-10 -10 120 120"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid meet"
