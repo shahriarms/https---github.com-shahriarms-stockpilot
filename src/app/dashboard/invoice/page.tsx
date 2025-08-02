@@ -24,24 +24,34 @@ import {
 import { useProducts } from '@/hooks/use-products';
 import { useInvoices } from '@/hooks/use-invoices';
 import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
-import type { Product, InvoiceItem } from '@/lib/types';
+import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
+import { useInvoiceForm } from '@/hooks/use-invoice-form';
 
 
 export default function InvoicePage() {
   const { products } = useProducts();
   const { saveInvoice } = useInvoices();
   const router = useRouter();
+  
+  const {
+    items: invoiceItems,
+    customerName,
+    customerAddress,
+    customerPhone,
+    paidAmount,
+    setItems: setInvoiceItems,
+    setCustomerName,
+    setCustomerAddress,
+    setCustomerPhone,
+    setPaidAmount,
+    clearInvoiceForm,
+  } = useInvoiceForm();
 
-  const [invoiceItems, setInvoiceItems] = useState<InvoiceItem[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [customerAddress, setCustomerAddress] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
   const [today, setToday] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
-  const [paidAmount, setPaidAmount] = useState(0);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -130,6 +140,7 @@ export default function InvoicePage() {
       dueAmount,
     });
     
+    clearInvoiceForm();
     router.push('/dashboard/buyers');
   };
 
