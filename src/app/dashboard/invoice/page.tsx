@@ -58,6 +58,7 @@ export default function InvoicePage() {
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
 
   useEffect(() => {
+    // These need to be in useEffect to avoid hydration errors
     setCurrentDate(new Date().toLocaleDateString('en-GB'));
     setInvoiceId(`INV-${Date.now()}`);
   }, []);
@@ -141,6 +142,7 @@ export default function InvoicePage() {
     });
     
     clearInvoiceForm();
+    setInvoiceId(`INV-${Date.now()}`); // Reset for next invoice
     router.push('/dashboard/buyers');
   };
 

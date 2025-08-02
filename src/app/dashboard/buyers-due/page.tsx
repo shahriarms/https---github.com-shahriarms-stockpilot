@@ -124,11 +124,11 @@ export default function BuyersDuePage() {
   };
 
   const receiptPaymentHistory = useMemo(() => {
-    if (!selectedInvoice || paymentAmount === '' || typeof paymentAmount !== 'number') return paymentHistory;
+    if (!selectedInvoice || paymentAmount === '' || typeof paymentAmount !== 'number' || !selectedBuyer) return paymentHistory;
     const pendingPayment: Payment = {
         id: 'pending',
         invoiceId: selectedInvoice.id,
-        buyerId: selectedBuyer!.id,
+        buyerId: selectedBuyer.id,
         amount: paymentAmount as number,
         date: new Date().toISOString(),
     };
