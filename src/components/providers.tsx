@@ -17,7 +17,7 @@ import { StockPilotLogo } from './stock-pilot-logo';
 import { SiteHeader } from './site-header';
 import { ProductProvider } from '@/hooks/use-products.tsx';
 import { UserProvider } from '@/hooks/use-user.tsx';
-import { LayoutDashboard, Package, FileText, Users, HandCoins } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, Users, HandCoins, Receipt } from 'lucide-react';
 
 export function Providers({
   children,
@@ -98,6 +98,17 @@ export function Providers({
                 >
                    <HandCoins className="h-6 w-6" />
                   <span>Buyers Due</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <Link href="/dashboard/expenses">
+                <SidebarMenuButton
+                  isActive={pathname.startsWith('/dashboard/expenses')}
+                  tooltip={{ children: 'Expenses' }}
+                >
+                   <Receipt className="h-6 w-6" />
+                  <span>Expenses</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

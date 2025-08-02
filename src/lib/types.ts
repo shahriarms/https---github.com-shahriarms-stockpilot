@@ -42,3 +42,12 @@ export interface Buyer {
   phone: string;
   invoiceIds: string[];
 }
+
+export interface Expense {
+    id: string;
+    category: 'Rent' | 'Utility' | 'Salary' | 'Equipment' | 'Misc' | string;
+    description: string;
+    amount: number;
+    date: string; // ISO 8601 date string
+    paymentMethod: 'Cash' | 'bKash' | 'Card' | 'Bank' | string;
+}

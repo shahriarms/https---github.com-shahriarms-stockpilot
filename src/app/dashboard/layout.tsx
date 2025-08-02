@@ -7,6 +7,7 @@ import { SiteHeader } from '@/components/site-header';
 import { InvoiceProvider } from '@/hooks/use-invoices';
 import { PaymentProvider } from '@/hooks/use-payments';
 import { InvoiceFormProvider } from '@/hooks/use-invoice-form';
+import { ExpenseProvider } from '@/hooks/use-expenses';
 
 export default function DashboardLayout({
   children,
@@ -18,9 +19,11 @@ export default function DashboardLayout({
       <ProductProvider>
         <InvoiceProvider>
           <PaymentProvider>
-            <InvoiceFormProvider>
-              <Providers header={<SiteHeader />}>{children}</Providers>
-            </InvoiceFormProvider>
+            <ExpenseProvider>
+              <InvoiceFormProvider>
+                <Providers header={<SiteHeader />}>{children}</Providers>
+              </InvoiceFormProvider>
+            </ExpenseProvider>
           </PaymentProvider>
         </InvoiceProvider>
       </ProductProvider>
