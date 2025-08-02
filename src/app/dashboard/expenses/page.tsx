@@ -128,6 +128,8 @@ export default function ExpensesPage() {
 
 
     useEffect(() => {
+        if (isLoading) return;
+
         const now = new Date();
         const todayExpenses = expenses.filter(e => isSameDay(new Date(e.date), now));
         const todayTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -155,14 +157,14 @@ export default function ExpensesPage() {
         })).filter(d => d.value > 0);
         
         setSummaryStats({ todayTotal, monthTotal, todayCategoryData });
-    }, [expenses]);
+    }, [expenses, isLoading]);
     
     const chartConfig: ChartConfig = {
       Expense: { label: "Expense", color: "hsl(var(--primary))" },
     };
 
-    const handleExport = (format: 'csv' | 'xlsx' | 'pdf') => {
-        if (format === 'pdf') {
+    const handleExport = (fileType: 'csv' | 'xlsx' | 'pdf') => {
+        if (fileType === 'pdf') {
             const doc = new jsPDF();
             doc.text("Expense Report", 14, 16);
             (doc as any).autoTable({
@@ -186,7 +188,7 @@ export default function ExpensesPage() {
             })));
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
-            XLSX.writeFile(workbook, `expenses.${format}`);
+            XLSX.writeFile(workbook, `expenses.${fileType}`);
         }
     };
 
