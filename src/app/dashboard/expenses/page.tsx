@@ -263,12 +263,12 @@ export default function ExpensesPage() {
                             onChange={e => setSearchTerm(e.target.value)}
                         />
                     </div>
-                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-48">
                             <SelectValue placeholder="Filter by Category" />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="">All Categories</SelectItem>
+                            <SelectItem value="all">All Categories</SelectItem>
                             {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                         </SelectContent>
                     </Select>
