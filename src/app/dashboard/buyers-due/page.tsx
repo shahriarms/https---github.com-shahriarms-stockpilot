@@ -18,7 +18,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer } from 'lucide-react';
+import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
 
@@ -51,6 +51,7 @@ export default function BuyersDuePage() {
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
+  const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   
   const receiptRef = useRef<HTMLDivElement>(null);
 
@@ -60,6 +61,14 @@ export default function BuyersDuePage() {
       return invoices.some(inv => inv.dueAmount > 0);
     });
   }, [buyers, getInvoicesForBuyer]);
+  
+  const filteredBuyersWithDue = useMemo(() => {
+    if (!buyerSearchTerm) return buyersWithDue;
+    return buyersWithDue.filter(buyer => 
+        buyer.name.toLowerCase().includes(buyerSearchTerm.toLowerCase()) ||
+        (buyer.phone && buyer.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))
+    );
+  }, [buyersWithDue, buyerSearchTerm]);
 
   const dueInvoices = useMemo(() => {
     if (!selectedBuyer) return [];
@@ -157,14 +166,23 @@ export default function BuyersDuePage() {
       <div className="grid md:grid-cols-3 gap-6 flex-1">
         {/* Buyers with Due List */}
         <Card className="md:col-span-1 flex flex-col">
-          <CardHeader>
+          <CardHeader className="space-y-4">
             <CardTitle>Buyers with Due Balance</CardTitle>
-            <CardDescription>Select a buyer to see their due invoices.</CardDescription>
+            <div className="relative">
+                <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                    type="search" 
+                    placeholder="Search by name or phone..." 
+                    className="pl-8" 
+                    value={buyerSearchTerm}
+                    onChange={e => setBuyerSearchTerm(e.target.value)}
+                />
+            </div>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <ScrollArea className="h-full">
               <div className="divide-y">
-                {buyersWithDue.length > 0 ? buyersWithDue.map((buyer) => (
+                {filteredBuyersWithDue.length > 0 ? filteredBuyersWithDue.map((buyer) => (
                   <button
                     key={buyer.id}
                     onClick={() => handleSelectBuyer(buyer)}
