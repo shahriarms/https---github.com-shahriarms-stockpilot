@@ -163,11 +163,11 @@ export default function BuyersDuePage() {
         <HandCoins className="w-6 h-6" />
         Buyers Due
       </h1>
-      <div className="grid md:grid-cols-3 gap-6 flex-1">
+      <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers with Due List */}
         <Card className="md:col-span-1 flex flex-col">
           <CardHeader className="space-y-4">
-            <CardTitle>Buyers with Due Balance</CardTitle>
+            <CardTitle>Buyers with Due</CardTitle>
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
@@ -209,8 +209,8 @@ export default function BuyersDuePage() {
         {/* Due Invoices List */}
         <Card className="md:col-span-1 flex flex-col">
           <CardHeader>
-            <CardTitle className="truncate">{selectedBuyer ? `${selectedBuyer.name}'s Due Invoices` : 'Select a Buyer'}</CardTitle>
-             <CardDescription>Invoices with an outstanding balance.</CardDescription>
+            <CardTitle className="truncate">{selectedBuyer ? `Due Invoices` : 'Select Buyer'}</CardTitle>
+             <CardDescription>{selectedBuyer ? `For ${selectedBuyer.name}` : 'Outstanding balances'}</CardDescription>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <ScrollArea className="h-full">
@@ -244,7 +244,7 @@ export default function BuyersDuePage() {
         </Card>
         
         {/* Payment Section */}
-        <Card className="md:col-span-1 flex flex-col">
+        <Card className="md:col-span-3 flex flex-col">
             <CardHeader>
                 <CardTitle>Receive Payment</CardTitle>
                 <CardDescription>Record a new payment for the selected invoice.</CardDescription>
