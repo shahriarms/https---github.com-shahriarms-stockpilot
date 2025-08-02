@@ -1,10 +1,11 @@
+
 import { ImageResponse } from 'next/og'
 
 export const runtime = 'edge'
 
 export const size = {
-  width: 32,
-  height: 32,
+  width: 128,
+  height: 128,
 }
 export const contentType = 'image/png'
 
@@ -18,7 +19,7 @@ export default function Icon() {
           justifyContent: 'center',
           width: '100%',
           height: '100%',
-          borderRadius: 6,
+          borderRadius: 24,
           background: 'white',
         }}
       >
