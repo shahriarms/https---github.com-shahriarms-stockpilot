@@ -15,6 +15,11 @@ import { useUser } from '@/hooks/use-user';
 import { useState, useEffect } from 'react';
 import { RedeemAdminCodeDialog } from './redeem-admin-code-dialog';
 import { ShowAdminCodeDialog } from './show-admin-code-dialog';
+import dynamic from 'next/dynamic';
+
+const LiveClock = dynamic(() => import('./live-clock').then(mod => mod.LiveClock), {
+  ssr: false,
+});
 
 
 export function SiteHeader() {
@@ -22,28 +27,6 @@ export function SiteHeader() {
 
   const [isRedeemDialogOpen, setRedeemDialogOpen] = useState(false);
   const [isShowCodeDialogOpen, setShowCodeDialogOpen] = useState(false);
-  const [currentTime, setCurrentTime] = useState('');
-
-
-  useEffect(() => {
-    // Set the time immediately on the client
-    setCurrentTime(new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
-    }));
-    // Then set up the interval to update it
-    const timer = setInterval(() => {
-      setCurrentTime(new Date().toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: true,
-      }));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, []);
 
 
   const handleShowCode = () => {
@@ -74,9 +57,7 @@ export function SiteHeader() {
           <h1 className="text-xl font-bold text-foreground">Mahmud Engineering Shop</h1>
         </div>
         <div className="flex items-center gap-4">
-            <div className="hidden sm:flex items-center justify-center p-2 rounded-md border bg-white text-black font-mono text-sm">
-                {currentTime || ''}
-            </div>
+            <LiveClock />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="rounded-full">
