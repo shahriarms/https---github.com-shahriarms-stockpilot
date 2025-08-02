@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useExpenses } from '@/hooks/use-expenses';
 import type { Expense } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -57,6 +57,12 @@ import 'jspdf-autotable';
 const expenseCategories = ["Rent", "Utility", "Salary", "Equipment", "Misc"];
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
+interface SummaryStats {
+    todayTotal: number;
+    monthTotal: number;
+    todayCategoryData: { name: string; value: number }[];
+}
+
 
 export default function ExpensesPage() {
     const { expenses, isLoading, deleteExpense } = useExpenses();
@@ -68,6 +74,10 @@ export default function ExpensesPage() {
     const [categoryFilter, setCategoryFilter] = useState('');
     const [sortKey, setSortKey] = useState('date');
     const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+    
+    const [summaryStats, setSummaryStats] = useState<SummaryStats | null>(null);
+    const [monthChartData, setMonthChartData] = useState<any[] | null>(null);
+
 
     const handleAddNew = () => {
         setExpenseToEdit(null);
@@ -117,8 +127,7 @@ export default function ExpensesPage() {
     }, [expenses, searchTerm, categoryFilter, sortKey, sortOrder]);
 
 
-    // Summary calculations
-    const { todayTotal, monthTotal, monthChartData, todayCategoryData } = useMemo(() => {
+    useEffect(() => {
         const now = new Date();
         const todayExpenses = expenses.filter(e => isSameDay(new Date(e.date), now));
         const todayTotal = todayExpenses.reduce((sum, e) => sum + e.amount, 0);
@@ -132,19 +141,20 @@ export default function ExpensesPage() {
         const monthTotal = monthExpenses.reduce((sum, e) => sum + e.amount, 0);
 
         const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
-        const monthChartData = daysInMonth.map(day => ({
+        const newMonthChartData = daysInMonth.map(day => ({
             name: format(day, 'd'),
             Expense: monthExpenses
                 .filter(e => isSameDay(new Date(e.date), day))
                 .reduce((sum, e) => sum + e.amount, 0)
         }));
+        setMonthChartData(newMonthChartData);
         
         const todayCategoryData = expenseCategories.map(cat => ({
             name: cat,
             value: todayExpenses.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount, 0)
         })).filter(d => d.value > 0);
-
-        return { todayTotal, monthTotal, monthChartData, todayCategoryData };
+        
+        setSummaryStats({ todayTotal, monthTotal, todayCategoryData });
     }, [expenses]);
     
     const chartConfig: ChartConfig = {
@@ -210,36 +220,42 @@ export default function ExpensesPage() {
                     <CardDescription>Total amount spent today</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <p className="text-3xl font-bold">${todayTotal.toFixed(2)}</p>
-                    {todayCategoryData.length > 0 ? (
-                        <ChartContainer config={{}} className="min-h-32 mt-4">
-                            <PieChart>
-                                <Pie data={todayCategoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
-                                     {todayCategoryData.map((entry, index) => (
-                                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                                    ))}
-                                </Pie>
-                                <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
-                            </PieChart>
-                        </ChartContainer>
-                    ) : <p className="text-sm text-muted-foreground mt-4">No expenses recorded today.</p>}
+                    {!summaryStats ? <Loader2 className="h-6 w-6 animate-spin"/> : (
+                        <>
+                            <p className="text-3xl font-bold">${summaryStats.todayTotal.toFixed(2)}</p>
+                            {summaryStats.todayCategoryData.length > 0 ? (
+                                <ChartContainer config={{}} className="min-h-32 mt-4">
+                                    <PieChart>
+                                        <Pie data={summaryStats.todayCategoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={60} label>
+                                             {summaryStats.todayCategoryData.map((entry, index) => (
+                                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                            ))}
+                                        </Pie>
+                                        <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
+                                    </PieChart>
+                                </ChartContainer>
+                            ) : <p className="text-sm text-muted-foreground mt-4">No expenses recorded today.</p>}
+                        </>
+                    )}
                 </CardContent>
             </Card>
             <Card className="lg:col-span-2">
                 <CardHeader>
                     <CardTitle>This Month's Expenses</CardTitle>
-                    <CardDescription>Total: <span className="font-bold">${monthTotal.toFixed(2)}</span></CardDescription>
+                     {!summaryStats ? <div className="h-5"/> : <CardDescription>Total: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
                 </CardHeader>
                 <CardContent>
-                    <ChartContainer config={chartConfig} className="min-h-48 w-full">
-                        <BarChart data={monthChartData}>
-                            <CartesianGrid vertical={false} />
-                            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
-                            <YAxis />
-                            <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
-                            <Bar dataKey="Expense" fill="var(--color-Expense)" radius={4} />
-                        </BarChart>
-                    </ChartContainer>
+                    {!monthChartData ? <div className="flex justify-center items-center min-h-48"><Loader2 className="h-6 w-6 animate-spin"/></div> : (
+                        <ChartContainer config={chartConfig} className="min-h-48 w-full">
+                            <BarChart data={monthChartData}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} />
+                                <YAxis />
+                                <ChartTooltip cursor={false} content={<ChartTooltipContent indicator="dot" />} />
+                                <Bar dataKey="Expense" fill="var(--color-Expense)" radius={4} />
+                            </BarChart>
+                        </ChartContainer>
+                    )}
                 </CardContent>
             </Card>
         </div>
