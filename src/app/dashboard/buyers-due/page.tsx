@@ -22,27 +22,6 @@ import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer,
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
 
-// Define the printable component separately. This is a robust way to avoid findDOMNode errors.
-const PrintableReceipt = React.forwardRef<HTMLDivElement, { 
-    buyer: Buyer;
-    invoice: Invoice;
-    paymentHistory: Payment[];
-    newPaymentAmount: number;
-}>(({ buyer, invoice, paymentHistory, newPaymentAmount }, ref) => {
-    return (
-        <div ref={ref}>
-            <PaymentReceipt
-                buyer={buyer}
-                invoice={invoice}
-                paymentHistory={paymentHistory}
-                newPaymentAmount={newPaymentAmount}
-            />
-        </div>
-    );
-});
-PrintableReceipt.displayName = 'PrintableReceipt';
-
-
 export default function BuyersDuePage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
   const { addPayment, getPaymentsForInvoice } = usePayments();
@@ -53,7 +32,7 @@ export default function BuyersDuePage() {
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
   
-  const receiptRef = useRef<HTMLDivElement>(null);
+  const componentToPrintRef = useRef(null);
 
   const buyersWithDue = useMemo(() => {
     return buyers.filter(buyer => {
@@ -116,7 +95,7 @@ export default function BuyersDuePage() {
   }, [addPayment, paymentAmount, selectedBuyer, selectedInvoice, toast, buyers]);
 
   const handlePrint = useReactToPrint({
-    content: () => receiptRef.current,
+    content: () => componentToPrintRef.current,
     onAfterPrint: () => {
       completePaymentTransaction();
     },
@@ -284,12 +263,14 @@ export default function BuyersDuePage() {
                 <div className="p-6 pt-2 flex-1">
                      <ScrollArea className="h-full border rounded-lg">
                         {selectedBuyer && selectedInvoice ? (
-                            <PaymentReceipt
-                                buyer={selectedBuyer}
-                                invoice={selectedInvoice}
-                                paymentHistory={receiptPaymentHistory}
-                                newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
-                            />
+                           <div ref={componentToPrintRef}>
+                                <PaymentReceipt
+                                    buyer={selectedBuyer}
+                                    invoice={selectedInvoice}
+                                    paymentHistory={receiptPaymentHistory}
+                                    newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
+                                />
+                            </div>
                         ) : (
                             <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full">
                                 <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
@@ -300,17 +281,6 @@ export default function BuyersDuePage() {
                 </div>
             </div>
         </Card>
-      </div>
-       <div className="hidden">
-        {selectedBuyer && selectedInvoice && (
-          <PrintableReceipt 
-            ref={receiptRef}
-            buyer={selectedBuyer}
-            invoice={selectedInvoice}
-            paymentHistory={receiptPaymentHistory}
-            newPaymentAmount={typeof paymentAmount === 'number' ? paymentAmount : 0}
-          />
-        )}
       </div>
     </div>
   );
