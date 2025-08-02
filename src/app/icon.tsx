@@ -30,6 +30,7 @@ export default function Icon() {
           }}
           viewBox="-10 -10 120 120"
           fill="none"
+          xmlns="http://www.w3.org/2000/svg"
         >
           <path d="M20 80H80" stroke="black" strokeWidth="4" strokeLinecap="round" />
           <path d="M20 20V80" stroke="black" strokeWidth="4" strokeLinecap="round" />
