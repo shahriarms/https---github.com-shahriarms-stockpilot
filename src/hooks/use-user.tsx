@@ -43,12 +43,18 @@ export function UserProvider({ children }: { children: ReactNode }) {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
       if (firebaseUser) {
         const isUserAdmin = firebaseUser.email === ADMIN_EMAIL;
-        const currentRole = sessionStorage.getItem('user-role') as Role;
+        let userRole: Role = isUserAdmin ? 'admin' : 'employee';
+
+        // Check session storage for a role override
+        const sessionRole = sessionStorage.getItem('user-role') as Role;
+        if (sessionRole) {
+            userRole = sessionRole;
+        }
 
         setUser({
           uid: firebaseUser.uid,
           email: firebaseUser.email,
-          role: currentRole || (isUserAdmin ? 'admin' : 'employee'),
+          role: userRole,
         });
         
         if (isUserAdmin) {
@@ -57,7 +63,6 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 setAdminCode(storedCode);
             }
         }
-
       } else {
         setUser(null);
         sessionStorage.removeItem('user-role');
@@ -69,14 +74,16 @@ export function UserProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, [router, pathname, auth]);
+  }, [auth, pathname, router]);
 
   const logout = useCallback(async () => {
+    setIsLoading(true);
     await auth.signOut();
     setUser(null);
     setAdminCode(null); 
     sessionStorage.removeItem('user-role');
     router.push('/login');
+    setIsLoading(false);
   }, [auth, router]);
 
   const generateAdminCode = useCallback(() => {

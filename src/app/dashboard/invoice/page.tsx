@@ -50,7 +50,7 @@ export default function InvoicePage() {
     clearInvoiceForm,
   } = useInvoiceForm();
 
-  const [today, setToday] = useState('');
+  const [currentDate, setCurrentDate] = useState('');
   const [invoiceId, setInvoiceId] = useState('');
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
@@ -58,7 +58,7 @@ export default function InvoicePage() {
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
 
   useEffect(() => {
-    setToday(new Date().toLocaleDateString('en-GB'));
+    setCurrentDate(new Date().toLocaleDateString('en-GB'));
     setInvoiceId(`INV-${Date.now()}`);
   }, []);
 
@@ -156,8 +156,8 @@ export default function InvoicePage() {
           <CardContent className="space-y-6">
              <div className="space-y-4">
                 <div className="flex justify-between items-center">
-                    <span className="font-medium">Invoice No: {invoiceId.slice(-6)}</span>
-                    <span className="text-muted-foreground">তারিখ (Date): {today}</span>
+                    <span className="font-medium">Invoice No: {invoiceId ? invoiceId.slice(-6) : '...'}</span>
+                    <span className="text-muted-foreground">তারিখ (Date): {currentDate || '...'}</span>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="customerName">নাম (Name)</Label>
@@ -295,8 +295,8 @@ export default function InvoicePage() {
                     <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
                 </div>
                 <div className="flex justify-between border-b pb-2 mb-4">
-                    <span>ক্রঃ নং (Inv No): {invoiceId.slice(-6)}</span>
-                    <span>তারিখ (Date): {today}</span>
+                    <span>ক্রঃ নং (Inv No): {invoiceId ? invoiceId.slice(-6) : '...'}</span>
+                    <span>তারিখ (Date): {currentDate || '...'}</span>
                 </div>
                 <div className="mb-4">
                     <p>নাম (Name): {customerName || '...........................................'}</p>
