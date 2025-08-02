@@ -26,6 +26,14 @@ export function SiteHeader() {
 
 
   useEffect(() => {
+    // Set the time immediately on the client
+    setCurrentTime(new Date().toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: true,
+    }));
+    // Then set up the interval to update it
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString('en-US', {
         hour: '2-digit',
@@ -67,7 +75,7 @@ export function SiteHeader() {
         </div>
         <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center justify-center p-2 rounded-md border bg-white text-black font-mono text-sm">
-                {currentTime}
+                {currentTime || ''}
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
