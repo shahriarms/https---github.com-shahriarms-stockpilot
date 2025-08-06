@@ -70,3 +70,11 @@ export interface Attendance {
     date: string; // ISO 8601 date string
     status: AttendanceStatus;
 }
+
+export interface SalaryPayment {
+    id: string;
+    employeeId: string;
+    amount: number;
+    date: string; // ISO 8601 date string
+    paidBy: string; // user email or id
+}

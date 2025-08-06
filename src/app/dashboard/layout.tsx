@@ -9,6 +9,7 @@ import { PaymentProvider } from '@/hooks/use-payments';
 import { InvoiceFormProvider } from '@/hooks/use-invoice-form';
 import { ExpenseProvider } from '@/hooks/use-expenses';
 import { EmployeeProvider } from '@/hooks/use-employees';
+import { SalaryProvider } from '@/hooks/use-salaries';
 
 export default function DashboardLayout({
   children,
@@ -22,9 +23,11 @@ export default function DashboardLayout({
           <PaymentProvider>
             <ExpenseProvider>
               <EmployeeProvider>
-                <InvoiceFormProvider>
-                  <Providers header={<SiteHeader />}>{children}</Providers>
-                </InvoiceFormProvider>
+                <SalaryProvider>
+                  <InvoiceFormProvider>
+                    <Providers header={<SiteHeader />}>{children}</Providers>
+                  </InvoiceFormProvider>
+                </SalaryProvider>
               </EmployeeProvider>
             </ExpenseProvider>
           </PaymentProvider>
