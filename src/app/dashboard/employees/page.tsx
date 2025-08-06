@@ -117,6 +117,19 @@ export default function EmployeesPage() {
         return { present, absent, leave };
     }, [dailyAttendance, employees.length]);
 
+    const getStatusColorClass = (status: AttendanceStatus) => {
+        switch (status) {
+            case 'Present':
+                return 'bg-green-100 text-green-800 focus:ring-green-500 border-green-200';
+            case 'Absent':
+                return 'bg-red-100 text-red-800 focus:ring-red-500 border-red-200';
+            case 'Leave':
+                return 'bg-yellow-100 text-yellow-800 focus:ring-yellow-500 border-yellow-200';
+            default:
+                return '';
+        }
+    };
+
 
     return (
         <div className="flex flex-col gap-6">
@@ -178,27 +191,30 @@ export default function EmployeesPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {employees.map(employee => (
-                                    <TableRow key={employee.id}>
-                                        <TableCell className="font-medium">{employee.name}</TableCell>
-                                        <TableCell>{employee.role}</TableCell>
-                                        <TableCell className="text-right">
-                                            <Select
-                                                value={getStatusForEmployee(employee.id)}
-                                                onValueChange={(status) => handleAttendanceChange(employee.id, status as AttendanceStatus)}
-                                            >
-                                                <SelectTrigger className="w-32 ml-auto">
-                                                    <SelectValue />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    <SelectItem value="Present">Present</SelectItem>
-                                                    <SelectItem value="Absent">Absent</SelectItem>
-                                                    <SelectItem value="Leave">On Leave</SelectItem>
-                                                </SelectContent>
-                                            </Select>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
+                                {employees.map(employee => {
+                                    const status = getStatusForEmployee(employee.id);
+                                    return (
+                                        <TableRow key={employee.id}>
+                                            <TableCell className="font-medium">{employee.name}</TableCell>
+                                            <TableCell>{employee.role}</TableCell>
+                                            <TableCell className="text-right">
+                                                <Select
+                                                    value={status}
+                                                    onValueChange={(newStatus) => handleAttendanceChange(employee.id, newStatus as AttendanceStatus)}
+                                                >
+                                                    <SelectTrigger className={cn("w-32 ml-auto font-semibold", getStatusColorClass(status))}>
+                                                        <SelectValue />
+                                                    </SelectTrigger>
+                                                    <SelectContent>
+                                                        <SelectItem value="Present">Present</SelectItem>
+                                                        <SelectItem value="Absent">Absent</SelectItem>
+                                                        <SelectItem value="Leave">On Leave</SelectItem>
+                                                    </SelectContent>
+                                                </Select>
+                                            </TableCell>
+                                        </TableRow>
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     </div>
