@@ -29,6 +29,7 @@ import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
+import { LiveWeightDisplay } from '@/components/live-weight-display';
 
 
 export default function InvoicePage() {
@@ -59,8 +60,9 @@ export default function InvoicePage() {
 
   useEffect(() => {
     // These need to be in useEffect to avoid hydration errors
-    setCurrentDate(new Date().toLocaleDateString('en-GB'));
-    setInvoiceId(`INV-${Date.now()}`);
+    const now = new Date();
+    setCurrentDate(now.toLocaleDateString('en-GB'));
+    setInvoiceId(`INV-${now.getTime()}`);
   }, []);
 
   const resetFilters = () => {
@@ -151,6 +153,7 @@ export default function InvoicePage() {
     <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
       {/* Left Column: Invoice Form */}
       <div className="flex flex-col gap-6">
+        <LiveWeightDisplay />
         <Card>
           <CardHeader>
             <CardTitle>Create Invoice</CardTitle>
