@@ -8,8 +8,6 @@ const firebaseConfig = {
   storageBucket: "shopmate-wl9jo.appspot.com",
   messagingSenderId: "633180331933",
   appId: "1:633180331933:web:6b2de168167513b3e11974",
-  // Add the databaseURL for Realtime Database
-  databaseURL: "https://shopmate-wl9jo-default-rtdb.firebaseio.com"
 };
 
 // Initialize Firebase
