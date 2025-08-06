@@ -62,7 +62,7 @@ export interface Employee {
     joiningDate: string; // ISO 8601 date string
 }
 
-export type AttendanceStatus = 'Present' | 'Absent' | 'Leave';
+export type AttendanceStatus = 'Present' | 'Absent' | 'On Leave';
 
 export interface Attendance {
     id: string;

@@ -110,17 +110,18 @@ export default function EmployeesPage() {
     };
     
     const attendanceSummary = useMemo(() => {
-        return {
-            present: dailyAttendance.filter(a => a.status === 'Present').length,
-            absent: employees.length - dailyAttendance.filter(a => a.status !== 'Absent').length,
-            leave: dailyAttendance.filter(a => a.status === 'Leave').length,
-        }
+        const present = dailyAttendance.filter(a => a.status === 'Present').length;
+        const leave = dailyAttendance.filter(a => a.status === 'Leave').length;
+        // Correctly calculate absent: total employees minus those present or on leave for that day
+        const absent = employees.length - present - leave;
+        return { present, absent, leave };
     }, [dailyAttendance, employees.length]);
+
 
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold flex items-center gap-2"><Users className="w-6 h-6"/> Employee Management</h1>
+                <h1 className="text-2xl font-semibold flex items-center gap-2"><Users className="w-6 h-6"/> Employee Attendance</h1>
                 <div className="flex gap-2">
                     <Button onClick={handleAddNew} disabled={user?.role !== 'admin'}>
                         <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
@@ -161,9 +162,9 @@ export default function EmployeesPage() {
                             </Popover>
                         </div>
                          <div className="flex gap-4 text-sm">
-                            <div className="flex items-center gap-2"><UserCheck className="w-5 h-5 text-green-500"/> Present: <span className="font-bold">{attendanceSummary.present}</span></div>
-                            <div className="flex items-center gap-2"><UserX className="w-5 h-5 text-red-500"/> Absent: <span className="font-bold">{attendanceSummary.absent}</span></div>
-                            <div className="flex items-center gap-2"><NotebookText className="w-5 h-5 text-yellow-500"/> On Leave: <span className="font-bold">{attendanceSummary.leave}</span></div>
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"><UserCheck className="w-5 h-5"/> Present: <span className="font-bold">{attendanceSummary.present}</span></div>
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"><UserX className="w-5 h-5"/> Absent: <span className="font-bold">{attendanceSummary.absent}</span></div>
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300"><NotebookText className="w-5 h-5"/> On Leave: <span className="font-bold">{attendanceSummary.leave}</span></div>
                         </div>
                     </div>
 
@@ -192,7 +193,7 @@ export default function EmployeesPage() {
                                                 <SelectContent>
                                                     <SelectItem value="Present">Present</SelectItem>
                                                     <SelectItem value="Absent">Absent</SelectItem>
-                                                    <SelectItem value="Leave">Leave</SelectItem>
+                                                    <SelectItem value="Leave">On Leave</SelectItem>
                                                 </SelectContent>
                                             </Select>
                                         </TableCell>

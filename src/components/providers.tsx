@@ -116,10 +116,10 @@ export function Providers({
               <Link href="/dashboard/employees">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/employees')}
-                  tooltip={{ children: 'Employee Roster' }}
+                  tooltip={{ children: 'Employee Attendance' }}
                 >
                    <UserCog className="h-6 w-6" />
-                  <span>Employee Roster</span>
+                  <span>Employee Attendance</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
