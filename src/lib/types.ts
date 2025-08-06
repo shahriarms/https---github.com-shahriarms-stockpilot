@@ -51,3 +51,22 @@ export interface Expense {
     date: string; // ISO 8601 date string
     paymentMethod: 'Cash' | 'bKash' | 'Card' | 'Bank' | string;
 }
+
+export interface Employee {
+    id: string;
+    name: string;
+    phone: string;
+    address: string;
+    role: 'Manager' | 'Sales' | 'Worker' | 'Accountant' | string;
+    salary: number;
+    joiningDate: string; // ISO 8601 date string
+}
+
+export type AttendanceStatus = 'Present' | 'Absent' | 'Leave';
+
+export interface Attendance {
+    id: string;
+    employeeId: string;
+    date: string; // ISO 8601 date string
+    status: AttendanceStatus;
+}
