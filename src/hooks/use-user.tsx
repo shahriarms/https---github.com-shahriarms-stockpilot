@@ -41,6 +41,7 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser: FirebaseUser | null) => {
+      setIsLoading(true);
       if (firebaseUser) {
         const isUserAdmin = firebaseUser.email === ADMIN_EMAIL;
         let userRole: Role = isUserAdmin ? 'admin' : 'employee';
@@ -63,6 +64,11 @@ export function UserProvider({ children }: { children: ReactNode }) {
                 setAdminCode(storedCode);
             }
         }
+         // If user is on login/signup page, redirect to dashboard
+        if (pathname === '/login' || pathname === '/signup') {
+            router.push('/dashboard');
+        }
+
       } else {
         setUser(null);
         sessionStorage.removeItem('user-role');
@@ -131,13 +137,34 @@ export function UserProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode }), [user, isLoading, logout, generateAdminCode, redeemAdminCode, adminCode]);
 
-  if (isLoading) {
+  // If loading and not on an auth page, show a global loader.
+  // This prevents content flashing on initial load or after logout.
+  if (isLoading && pathname !== '/login' && pathname !== '/signup') {
     return (
         <div className="flex h-screen w-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
         </div>
     );
   }
+
+  // On auth pages, we want to show the page content while checking auth state in background
+  if (isLoading && (pathname === '/login' || pathname === '/signup')) {
+     return (
+        <UserContext.Provider value={value}>
+            {children}
+        </UserContext.Provider>
+    );
+  }
+
+  // Prevent dashboard rendering for unauthenticated users, even for a flash
+  if (!user && pathname !== '/login' && pathname !== '/signup') {
+    return (
+        <div className="flex h-screen w-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+    );
+  }
+
 
   return (
     <UserContext.Provider value={value}>
