@@ -3,6 +3,8 @@
 
 StockPilot is a modern, responsive inventory management application designed to streamline stock, invoice, and expense tracking for small businesses. Built with Next.js, Firebase, and Tailwind CSS.
 
+---
+
 ## Technology Stack
 
 - **Framework**: [Next.js](https://nextjs.org/) (with App Router)
@@ -24,40 +26,78 @@ Before you begin, ensure you have the following installed on your local machine:
 
 - **Node.js**: `v18.x` or later is recommended. You can download it from [nodejs.org](https://nodejs.org/).
 - **npm**: This comes automatically with Node.js.
+- **Git**: You need Git to clone the repository. You can download it from [git-scm.com](https://git-scm.com/).
 
-### 2. Clone the repository
+### 2. Clone the Repository (রিপোজিটরি ক্লোন করুন)
 
-First, clone the repository to your local machine using Git:
+Open your terminal (like Git Bash, PowerShell, or Command Prompt) and run the following command to clone the project to your computer:
 
 ```bash
 git clone https://github.com/shahriarms/stockpilot.git
+```
+
+After the clone is complete, navigate into the project directory:
+```bash
 cd stockpilot
 ```
 
-### 3. Install Dependencies (প্যাকেজ ইনস্টল)
+### 3. Install Dependencies (প্যাকেজ ইনস্টল করুন)
 
-Navigate into the project directory and install all the required npm packages. This command reads the `package.json` file and downloads all the necessary libraries into a `node_modules` folder.
+Inside the `stockpilot` folder, run this command to install all the necessary libraries and packages for the project.
 
 ```bash
 npm install
 ```
+This might take a few minutes.
 
-### 4. Set up Environment Variables (পরিবেশ সেটআপ)
+### 4. Run the Development Server (প্রজেক্ট চালান)
 
-This project uses a Firebase configuration that is already included in the source code (`src/lib/firebase/firebase.ts`). No `.env` file or extra configuration is required to run the application.
-
-### 5. Run the Development Server (প্রজেক্ট চালান)
-
-Now you can run the application in development mode. The `--turbopack` flag helps it run faster.
+Once the installation is complete, you can start the development server with this command:
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:9002](http://localhost:9002) with your browser to see the result. You can start editing the page by modifying any file in `src/`. The app will auto-update as you edit the files.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. You can start editing the page by modifying any file in `src/`. The app will auto-update as you edit the files.
 
 ---
 
+## How to Push Your Code to GitHub (সম্পূর্ণ প্রজেক্ট পুশ করার নিয়ম)
+
+If you are starting a new project in Firebase Studio and want to push it to your own GitHub repository for the first time, follow these steps very carefully. This will solve the problem of missing files/folders when you clone.
+
+**Step 1: Open Terminal in Your Project Folder**
+Make sure your terminal is open inside your project's root folder (the folder that contains `src`, `package.json`, etc.).
+
+**Step 2: Run These Commands One By One**
+
+```bash
+# Initialize a new Git repository
+# (এটি শুধুমাত্র প্রথমবার করতে হবে)
+git init
+
+# Add ALL files to Git's tracking
+# (এখানে ডট (.) চিহ্নটি খুবই গুরুত্বপূর্ণ)
+git add .
+
+# Create a "commit" - a snapshot of your entire project
+git commit -m "Initial project commit with all files"
+
+# Set the default branch name to 'main'
+git branch -M main
+
+# Connect your local project to your GitHub repository
+# (আপনার রিপোজিটরির URL এখানে ব্যবহার করুন)
+git remote add origin https://github.com/shahriarms/stockpilot.git
+
+# IMPORTANT: Push all your code to GitHub
+# (-u flag sets it as the default for future pushes)
+git push -u origin main
+```
+
+After running these commands, your entire project, including the `src` folder, will be uploaded to GitHub. Then, anyone can clone it without any issues.
+
+---
 ## How Offline Mode Works (অফলাইন মোড)
 
 This application is designed to work even without an internet connection after the first load.
