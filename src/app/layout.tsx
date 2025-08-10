@@ -32,7 +32,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} font-body antialiased`}>
-      <body>
+      <body suppressHydrationWarning>
         {children}
         <Toaster />
       </body>
