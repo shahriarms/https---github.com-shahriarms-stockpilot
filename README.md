@@ -1,3 +1,4 @@
+
 # StockPilot - Inventory Management System
 
 StockPilot is a modern, responsive inventory management application designed to streamline stock, invoice, and expense tracking for small businesses. Built with Next.js, Firebase, and Tailwind CSS.
@@ -11,41 +12,43 @@ StockPilot is a modern, responsive inventory management application designed to 
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
 - **Local Database**: Browser's `localStorage` for offline support and persistence.
 
-## Prerequisites
+---
+
+## Getting Started (Local Setup)
+
+Follow these steps to get a local copy up and running on your machine.
+
+### 1. Prerequisites (পূর্বশর্ত)
 
 Before you begin, ensure you have the following installed on your local machine:
 
-- [Node.js](https://nodejs.org/en/) (v18.x or later is recommended)
-- [npm](https://www.npmjs.com/get-npm) (comes with Node.js)
+- **Node.js**: `v18.x` or later is recommended. You can download it from [nodejs.org](https://nodejs.org/).
+- **npm**: This comes automatically with Node.js.
 
-## Getting Started
+### 2. Clone the repository
 
-Follow these steps to get a local copy up and running.
-
-### 1. Clone the repository
-
-First, clone the repository to your local machine:
+First, clone the repository to your local machine using Git:
 
 ```bash
 git clone https://github.com/shahriarms/stockpilot.git
 cd stockpilot
 ```
 
-### 2. Install Dependencies
+### 3. Install Dependencies (প্যাকেজ ইনস্টল)
 
-Next, install the required npm packages:
+Navigate into the project directory and install all the required npm packages. This command reads the `package.json` file and downloads all the necessary libraries into a `node_modules` folder.
 
 ```bash
 npm install
 ```
 
-### 3. Set up Environment Variables
+### 4. Set up Environment Variables (পরিবেশ সেটআপ)
 
-This project uses a Firebase configuration that is already included in the source code. No `.env` file is required to run the application. The Firebase configuration is located in `src/lib/firebase/firebase.ts`.
+This project uses a Firebase configuration that is already included in the source code (`src/lib/firebase/firebase.ts`). No `.env` file or extra configuration is required to run the application.
 
-### 4. Run the Development Server
+### 5. Run the Development Server (প্রজেক্ট চালান)
 
-Now you can run the application in development mode:
+Now you can run the application in development mode. The `--turbopack` flag helps it run faster.
 
 ```bash
 npm run dev
@@ -53,13 +56,14 @@ npm run dev
 
 Open [http://localhost:9002](http://localhost:9002) with your browser to see the result. You can start editing the page by modifying any file in `src/`. The app will auto-update as you edit the files.
 
-## Key Features
+---
 
-- **Dashboard**: An overview of key metrics like total products, stock value, etc.
-- **Product Management**: Add, edit, delete, and view all inventory items. Bulk upload from a CSV/Excel file is also supported.
-- **Invoice Creation**: Generate and manage customer invoices with ease.
-- **Buyer Tracking**: Keep a record of all buyers and their purchase history.
-- **Due Payments**: Track and receive payments for outstanding invoices.
-- **Expense Management**: Log and categorize all business expenses.
-- **Employee & Salary Management**: Manage employee attendance and process salary payments.
-- **Authentication**: Secure login and signup functionality using Firebase.
+## How Offline Mode Works (অফলাইন মোড)
+
+This application is designed to work even without an internet connection after the first load.
+
+- **Data Storage**: All your inventory data (products, invoices, buyers, expenses, etc.) is stored in your web browser's `localStorage`.
+- **Functionality**: You can add, edit, and view all data completely offline. The application logic runs entirely in the browser.
+- **Authentication**: Logging in, signing up, or resetting your password requires an active internet connection to communicate with Firebase. Once you are logged in, you can go offline and continue working. Your login session will persist.
+
+This ensures that you can manage your inventory anytime, anywhere, regardless of your internet connectivity.
