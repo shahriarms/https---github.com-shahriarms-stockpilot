@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,18 +23,21 @@ import {
 } from '@/components/ui/select';
 import { useProducts } from '@/hooks/use-products';
 import { useInvoices } from '@/hooks/use-invoices';
-import { PlusCircle, Trash2, Printer, FileText } from 'lucide-react';
+import { PlusCircle, Trash2, Printer, FileText, Save } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
+import { useReactToPrint } from 'react-to-print';
+import { useToast } from '@/hooks/use-toast';
 
 
 export default function InvoicePage() {
   const { products } = useProducts();
   const { saveInvoice } = useInvoices();
   const router = useRouter();
+  const { toast } = useToast();
   
   const {
     items: invoiceItems,
@@ -56,6 +59,8 @@ export default function InvoicePage() {
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
+
+  const printComponentRef = useRef(null);
 
   useEffect(() => {
     // These need to be in useEffect to avoid hydration errors
@@ -124,13 +129,19 @@ export default function InvoicePage() {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
 
-  const handleSaveInvoice = () => {
-    if (!customerName || invoiceItems.length === 0) {
-      // Maybe show a toast message here
-      alert("Please enter customer name and add at least one item.");
-      return;
+  const validateInvoice = () => {
+    if (!customerName) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter the customer\'s name.' });
+      return false;
     }
-
+    if (invoiceItems.length === 0) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please add at least one item to the invoice.' });
+      return false;
+    }
+    return true;
+  };
+  
+  const performSave = () => {
     saveInvoice({
       id: invoiceId,
       customerName,
@@ -141,10 +152,29 @@ export default function InvoicePage() {
       paidAmount,
       dueAmount,
     });
-    
     clearInvoiceForm();
     setInvoiceId(`INV-${Date.now()}`); // Reset for next invoice
+  }
+
+  const handleSaveAndRedirect = () => {
+    if (!validateInvoice()) return;
+    performSave();
     router.push('/dashboard/buyers');
+  };
+  
+  const handlePrint = useReactToPrint({
+    content: () => printComponentRef.current,
+    onAfterPrint: () => {
+        // After printing, save the invoice and redirect.
+        performSave();
+        router.push('/dashboard/buyers');
+    }
+  });
+  
+  const handleSaveAndPrint = () => {
+    if (!validateInvoice()) return;
+    // The save operation is now handled in onAfterPrint
+    handlePrint();
   };
 
 
@@ -273,8 +303,8 @@ export default function InvoicePage() {
                 </div>
             </div>
             
-             <Button className="w-full mt-6" onClick={handleSaveInvoice}>
-                চালান সেভ করুন (Save Invoice)
+             <Button className="w-full mt-6" onClick={handleSaveAndRedirect}>
+                <Save className="mr-2 h-4 w-4"/> চালান সেভ করুন (Save Invoice)
             </Button>
           </CardContent>
         </Card>
@@ -286,75 +316,78 @@ export default function InvoicePage() {
             <h2 className="text-lg font-semibold">Print Preview</h2>
             <div className="flex gap-2">
                 <Button variant="outline"><FileText className="mr-2" /> POS Receipt</Button>
-                <Button><Printer className="mr-2"/> Print</Button>
+                <Button onClick={handleSaveAndPrint}><Printer className="mr-2"/> Save & Print</Button>
             </div>
         </div>
-        <Card className="w-full">
-            <CardContent className="p-8 bg-white text-black font-serif">
-                <div className="text-center mb-6">
-                    <h1 className="text-2xl font-bold text-primary">ক্যাশ মেমো (Cash Memo)</h1>
-                    <h2 className="text-xl font-bold">মাহমুদ ইঞ্জিনিয়ারিং শপ</h2>
-                    <p className="text-xs">এখানে ওয়েডিং, জিন, শিট সহ সকল প্রকার ওয়র্কশপ এর মালামাল এবং ফার্নিচার সামগ্রি বিক্রয় করা হয়।</p>
-                    <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
-                </div>
-                <div className="flex justify-between border-b pb-2 mb-4">
-                    <span>ক্রঃ নং (Inv No): {invoiceId ? invoiceId.slice(-6) : '...'}</span>
-                    <span>তারিখ (Date): {currentDate || '...'}</span>
-                </div>
-                <div className="mb-4">
-                    <p>নাম (Name): {customerName || '...........................................'}</p>
-                    <p>ঠিকানা (Address): {customerAddress || '.....................................'}</p>
-                    <p>ফোন (Phone): {customerPhone || '.........................................'}</p>
-                </div>
+        <div ref={printComponentRef}>
+          <Card className="w-full">
+              <CardContent className="p-8 bg-white text-black font-serif">
+                  <div className="text-center mb-6">
+                      <h1 className="text-2xl font-bold text-primary">ক্যাশ মেমো (Cash Memo)</h1>
+                      <h2 className="text-xl font-bold">মাহমুদ ইঞ্জিনিয়ারিং শপ</h2>
+                      <p className="text-xs">এখানে ওয়েডিং, জিন, শিট সহ সকল প্রকার ওয়র্কশপ এর মালামাল এবং ফার্নিচার সামগ্রি বিক্রয় করা হয়।</p>
+                      <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
+                  </div>
+                  <div className="flex justify-between border-b pb-2 mb-4">
+                      <span>ক্রঃ নং (Inv No): {invoiceId ? invoiceId.slice(-6) : '...'}</span>
+                      <span>তারিখ (Date): {currentDate || '...'}</span>
+                  </div>
+                  <div className="mb-4">
+                      <p>নাম (Name): {customerName || '...........................................'}</p>
+                      <p>ঠিকানা (Address): {customerAddress || '.....................................'}</p>
+                      <p>ফোন (Phone): {customerPhone || '.........................................'}</p>
+                  </div>
 
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead className="text-black">মালের বিবরণ (Item Description)</TableHead>
-                            <TableHead className="text-black text-center">পরিমাণ (Qty)</TableHead>
-                            <TableHead className="text-black text-center">দর (Rate)</TableHead>
-                            <TableHead className="text-black text-right">টাকা (Amount)</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {invoiceItems.length > 0 ? invoiceItems.map(item => (
-                            <TableRow key={item.id}>
-                                <TableCell className="text-black">{item.name}</TableCell>
-                                <TableCell className="text-black text-center">{item.quantity}</TableCell>
-                                <TableCell className="text-black text-center">${item.price.toFixed(2)}</TableCell>
-                                <TableCell className="text-black text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
-                            </TableRow>
-                        )) : (
-                            <TableRow>
-                                <TableCell colSpan={4} className="text-center text-gray-500 py-6">এখনও কোনো আইটেম যোগ করা হয়নি। (No items added yet.)</TableCell>
-                            </TableRow>
-                        )}
-                    </TableBody>
-                </Table>
-                
-                <div className="mt-6 flex justify-end">
-                    <div className="w-64 space-y-2">
-                        <div className="flex justify-between">
-                            <span>উপমোট (Subtotal):</span>
-                            <span>${subtotal.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span>জমা (Paid):</span>
-                            <span>${paidAmount.toFixed(2)}</span>
-                        </div>
-                        <div className="flex justify-between font-bold border-t pt-2">
-                            <span>বাকী (Due):</span>
-                            <span>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                        </div>
-                    </div>
-                </div>
-                 <div className="mt-4 border-t pt-2">
-                    <p>টাকায় কথায় (In Words): ............................................</p>
-                </div>
+                  <Table>
+                      <TableHeader>
+                          <TableRow>
+                              <TableHead className="text-black">মালের বিবরণ (Item Description)</TableHead>
+                              <TableHead className="text-black text-center">পরিমাণ (Qty)</TableHead>
+                              <TableHead className="text-black text-center">দর (Rate)</TableHead>
+                              <TableHead className="text-black text-right">টাকা (Amount)</TableHead>
+                          </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                          {invoiceItems.length > 0 ? invoiceItems.map(item => (
+                              <TableRow key={item.id}>
+                                  <TableCell className="text-black">{item.name}</TableCell>
+                                  <TableCell className="text-black text-center">{item.quantity}</TableCell>
+                                  <TableCell className="text-black text-center">${item.price.toFixed(2)}</TableCell>
+                                  <TableCell className="text-black text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                              </TableRow>
+                          )) : (
+                              <TableRow>
+                                  <TableCell colSpan={4} className="text-center text-gray-500 py-6">এখনও কোনো আইটেম যোগ করা হয়নি। (No items added yet.)</TableCell>
+                              </TableRow>
+                          )}
+                      </TableBody>
+                  </Table>
+                  
+                  <div className="mt-6 flex justify-end">
+                      <div className="w-64 space-y-2">
+                          <div className="flex justify-between">
+                              <span>উপমোট (Subtotal):</span>
+                              <span>${subtotal.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between">
+                              <span>জমা (Paid):</span>
+                              <span>${paidAmount.toFixed(2)}</span>
+                          </div>
+                          <div className="flex justify-between font-bold border-t pt-2">
+                              <span>বাকী (Due):</span>
+                              <span>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                          </div>
+                      </div>
+                  </div>
+                  <div className="mt-4 border-t pt-2">
+                      <p>টাকায় কথায় (In Words): ............................................</p>
+                  </div>
 
-            </CardContent>
-        </Card>
+              </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );
 }
+
