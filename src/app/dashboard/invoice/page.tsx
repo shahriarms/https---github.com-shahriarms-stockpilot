@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useProducts } from '@/hooks/use-products';
+import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
 import { PlusCircle, Trash2, Printer, FileText, Save } from 'lucide-react';
 import type { Product } from '@/lib/types';
@@ -60,7 +60,7 @@ export default function InvoicePage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
 
-  const printComponentRef = useRef(null);
+  const printComponentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // These need to be in useEffect to avoid hydration errors
@@ -141,7 +141,7 @@ export default function InvoicePage() {
     return true;
   };
   
-  const performSave = () => {
+  const performSave = useCallback(() => {
     saveInvoice({
       id: invoiceId,
       customerName,
@@ -154,7 +154,7 @@ export default function InvoicePage() {
     });
     clearInvoiceForm();
     setInvoiceId(`INV-${Date.now()}`); // Reset for next invoice
-  }
+  }, [saveInvoice, invoiceId, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm]);
 
   const handleSaveAndRedirect = () => {
     if (!validateInvoice()) return;
@@ -391,3 +391,4 @@ export default function InvoicePage() {
   );
 }
 
+    
