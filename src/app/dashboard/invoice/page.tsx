@@ -185,18 +185,18 @@ export default function InvoicePage() {
                <div className="space-y-4">
                   <div className="flex justify-between items-center">
                       <span className="font-medium">Invoice No: {invoiceId ? invoiceId.slice(-6) : '...'}</span>
-                      <span className="text-muted-foreground">তারিখ (Date): {currentDate || '...'}</span>
+                      <span className="text-muted-foreground">Date: {currentDate || '...'}</span>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customerName">নাম (Name)</Label>
-                    <Input id="customerName" placeholder="ক্রেতার নাম লিখুন" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+                    <Label htmlFor="customerName">Name</Label>
+                    <Input id="customerName" placeholder="Enter customer name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customerAddress">ঠিকানা (Address)</Label>
-                    <Input id="customerAddress" placeholder="ক্রেতার ঠিকানা লিখুন" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+                    <Label htmlFor="customerAddress">Address</Label>
+                    <Input id="customerAddress" placeholder="Enter customer address" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customerPhone">ফোন (Phone)</Label>
+                    <Label htmlFor="customerPhone">Phone</Label>
                     <Input id="customerPhone" placeholder="Enter phone number" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
                   </div>
               </div>
@@ -204,7 +204,7 @@ export default function InvoicePage() {
               <Separator />
               
               <div className="space-y-4">
-                  <Label>পণ্য যোগ করুন (Add Products)</Label>
+                  <Label>Add Products</Label>
                   
                   <RadioGroup
                       value={mainCategoryFilter}
@@ -247,7 +247,7 @@ export default function InvoicePage() {
                   <div className="flex gap-2">
                       <Select onValueChange={handleAddProduct}>
                           <SelectTrigger>
-                              <SelectValue placeholder="পণ্য নির্বাচন করুন (Select Product)" />
+                              <SelectValue placeholder="Select Product" />
                           </SelectTrigger>
                           <SelectContent>
                               {filteredProducts.map((p) => (
@@ -274,11 +274,11 @@ export default function InvoicePage() {
                   <div className="mt-6 pt-4 border-t flex items-end justify-end">
                       <div className="space-y-2 text-right">
                           <div className="flex justify-end items-center gap-4">
-                              <span className="font-medium">উপমোট (Subtotal):</span>
+                              <span className="font-medium">Subtotal:</span>
                               <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
                           </div>
                            <div className="flex justify-end items-center gap-4">
-                              <span className="font-medium">জমা (Paid):</span>
+                              <span className="font-medium">Paid:</span>
                               <div className="relative w-28 flex items-center gap-1">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
                                   <Input
@@ -291,7 +291,7 @@ export default function InvoicePage() {
                               </div>
                           </div>
                            <div className="flex justify-end items-center gap-4 text-primary">
-                              <span className="font-medium">বাকী (Due):</span>
+                              <span className="font-medium">Due:</span>
                               <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
                           </div>
                       </div>
@@ -299,7 +299,7 @@ export default function InvoicePage() {
               </div>
               
                <Button className="w-full mt-6" onClick={handleSaveAndRedirect}>
-                  <Save className="mr-2 h-4 w-4"/> চালান সেভ করুন (Save Invoice)
+                  <Save className="mr-2 h-4 w-4"/> Save Invoice
               </Button>
             </CardContent>
           </Card>
@@ -314,7 +314,7 @@ export default function InvoicePage() {
                 {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
               </Button>
           </div>
-          <div className="print:hidden">
+          <div className="print-hidden">
              <InvoicePrintLayout 
                 ref={componentToPrintRef}
                 invoiceId={invoiceId}
@@ -331,7 +331,7 @@ export default function InvoicePage() {
           </div>
         </div>
       </div>
-       <div className="hidden print:block">
+       <div className="hidden">
         <InvoicePrintLayout 
             ref={componentToPrintRef}
             invoiceId={invoiceId}
