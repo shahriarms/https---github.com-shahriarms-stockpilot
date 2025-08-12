@@ -46,7 +46,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   }, [invoices, buyers, isLoading]);
 
   const saveInvoice = useCallback((invoiceData: Omit<Invoice, 'payments' | 'items' | 'id' | 'date'> & { items: any[], id: string }) => {
-    const fullInvoice: Invoice = {...invoiceData, payments: [], date: new Date().toISOString() };
+    const fullInvoice: Invoice = {...invoiceData, date: new Date().toISOString() };
     
     setInvoices(prev => [...prev, fullInvoice]);
     
@@ -100,7 +100,10 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     // Create a map for quick invoice lookup
     const invoiceMap = new Map(invoices.map(inv => [inv.id, inv]));
     
-    return buyer.invoiceIds
+    // Use Set to get unique invoice IDs
+    const uniqueInvoiceIds = [...new Set(buyer.invoiceIds)];
+
+    return uniqueInvoiceIds
         .map(id => invoiceMap.get(id))
         .filter((inv): inv is Invoice => !!inv) // Type guard to filter out undefined
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
