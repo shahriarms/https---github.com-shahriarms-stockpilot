@@ -168,7 +168,8 @@ export default function InvoicePage() {
         // After printing, save the invoice and redirect.
         performSave();
         router.push('/dashboard/buyers');
-    }
+    },
+    removeAfterPrint: true,
   });
   
   const handleSaveAndPrint = () => {
@@ -390,5 +391,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
