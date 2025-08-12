@@ -160,16 +160,17 @@ export default function InvoicePage() {
   
   const handlePrint = useReactToPrint({
     content: () => componentToPrintRef.current,
+    onBeforePrint: () => {
+        if (!validateInvoice()) {
+            // This is a bit of a hack to cancel printing, but it's the simplest way
+            throw new Error("Validation failed. Please check invoice details.");
+        }
+    },
     onAfterPrint: () => {
       performSave();
       router.push('/dashboard/buyers');
     },
   });
-
-  const handleSaveAndPrint = () => {
-    if (!validateInvoice()) return;
-    handlePrint();
-  };
 
 
   return (
@@ -309,14 +310,14 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Print Preview</h2>
-              <Button onClick={handleSaveAndPrint}>
+              <Button onClick={handlePrint}>
                 <Printer className="mr-2"/> 
                 {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
               </Button>
           </div>
           <div className="border rounded-lg overflow-hidden">
+             {/* This component is rendered for the user to see the preview */}
              <InvoicePrintLayout 
-                ref={componentToPrintRef}
                 invoiceId={invoiceId}
                 currentDate={currentDate}
                 customerName={customerName}
@@ -331,6 +332,22 @@ export default function InvoicePage() {
           </div>
         </div>
       </div>
+       {/* This component is hidden and is only used for printing */}
+       <div style={{ display: 'none' }}>
+            <InvoicePrintLayout 
+                ref={componentToPrintRef}
+                invoiceId={invoiceId}
+                currentDate={currentDate}
+                customerName={customerName}
+                customerAddress={customerAddress}
+                customerPhone={customerPhone}
+                invoiceItems={invoiceItems}
+                subtotal={subtotal}
+                paidAmount={paidAmount}
+                dueAmount={dueAmount}
+                printFormat={settings.printFormat}
+            />
+        </div>
     </>
   );
 }
