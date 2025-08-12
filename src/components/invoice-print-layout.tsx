@@ -34,7 +34,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 
     return (
         <div ref={ref}>
-            <Card className="w-full shadow-none border-0 print:shadow-none print:border-0">
+            <Card className="w-full shadow-none border-0">
                 <CardContent className="p-8 bg-white text-black font-serif">
                     <div className="text-center mb-6">
                         <h1 className="text-2xl font-bold text-primary">ক্যাশ মেমো (Cash Memo)</h1>

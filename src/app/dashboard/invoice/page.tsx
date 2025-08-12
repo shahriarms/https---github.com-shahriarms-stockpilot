@@ -1,19 +1,11 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   Select,
   SelectContent,
@@ -31,6 +23,7 @@ import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
+import { useReactToPrint } from 'react-to-print';
 
 
 export default function InvoicePage() {
@@ -38,6 +31,7 @@ export default function InvoicePage() {
   const { saveInvoice } = useInvoices();
   const router = useRouter();
   const { toast } = useToast();
+  const componentToPrintRef = useRef<HTMLDivElement>(null);
   
   const {
     items: invoiceItems,
@@ -160,21 +154,25 @@ export default function InvoicePage() {
     router.push('/dashboard/buyers');
   };
   
+  const handlePrint = useReactToPrint({
+    content: () => componentToPrintRef.current,
+    onAfterPrint: () => {
+      // This is called after the print dialog is closed
+      performSave();
+      router.push('/dashboard/buyers');
+    },
+  });
+
   const handleSaveAndPrint = () => {
     if (!validateInvoice()) return;
-    performSave();
-    
-    // Use a short delay to ensure state updates before printing
-    setTimeout(() => {
-      window.print();
-      router.push('/dashboard/buyers');
-    }, 100);
+    // The save operation is now handled in onAfterPrint
+    handlePrint();
   };
 
 
   return (
     <>
-      <div className="print:hidden flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left Column: Invoice Form */}
         <div className="flex flex-col gap-6">
           <Card>
@@ -314,22 +312,26 @@ export default function InvoicePage() {
                   <Button onClick={handleSaveAndPrint}><Printer className="mr-2"/> Save & Print</Button>
               </div>
           </div>
-          <InvoicePrintLayout 
-            invoiceId={invoiceId}
-            currentDate={currentDate}
-            customerName={customerName}
-            customerAddress={customerAddress}
-            customerPhone={customerPhone}
-            invoiceItems={invoiceItems}
-            subtotal={subtotal}
-            paidAmount={paidAmount}
-            dueAmount={dueAmount}
-          />
+          <div className="print:hidden">
+            <InvoicePrintLayout 
+                ref={componentToPrintRef}
+                invoiceId={invoiceId}
+                currentDate={currentDate}
+                customerName={customerName}
+                customerAddress={customerAddress}
+                customerPhone={customerPhone}
+                invoiceItems={invoiceItems}
+                subtotal={subtotal}
+                paidAmount={paidAmount}
+                dueAmount={dueAmount}
+            />
+          </div>
         </div>
       </div>
 
-      <div className="hidden print:block">
+      <div className="hidden">
         <InvoicePrintLayout 
+            ref={componentToPrintRef}
             invoiceId={invoiceId}
             currentDate={currentDate}
             customerName={customerName}
