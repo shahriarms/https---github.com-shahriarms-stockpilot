@@ -17,7 +17,7 @@ import { StockPilotLogo } from './stock-pilot-logo';
 import { SiteHeader } from './site-header';
 import { ProductProvider } from '@/hooks/use-products.tsx';
 import { UserProvider } from '@/hooks/use-user.tsx';
-import { LayoutDashboard, Package, FileText, Users, HandCoins, Receipt, UserCog, Wallet } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, Users, HandCoins, Receipt, UserCog, Wallet, Settings } from 'lucide-react';
 
 export function Providers({
   children,
@@ -136,7 +136,21 @@ export function Providers({
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarContent>
-        <SidebarFooter></SidebarFooter>
+        <SidebarFooter>
+            <SidebarMenu>
+                 <SidebarMenuItem>
+                    <Link href="/dashboard/settings">
+                        <SidebarMenuButton
+                        isActive={pathname.startsWith('/dashboard/settings')}
+                        tooltip={{ children: 'Settings' }}
+                        >
+                        <Settings className="h-6 w-6" />
+                        <span>Settings</span>
+                        </SidebarMenuButton>
+                    </Link>
+                </SidebarMenuItem>
+            </SidebarMenu>
+        </SidebarFooter>
       </Sidebar>
       <SidebarInset>
         <div className="flex flex-col h-svh">

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -63,14 +64,20 @@
         display: none;
     }
     @media print {
-        .print-only {
-            display: block;
+        body * {
+            visibility: hidden;
+        }
+        .print-container, .print-container * {
+            visibility: visible;
+        }
+        .print-container {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
         }
         .print-hidden {
             display: none !important;
-        }
-        body {
-            background-color: #fff;
         }
         .print\:block {
             display: block !important;
@@ -80,6 +87,10 @@
         }
         .print\:border-0 {
             border-width: 0 !important;
+        }
+        @page {
+            size: auto;
+            margin: 0;
         }
     }
 }

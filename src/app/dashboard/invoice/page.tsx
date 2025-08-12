@@ -24,11 +24,13 @@ import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useReactToPrint } from 'react-to-print';
+import { useSettings } from '@/hooks/use-settings';
 
 
 export default function InvoicePage() {
   const { products } = useProducts();
   const { saveInvoice } = useInvoices();
+  const { settings } = useSettings();
   const router = useRouter();
   const { toast } = useToast();
   const componentToPrintRef = useRef<HTMLDivElement>(null);
@@ -307,13 +309,13 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Print Preview</h2>
-              <div className="flex gap-2">
-                  <Button variant="outline"><FileText className="mr-2" /> POS Receipt</Button>
-                  <Button onClick={handleSaveAndPrint}><Printer className="mr-2"/> Save & Print</Button>
-              </div>
+              <Button onClick={handleSaveAndPrint}>
+                <Printer className="mr-2"/> 
+                {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
+              </Button>
           </div>
           <div className="print:hidden">
-            <InvoicePrintLayout 
+             <InvoicePrintLayout 
                 ref={componentToPrintRef}
                 invoiceId={invoiceId}
                 currentDate={currentDate}
@@ -324,12 +326,12 @@ export default function InvoicePage() {
                 subtotal={subtotal}
                 paidAmount={paidAmount}
                 dueAmount={dueAmount}
+                printFormat={settings.printFormat}
             />
           </div>
         </div>
       </div>
-
-      <div className="hidden">
+       <div className="hidden print:block">
         <InvoicePrintLayout 
             ref={componentToPrintRef}
             invoiceId={invoiceId}
@@ -341,6 +343,7 @@ export default function InvoicePage() {
             subtotal={subtotal}
             paidAmount={paidAmount}
             dueAmount={dueAmount}
+            printFormat={settings.printFormat}
           />
       </div>
     </>

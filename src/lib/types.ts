@@ -78,3 +78,9 @@ export interface SalaryPayment {
     date: string; // ISO 8601 date string
     paidBy: string; // user email or id
 }
+
+export type PrintFormat = 'normal' | 'pos';
+
+export interface AppSettings {
+    printFormat: PrintFormat;
+}
