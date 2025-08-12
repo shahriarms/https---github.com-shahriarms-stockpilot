@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import { useReactToPrint, ReactToPrint } from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,10 +33,6 @@ export default function BuyersPage() {
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
 
   const componentToPrintRef = useRef<HTMLDivElement>(null);
-
-  const handlePrint = useReactToPrint({
-    content: () => componentToPrintRef.current,
-  });
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -170,29 +166,33 @@ export default function BuyersPage() {
           <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Invoice Details</h2>
               {selectedInvoice && (
-                  <Button onClick={handlePrint}>
-                      <Printer className="mr-2 h-4 w-4" />
-                      Print Invoice
-                  </Button>
+                  <ReactToPrint
+                    trigger={() => (
+                      <Button>
+                        <Printer className="mr-2 h-4 w-4" />
+                        Print Invoice
+                      </Button>
+                    )}
+                    content={() => componentToPrintRef.current}
+                  />
               )}
           </div>
           <ScrollArea className="flex-1 rounded-lg border">
             <div className="p-4 space-y-4 bg-background">
               {selectedInvoice ? (
-                   <div ref={componentToPrintRef}>
-                       <InvoicePrintLayout
-                          invoiceId={selectedInvoice.id}
-                          currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                          customerName={selectedInvoice.customerName}
-                          customerAddress={selectedInvoice.customerAddress}
-                          customerPhone={selectedInvoice.customerPhone}
-                          invoiceItems={selectedInvoice.items}
-                          subtotal={selectedInvoice.subtotal}
-                          paidAmount={selectedInvoice.paidAmount}
-                          dueAmount={selectedInvoice.dueAmount}
-                          printFormat={settings.printFormat}
-                       />
-                   </div>
+                   <InvoicePrintLayout
+                      ref={componentToPrintRef}
+                      invoiceId={selectedInvoice.id}
+                      currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                      customerName={selectedInvoice.customerName}
+                      customerAddress={selectedInvoice.customerAddress}
+                      customerPhone={selectedInvoice.customerPhone}
+                      invoiceItems={selectedInvoice.items}
+                      subtotal={selectedInvoice.subtotal}
+                      paidAmount={selectedInvoice.paidAmount}
+                      dueAmount={selectedInvoice.dueAmount}
+                      printFormat={settings.printFormat}
+                   />
               ) : (
                 <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center">
                     <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
