@@ -57,3 +57,29 @@
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+    .print-only {
+        display: none;
+    }
+    @media print {
+        .print-only {
+            display: block;
+        }
+        .print-hidden {
+            display: none !important;
+        }
+        body {
+            background-color: #fff;
+        }
+        .print\:block {
+            display: block !important;
+        }
+        .print\:shadow-none {
+            box-shadow: none !important;
+        }
+        .print\:border-0 {
+            border-width: 0 !important;
+        }
+    }
+}
