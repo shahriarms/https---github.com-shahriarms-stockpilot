@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,9 @@ import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
-import { useReactToPrint } from 'react-to-print';
+import ReactToPrint from 'react-to-print';
 import { useSettings } from '@/hooks/use-settings';
+import { cn } from '@/lib/utils';
 
 
 export default function InvoicePage() {
@@ -158,20 +159,6 @@ export default function InvoicePage() {
     router.push('/dashboard/buyers');
   };
   
-  const handlePrint = useReactToPrint({
-    content: () => componentToPrintRef.current,
-    onBeforePrint: () => {
-        if (!validateInvoice()) {
-            // This is a bit of a hack to cancel printing, but it's the simplest way
-            throw new Error("Validation failed. Please check invoice details.");
-        }
-    },
-    onAfterPrint: () => {
-      performSave();
-      router.push('/dashboard/buyers');
-    },
-  });
-
 
   return (
     <>
@@ -310,14 +297,30 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Print Preview</h2>
-              <Button onClick={handlePrint}>
-                <Printer className="mr-2"/> 
-                {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
-              </Button>
+              
+               <ReactToPrint
+                trigger={() => (
+                    <button className={cn(buttonVariants())}>
+                        <Printer className="mr-2"/> 
+                        {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
+                    </button>
+                )}
+                content={() => componentToPrintRef.current}
+                onBeforePrint={() => {
+                  if (!validateInvoice()) {
+                    // This is a hack to prevent printing on validation fail
+                    return false;
+                  }
+                }}
+                onAfterPrint={() => {
+                    performSave();
+                    router.push('/dashboard/buyers');
+                }}
+               />
           </div>
           <div className="border rounded-lg overflow-hidden">
-             {/* This component is rendered for the user to see the preview */}
              <InvoicePrintLayout 
+                ref={componentToPrintRef}
                 invoiceId={invoiceId}
                 currentDate={currentDate}
                 customerName={customerName}
@@ -332,22 +335,6 @@ export default function InvoicePage() {
           </div>
         </div>
       </div>
-       {/* This component is hidden and is only used for printing */}
-       <div style={{ display: 'none' }}>
-            <InvoicePrintLayout 
-                ref={componentToPrintRef}
-                invoiceId={invoiceId}
-                currentDate={currentDate}
-                customerName={customerName}
-                customerAddress={customerAddress}
-                customerPhone={customerPhone}
-                invoiceItems={invoiceItems}
-                subtotal={subtotal}
-                paidAmount={paidAmount}
-                dueAmount={dueAmount}
-                printFormat={settings.printFormat}
-            />
-        </div>
     </>
   );
 }
