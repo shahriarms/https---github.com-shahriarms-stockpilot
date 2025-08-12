@@ -1,8 +1,10 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef } from 'react';
+import { useReactToPrint } from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
+import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -13,18 +15,28 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Users, FileText, ChevronRight, Calendar, DollarSign, Search } from 'lucide-react';
+import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { InvoicePrintLayout } from '@/components/invoice-print-layout';
+import { cn } from '@/lib/utils';
+
 
 export default function BuyersPage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
+  const { settings } = useSettings();
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
   const [invoiceSearchTerm, setInvoiceSearchTerm] = useState('');
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
 
+  const componentToPrintRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentToPrintRef.current,
+  });
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -155,66 +167,32 @@ export default function BuyersPage() {
 
         {/* Invoice Display */}
         <div className="md:col-span-2 flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold">Invoice Details</h2>
+              {selectedInvoice && (
+                  <Button onClick={handlePrint}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print Invoice
+                  </Button>
+              )}
+          </div>
           <ScrollArea className="flex-1 rounded-lg border">
             <div className="p-4 space-y-4 bg-background">
               {selectedInvoice ? (
-                     <Card key={selectedInvoice.id} className="w-full">
-                        <CardContent className="p-8 bg-white text-black font-serif">
-                            <div className="text-center mb-6">
-                                <h1 className="text-2xl font-bold text-primary">ক্যাশ মেমো (Cash Memo)</h1>
-                                <h2 className="text-xl font-bold">মাহমুদ ইঞ্জিনিয়ারিং শপ</h2>
-                                <p className="text-xs">এখানে ওয়েডিং, জিন, শিট সহ সকল প্রকার ওয়র্কশপ এর মালামাল এবং ফার্নিচার সামগ্রি বিক্রয় করা হয়।</p>
-                                <p className="text-xs">Email: engmahmud.mm@gmail.com</p>
-                            </div>
-                            <div className="flex justify-between border-b pb-2 mb-4">
-                                <span>ক্রঃ নং (Inv No): {selectedInvoice.id.slice(-6)}</span>
-                                <span>তারিখ (Date): {new Date(selectedInvoice.date).toLocaleDateString()}</span>
-                            </div>
-                            <div className="mb-4">
-                                <p>নাম (Name): {selectedInvoice.customerName}</p>
-                                <p>ঠিকানা (Address): {selectedInvoice.customerAddress}</p>
-                                <p>ফোন (Phone): {selectedInvoice.customerPhone}</p>
-                            </div>
-
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="text-black">মালের বিবরণ (Item Description)</TableHead>
-                                        <TableHead className="text-black text-center">পরিমাণ (Qty)</TableHead>
-                                        <TableHead className="text-black text-center">দর (Rate)</TableHead>
-                                        <TableHead className="text-black text-right">টাকা (Amount)</TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {selectedInvoice.items.map(item => (
-                                        <TableRow key={item.id}>
-                                            <TableCell className="text-black">{item.name}</TableCell>
-                                            <TableCell className="text-black text-center">{item.quantity}</TableCell>
-                                            <TableCell className="text-black text-center">${item.price.toFixed(2)}</TableCell>
-                                            <TableCell className="text-black text-right">${(item.price * item.quantity).toFixed(2)}</TableCell>
-                                        </TableRow>
-                                    ))}
-                                </TableBody>
-                            </Table>
-                            
-                            <div className="mt-6 flex justify-end">
-                                <div className="w-64 space-y-2">
-                                    <div className="flex justify-between">
-                                        <span>উপমোট (Subtotal):</span>
-                                        <span>${selectedInvoice.subtotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between">
-                                        <span>জমা (Paid):</span>
-                                        <span>${selectedInvoice.paidAmount.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between font-bold border-t pt-2">
-                                        <span>বাকী (Due):</span>
-                                        <span>${selectedInvoice.dueAmount < 0 ? `($${Math.abs(selectedInvoice.dueAmount).toFixed(2)})` : `$${selectedInvoice.dueAmount.toFixed(2)}`}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+                   <div ref={componentToPrintRef}>
+                       <InvoicePrintLayout
+                          invoiceId={selectedInvoice.id}
+                          currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                          customerName={selectedInvoice.customerName}
+                          customerAddress={selectedInvoice.customerAddress}
+                          customerPhone={selectedInvoice.customerPhone}
+                          invoiceItems={selectedInvoice.items}
+                          subtotal={selectedInvoice.subtotal}
+                          paidAmount={selectedInvoice.paidAmount}
+                          dueAmount={selectedInvoice.dueAmount}
+                          printFormat={settings.printFormat}
+                       />
+                   </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center">
                     <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
