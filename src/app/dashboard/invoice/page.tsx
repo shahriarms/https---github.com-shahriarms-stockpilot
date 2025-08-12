@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
-import ReactToPrint from 'react-to-print';
+import ReactToPrint, { useReactToPrint } from 'react-to-print';
 import { useSettings } from '@/hooks/use-settings';
 import { cn } from '@/lib/utils';
 
@@ -159,6 +159,19 @@ export default function InvoicePage() {
     router.push('/dashboard/buyers');
   };
   
+  const handlePrint = useReactToPrint({
+    content: () => componentToPrintRef.current,
+    onBeforeGetContent: () => {
+        if (!validateInvoice()) {
+            return Promise.reject(); // Prevents printing if validation fails
+        }
+    },
+    onAfterPrint: () => {
+        performSave();
+        router.push('/dashboard/buyers');
+    }
+  });
+
 
   return (
     <>
@@ -297,26 +310,10 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Print Preview</h2>
-              
-               <ReactToPrint
-                trigger={() => (
-                    <button className={cn(buttonVariants())}>
-                        <Printer className="mr-2"/> 
-                        {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
-                    </button>
-                )}
-                content={() => componentToPrintRef.current}
-                onBeforePrint={() => {
-                  if (!validateInvoice()) {
-                    // This is a hack to prevent printing on validation fail
-                    return false;
-                  }
-                }}
-                onAfterPrint={() => {
-                    performSave();
-                    router.push('/dashboard/buyers');
-                }}
-               />
+               <button onClick={handlePrint} className={cn(buttonVariants())}>
+                    <Printer className="mr-2"/> 
+                    {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
+                </button>
           </div>
           <div className="border rounded-lg overflow-hidden">
              <InvoicePrintLayout 
@@ -338,3 +335,5 @@ export default function InvoicePage() {
     </>
   );
 }
+
+    
