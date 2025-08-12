@@ -40,16 +40,14 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateSettings = useCallback((newSettings: Partial<AppSettings>) => {
-    setSettings(prevSettings => {
-        const updated = { ...prevSettings, ...newSettings };
-        localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
-        toast({
-            title: "Settings Updated",
-            description: "Your changes have been saved.",
-        });
-        return updated;
+    const updated = { ...settings, ...newSettings };
+    setSettings(updated);
+    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+    toast({
+        title: "Settings Updated",
+        description: "Your changes have been saved.",
     });
-  }, [toast]);
+  }, [settings, toast]);
   
   const value = useMemo(() => ({ settings, updateSettings, isLoading }), [settings, updateSettings, isLoading]);
 
