@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
-import { PlusCircle, Trash2, Printer, FileText, Save } from 'lucide-react';
+import { PlusCircle, Trash2, Printer, Save } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -123,7 +123,7 @@ export default function InvoicePage() {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
 
-  const validateInvoice = () => {
+  const validateInvoice = useCallback(() => {
     if (!customerName) {
       toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter the customer\'s name.' });
       return false;
@@ -133,7 +133,7 @@ export default function InvoicePage() {
       return false;
     }
     return true;
-  };
+  }, [customerName, invoiceItems.length, toast]);
   
   const performSave = useCallback(() => {
     saveInvoice({
@@ -147,7 +147,9 @@ export default function InvoicePage() {
       dueAmount,
     });
     clearInvoiceForm();
-    setInvoiceId(`INV-${Date.now()}`); // Reset for next invoice
+    const newInvoiceId = `INV-${Date.now()}`;
+    setInvoiceId(newInvoiceId);
+    return newInvoiceId;
   }, [saveInvoice, invoiceId, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm]);
 
   const handleSaveAndRedirect = () => {
@@ -159,16 +161,17 @@ export default function InvoicePage() {
   const handlePrint = useReactToPrint({
     content: () => componentToPrintRef.current,
     onAfterPrint: () => {
-      // This is called after the print dialog is closed
-      performSave();
       router.push('/dashboard/buyers');
     },
   });
 
   const handleSaveAndPrint = () => {
     if (!validateInvoice()) return;
-    // The save operation is now handled in onAfterPrint
-    handlePrint();
+    performSave();
+    // Use a short timeout to ensure state updates before printing
+    setTimeout(() => {
+        handlePrint();
+    }, 100);
   };
 
 
