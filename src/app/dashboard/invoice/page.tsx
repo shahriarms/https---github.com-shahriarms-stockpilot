@@ -161,17 +161,14 @@ export default function InvoicePage() {
   const handlePrint = useReactToPrint({
     content: () => componentToPrintRef.current,
     onAfterPrint: () => {
+      performSave();
       router.push('/dashboard/buyers');
     },
   });
 
   const handleSaveAndPrint = () => {
     if (!validateInvoice()) return;
-    performSave();
-    // Use a short timeout to ensure state updates before printing
-    setTimeout(() => {
-        handlePrint();
-    }, 100);
+    handlePrint();
   };
 
 
@@ -317,7 +314,7 @@ export default function InvoicePage() {
                 {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
               </Button>
           </div>
-          <div className="print-hidden">
+          <div className="border rounded-lg overflow-hidden">
              <InvoicePrintLayout 
                 ref={componentToPrintRef}
                 invoiceId={invoiceId}
@@ -333,21 +330,6 @@ export default function InvoicePage() {
             />
           </div>
         </div>
-      </div>
-       <div className="hidden">
-        <InvoicePrintLayout 
-            ref={componentToPrintRef}
-            invoiceId={invoiceId}
-            currentDate={currentDate}
-            customerName={customerName}
-            customerAddress={customerAddress}
-            customerPhone={customerPhone}
-            invoiceItems={invoiceItems}
-            subtotal={subtotal}
-            paidAmount={paidAmount}
-            dueAmount={dueAmount}
-            printFormat={settings.printFormat}
-          />
       </div>
     </>
   );
