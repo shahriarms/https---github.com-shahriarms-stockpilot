@@ -60,7 +60,7 @@ export default function InvoicePage() {
   useEffect(() => {
     // These need to be in useEffect to avoid hydration errors
     const now = new Date();
-    setCurrentDate(now.toLocaleDateString('en-GB'));
+    setCurrentDate(now.toLocaleDateString());
     setInvoiceId(`INV-${now.getTime()}`);
   }, []);
 
@@ -113,28 +113,89 @@ export default function InvoicePage() {
     if (!validateInvoice()) return;
 
     if (componentToPrintRef.current) {
-      printJS({
-        printable: componentToPrintRef.current.innerHTML,
-        type: 'raw-html',
-        style: `
+        const isPos = settings.printFormat === 'pos';
+        const printStyles = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-            body { font-family: 'Inter', sans-serif; }
-            .print-card { margin: 0; padding: 1rem; border: none; box-shadow: none; }
-            .print-title { font-size: 1.5rem; font-weight: bold; text-align: center; }
-            .print-subtitle { font-size: 1.25rem; font-weight: bold; text-align: center; }
-            .print-text-xs { font-size: 0.75rem; text-align: center; }
-            .print-flex { display: flex; justify-content: space-between; }
-            .print-border-b { border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; margin-bottom: 1rem; }
-            .print-table { width: 100%; border-collapse: collapse; }
-            .print-table th, .print-table td { text-align: left; padding: 0.25rem; border-bottom: 1px solid #eee; }
-            .print-table th { font-weight: bold; }
-            .print-text-right { text-align: right; }
-            .print-mt-6 { margin-top: 1.5rem; }
-            .print-font-bold { font-weight: bold; }
-        `,
-        documentTitle: `Invoice - ${invoiceId.slice(-6)}`,
-        onPrintDialogClose: performSave,
-      });
+            @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
+            
+            body { 
+                font-family: 'Inter', sans-serif; 
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+            .print-container { 
+                margin: 0; 
+                padding: 0;
+            }
+            .print-card { 
+                border: none !important; 
+                box-shadow: none !important; 
+                background-color: white !important;
+                color: black !important;
+            }
+            .print-card * {
+                color: black !important;
+            }
+            table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            th, td {
+                border-bottom: 1px solid #ccc;
+                padding: 4px 2px;
+                text-align: left;
+            }
+            th {
+                font-weight: bold;
+            }
+            .text-right { text-align: right; }
+            .font-bold { font-weight: bold; }
+            .font-bangla { font-family: 'Tiro Bangla', serif; }
+            .mb-2 { margin-bottom: 0.5rem; }
+            .mb-4 { margin-bottom: 1rem; }
+            .mb-6 { margin-bottom: 1.5rem; }
+            .pb-2 { padding-bottom: 0.5rem; }
+            .pt-2 { padding-top: 0.5rem; }
+            .border-b { border-bottom: 1px solid #ccc; }
+            .text-center { text-align: center; }
+            .flex { display: flex; }
+            .justify-between { justify-content: space-between; }
+            
+            ${isPos ? `
+                @page {
+                    size: 80mm auto;
+                    margin: 2mm;
+                }
+                body {
+                    font-size: 10pt;
+                    line-height: 1.4;
+                }
+                .print-card {
+                    padding: 0 !important;
+                }
+                h1 { font-size: 14pt; }
+                h2 { font-size: 12pt; }
+                p, span, div { font-size: 10pt; }
+                th, td { padding: 2px 1px; font-size: 9pt; }
+            ` : `
+                @page {
+                    size: A4;
+                    margin: 20mm;
+                }
+                 body {
+                    font-size: 12pt;
+                }
+            `}
+        `;
+
+        printJS({
+            printable: componentToPrintRef.current.innerHTML,
+            type: 'raw-html',
+            style: printStyles,
+            scanStyles: false,
+            documentTitle: `Invoice - ${invoiceId.slice(-6)}`,
+            onPrintDialogClose: performSave,
+        });
     }
   };
 
@@ -216,7 +277,6 @@ export default function InvoicePage() {
   };
 
   return (
-    <>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left Column: Invoice Form */}
         <div className="flex flex-col gap-6">
@@ -352,12 +412,13 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Live Print Preview</h2>
-              <Button onClick={handlePrint}>
+              <Button onClick={handlePrint} disabled={invoiceItems.length === 0}>
                   <Printer className="mr-2"/> 
-                  {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & A4 Print'}
+                  {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
               </Button>
           </div>
           <div className="border rounded-lg overflow-hidden">
+            <div ref={componentToPrintRef} className="print-container">
              <InvoicePrintLayout 
                 invoiceId={invoiceId}
                 currentDate={currentDate}
@@ -370,27 +431,10 @@ export default function InvoicePage() {
                 dueAmount={dueAmount}
                 printFormat={settings.printFormat}
             />
+            </div>
           </div>
         </div>
       </div>
-       {/* Hidden component for printing */}
-      <div style={{ display: "none" }}>
-        <div ref={componentToPrintRef}>
-            <InvoicePrintLayout
-            invoiceId={invoiceId}
-            currentDate={currentDate}
-            customerName={customerName}
-            customerAddress={customerAddress}
-            customerPhone={customerPhone}
-            invoiceItems={invoiceItems}
-            subtotal={subtotal}
-            paidAmount={paidAmount}
-            dueAmount={dueAmount}
-            printFormat={settings.printFormat}
-            />
-        </div>
-      </div>
-    </>
   );
 }
 
