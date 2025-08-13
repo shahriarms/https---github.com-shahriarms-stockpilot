@@ -404,9 +404,6 @@ export default function InvoicePage() {
                   </div>
               </div>
               
-               <Button className="w-full mt-6" onClick={handleSaveAndRedirect}>
-                  <Save className="mr-2 h-4 w-4"/> {t('save_invoice_button')}
-              </Button>
             </CardContent>
           </Card>
         </div>
