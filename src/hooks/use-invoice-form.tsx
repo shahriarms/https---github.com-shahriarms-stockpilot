@@ -2,12 +2,16 @@
 'use client';
 
 import { useState, createContext, useContext, ReactNode, useMemo, useCallback, useEffect } from 'react';
-import type { InvoiceItem } from '@/lib/types';
+import type { InvoiceItem, Product } from '@/lib/types';
 import { useToast } from './use-toast';
+
+export interface DraftInvoiceItem extends InvoiceItem {
+    originalPrice: number;
+}
 
 export interface DraftInvoice {
     id: string;
-    items: InvoiceItem[];
+    items: DraftInvoiceItem[];
     customerName: string;
     customerAddress: string;
     customerPhone: string;
@@ -24,6 +28,9 @@ interface InvoiceFormContextType {
     removeDraft: (draftId: string) => void;
     setActiveDraftIndex: (index: number) => void;
     updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => void;
+    addInvoiceItem: (product: Product) => void;
+    updateInvoiceItem: (itemId: string, update: Partial<DraftInvoiceItem>) => void;
+    removeInvoiceItem: (itemId: string) => void;
     isFormLoading: boolean;
 }
 
@@ -42,13 +49,18 @@ const createNewDraft = (): DraftInvoice => ({
     dueAmount: 0,
 });
 
+const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number) => {
+    const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
+    const dueAmount = subtotal - paidAmount;
+    return { subtotal, dueAmount };
+}
+
 export function InvoiceFormProvider({ children }: { children: ReactNode }) {
     const [drafts, setDrafts] = useState<DraftInvoice[]>([]);
     const [activeDraftIndex, setActiveDraftIndex] = useState(0);
     const [isFormLoading, setFormLoading] = useState(true);
     const { toast } = useToast();
 
-    // Load drafts from localStorage on initial render
     useEffect(() => {
         try {
             const savedDrafts = localStorage.getItem(INVOICE_DRAFTS_KEY);
@@ -70,7 +82,6 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         setFormLoading(false);
     }, []);
     
-    // Save drafts to localStorage whenever they change
     useEffect(() => {
         if (!isFormLoading) {
             localStorage.setItem(INVOICE_DRAFTS_KEY, JSON.stringify(drafts));
@@ -90,18 +101,16 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         }
         const newDraft = createNewDraft();
         setDrafts(prev => [...prev, newDraft]);
-        setActiveDraftIndex(drafts.length); // Switch to the new draft
+        setActiveDraftIndex(drafts.length);
     }, [drafts.length, toast]);
     
     const removeDraft = useCallback((draftId: string) => {
         setDrafts(prev => {
             const newDrafts = prev.filter(d => d.id !== draftId);
-            
             if (newDrafts.length === 0) {
                 setActiveDraftIndex(0);
                 return [createNewDraft()];
             }
-
             if (activeDraftIndex >= newDrafts.length) {
                 setActiveDraftIndex(newDrafts.length - 1);
             }
@@ -110,23 +119,53 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
     }, [activeDraftIndex]);
 
     const updateActiveDraft = useCallback((update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => {
-        setDrafts(prev => {
-            return prev.map((draft, index) => {
-                if (index === activeDraftIndex) {
-                    const updatedDraft = { ...draft, ...update };
-                    
-                    if (update.items) {
-                        updatedDraft.subtotal = update.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-                    }
-                    
-                    updatedDraft.dueAmount = updatedDraft.subtotal - updatedDraft.paidAmount;
-
-                    return updatedDraft;
-                }
-                return draft;
-            });
-        });
+        setDrafts(prev => prev.map((draft, index) => {
+            if (index === activeDraftIndex) {
+                const updatedDraft = { ...draft, ...update };
+                const { subtotal, dueAmount } = calculateTotals(updatedDraft.items, updatedDraft.paidAmount);
+                updatedDraft.subtotal = subtotal;
+                updatedDraft.dueAmount = dueAmount;
+                return updatedDraft;
+            }
+            return draft;
+        }));
     }, [activeDraftIndex]);
+
+    const addInvoiceItem = useCallback((product: Product) => {
+        setDrafts(prev => prev.map((draft, index) => {
+            if (index !== activeDraftIndex) return draft;
+
+            const existingItem = draft.items.find(item => item.id === product.id);
+            let newItems;
+            if (existingItem) {
+                newItems = draft.items.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+            } else {
+                const newItem: DraftInvoiceItem = { ...product, quantity: 1, originalPrice: product.price };
+                newItems = [...draft.items, newItem];
+            }
+            const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
+            return { ...draft, items: newItems, subtotal, dueAmount };
+        }));
+    }, [activeDraftIndex]);
+    
+    const updateInvoiceItem = useCallback((itemId: string, itemUpdate: Partial<DraftInvoiceItem>) => {
+        setDrafts(prev => prev.map((draft, index) => {
+            if (index !== activeDraftIndex) return draft;
+            const newItems = draft.items.map(item => item.id === itemId ? { ...item, ...itemUpdate } : item);
+            const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
+            return { ...draft, items: newItems, subtotal, dueAmount };
+        }));
+    }, [activeDraftIndex]);
+
+    const removeInvoiceItem = useCallback((itemId: string) => {
+        setDrafts(prev => prev.map((draft, index) => {
+            if (index !== activeDraftIndex) return draft;
+            const newItems = draft.items.filter(item => item.id !== itemId);
+            const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
+            return { ...draft, items: newItems, subtotal, dueAmount };
+        }));
+    }, [activeDraftIndex]);
+
 
     const value = useMemo(() => ({
         drafts,
@@ -136,8 +175,11 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         removeDraft,
         setActiveDraftIndex,
         updateActiveDraft,
+        addInvoiceItem,
+        updateInvoiceItem,
+        removeInvoiceItem,
         isFormLoading,
-    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, updateActiveDraft, isFormLoading]);
+    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, isFormLoading]);
 
     return (
         <InvoiceFormContext.Provider value={value}>

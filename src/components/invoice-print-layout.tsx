@@ -7,6 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import type { InvoiceItem, PrintFormat, Locale } from '@/lib/types';
 import { cn, numberToWords, numberToWordsBn } from '@/lib/utils';
 import { translations } from '@/lib/i18n/all';
+import type { DraftInvoiceItem } from '@/hooks/use-invoice-form';
 
 interface InvoicePrintLayoutProps {
     invoiceId: string;
@@ -14,7 +15,7 @@ interface InvoicePrintLayoutProps {
     customerName: string;
     customerAddress: string;
     customerPhone: string;
-    invoiceItems: InvoiceItem[];
+    invoiceItems: DraftInvoiceItem[];
     subtotal: number;
     paidAmount: number;
     dueAmount: number;
@@ -83,7 +84,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {invoiceItems.length > 0 ? invoiceItems.map(item => (
+                            {invoiceItems && invoiceItems.length > 0 ? invoiceItems.map(item => (
                                 <TableRow key={item.id}>
                                     <TableCell className="p-1">{item.name}</TableCell>
                                     <TableCell className="text-center p-1">{item.quantity}</TableCell>

@@ -26,10 +26,11 @@ import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useSettings } from '@/hooks/use-settings';
 import printJS from 'print-js';
 import { useTranslation } from '@/hooks/use-translation';
-import type { DraftInvoice } from '@/hooks/use-invoice-form';
+import type { DraftInvoice, DraftInvoiceItem } from '@/hooks/use-invoice-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Product } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { cn } from '@/lib/utils';
 
 
 export default function InvoicePage() {
@@ -49,6 +50,9 @@ export default function InvoicePage() {
     removeDraft,
     setActiveDraftIndex,
     updateActiveDraft,
+    updateInvoiceItem,
+    removeInvoiceItem,
+    addInvoiceItem,
     isFormLoading
   } = useInvoiceForm();
   
@@ -62,9 +66,7 @@ export default function InvoicePage() {
   const [subCategorySearch, setSubCategorySearch] = useState('');
   const [productSearch, setProductSearch] = useState('');
   
-  
-  // Destructure activeDraft properties only when it's available
-  const { id: draftId, items, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount } = activeDraft || {};
+  const { id: draftId, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount, items } = activeDraft || {};
 
   const validateInvoice = () => {
     if (!customerName) {
@@ -87,7 +89,7 @@ export default function InvoicePage() {
       customerName: activeDraft.customerName,
       customerAddress: activeDraft.customerAddress,
       customerPhone: activeDraft.customerPhone,
-      items: activeDraft.items,
+      items: activeDraft.items.map(({ originalPrice, ...item }) => item), // Remove originalPrice before saving
       subtotal: activeDraft.subtotal,
       paidAmount: activeDraft.paidAmount,
       dueAmount: activeDraft.dueAmount,
@@ -103,7 +105,7 @@ export default function InvoicePage() {
   };
 
   const handlePrint = () => {
-    if (!validateInvoice()) return;
+    if (!validateInvoice() || !activeDraft) return;
     if (componentToPrintRef.current) {
         const isPos = settings.printFormat === 'pos';
         const printStyles = `
@@ -238,30 +240,10 @@ export default function InvoicePage() {
     return prods;
   }, [products, mainCategoryFilter, categoryFilter, subCategoryFilter, productSearch]);
 
-
   const handleAddProduct = (product: Product) => {
-    if (!activeDraft) return;
-    const existingItem = activeDraft.items.find((item) => item.id === product.id);
-    const newItems = existingItem
-      ? activeDraft.items.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
-      : [...activeDraft.items, { ...product, quantity: 1 }];
-    updateActiveDraft({ items: newItems });
+    addInvoiceItem(product);
   };
-
-  const handleQuantityChange = (productId: string, quantity: number) => {
-    if (!activeDraft) return;
-    const newItems = activeDraft.items.map((item) =>
-      item.id === productId ? { ...item, quantity: Math.max(0, quantity) } : item
-    );
-    updateActiveDraft({ items: newItems });
-  };
-
-  const handleRemoveItem = (productId: string) => {
-    if (!activeDraft) return;
-    const newItems = activeDraft.items.filter((item) => item.id !== productId);
-    updateActiveDraft({ items: newItems });
-  };
-
+  
   const handleDeleteDraftClick = (draft: DraftInvoice) => {
     if (drafts.length <= 1) {
         toast({
@@ -290,7 +272,7 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-full">
+    <div className="flex flex-col gap-4 h-[calc(100vh-theme(spacing.24))]">
         <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
@@ -319,9 +301,9 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start flex-1 min-h-0">
-            {/* Left Column: Customer Details & Product Selection */}
-            <div className="flex flex-col gap-4 h-full">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 flex-1 min-h-0">
+            {/* Left Column: Customer & Product Selection */}
+            <div className="flex flex-col gap-4 h-full min-h-0">
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -345,7 +327,7 @@ export default function InvoicePage() {
                     </CardContent>
                 </Card>
 
-                <Card className="flex-1 flex flex-col">
+                <Card className="flex-1 flex flex-col min-h-0">
                     <CardHeader>
                         <CardTitle>{t('add_products_label')}</CardTitle>
                         <RadioGroup
@@ -404,23 +386,30 @@ export default function InvoicePage() {
             </div>
 
             {/* Right Column: Invoice Items & Print Preview */}
-            <div className="flex flex-col gap-4 h-full">
-                <Card className="flex-1 flex flex-col">
+            <div className="flex flex-col gap-4 h-full min-h-0">
+                <Card className="flex-1 flex flex-col min-h-0">
                     <CardHeader>
                         <CardTitle>Invoice Items</CardTitle>
                     </CardHeader>
-                    <CardContent className="flex-1 flex flex-col gap-4">
+                    <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
                         <ScrollArea className="flex-1 -mr-6 pr-6">
                             <div className="space-y-2">
-                                {items.length === 0 ? (
+                                {items && items.length === 0 ? (
                                     <div className="text-center text-muted-foreground py-10">Select products to add them here.</div>
                                 ) : (
-                                    items.map(item => (
+                                    items && items.map(item => (
                                         <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                                            <span className="flex-1 font-medium">{item.name}</span>
-                                            <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
-                                            <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
-                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
+                                            <div className='flex-1'>
+                                                <p className="font-medium">{item.name}</p>
+                                                <p className='text-xs text-muted-foreground'>Suggested: ${item.originalPrice.toFixed(2)}</p>
+                                            </div>
+                                            <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="w-20" />
+                                            <div className="relative w-28 flex items-center gap-1">
+                                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                                 <Input type="number" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium" />
+                                            </div>
+                                            <span className="w-24 text-right font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
+                                            <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)}>
                                                 <Trash2 className="w-4 h-4 text-destructive" />
                                             </Button>
                                         </div>
@@ -429,14 +418,14 @@ export default function InvoicePage() {
                             </div>
                         </ScrollArea>
                         
-                        {items.length > 0 && (
+                        {items && items.length > 0 && (
                             <div className="mt-auto pt-4 border-t flex items-end justify-end">
-                                <div className="space-y-2 text-right">
-                                    <div className="flex justify-end items-center gap-4">
+                                <div className="space-y-2 text-right w-64">
+                                    <div className="flex justify-between items-center">
                                         <span className="font-medium">{t('subtotal_label')}:</span>
                                         <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
                                     </div>
-                                    <div className="flex justify-end items-center gap-4">
+                                    <div className="flex justify-between items-center">
                                         <span className="font-medium">{t('paid_label')}:</span>
                                         <div className="relative w-28 flex items-center gap-1">
                                             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
@@ -449,7 +438,7 @@ export default function InvoicePage() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="flex justify-end items-center gap-4 text-primary">
+                                    <div className="flex justify-between items-center text-primary">
                                         <span className="font-medium">{t('due_label')}:</span>
                                         <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
                                     </div>
@@ -467,9 +456,9 @@ export default function InvoicePage() {
                             {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
                         </Button>
                     </div>
-                    <div className="border rounded-lg overflow-hidden flex-1 max-h-[50vh]">
-                        <ScrollArea className="h-full">
-                           <div ref={componentToPrintRef} className="print-container bg-white">
+                    <div className={cn("border rounded-lg overflow-hidden flex-1", settings.printFormat === 'pos' ? "max-h-[60vh]" : "max-h-[50vh]")}>
+                        <ScrollArea className="h-full bg-muted/50 p-4">
+                           <div ref={componentToPrintRef} className="print-container bg-white mx-auto">
                                 <InvoicePrintLayout 
                                     invoiceId={draftId}
                                     currentDate={new Date().toLocaleDateString()}
