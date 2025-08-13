@@ -401,7 +401,7 @@ export default function InvoicePage() {
                                         <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
                                             <div className='flex-1'>
                                                 <p className="font-medium">{item.name}</p>
-                                                <p className='text-xs text-muted-foreground'>Suggested: ${item.originalPrice.toFixed(2)}</p>
+                                                <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || item.price).toFixed(2)}</p>
                                             </div>
                                             <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="w-20" />
                                             <div className="relative w-28 flex items-center gap-1">
