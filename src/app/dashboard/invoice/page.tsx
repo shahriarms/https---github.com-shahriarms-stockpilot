@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,9 +23,8 @@ import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
-import ReactToPrint from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import { useSettings } from '@/hooks/use-settings';
-import { cn } from '@/lib/utils';
 
 
 export default function InvoicePage() {
@@ -63,6 +62,46 @@ export default function InvoicePage() {
     setCurrentDate(now.toLocaleDateString('en-GB'));
     setInvoiceId(`INV-${now.getTime()}`);
   }, []);
+  
+  const performSave = useCallback(() => {
+    if (!validateInvoice()) return null;
+    
+    const newId = `INV-${Date.now()}`;
+    saveInvoice({
+      id: newId,
+      customerName,
+      customerAddress,
+      customerPhone,
+      items: invoiceItems,
+      subtotal,
+      paidAmount,
+      dueAmount,
+    });
+    
+    toast({
+        title: "Invoice Saved & Printed",
+        description: `Invoice ${newId.slice(-6)} has been saved.`,
+    });
+
+    clearInvoiceForm();
+    setInvoiceId(`INV-${Date.now()}`); // Generate a new ID for the next form
+    router.push('/dashboard/buyers');
+  }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast]);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentToPrintRef.current,
+    onAfterPrint: () => {
+        performSave();
+    },
+    onBeforeGetContent: () => {
+      return new Promise<void>((resolve) => {
+        if (!validateInvoice()) {
+            return;
+        }
+        resolve();
+      });
+    }
+  });
 
   const resetFilters = () => {
     setCategoryFilter('');
@@ -136,11 +175,13 @@ export default function InvoicePage() {
     return true;
   }, [customerName, invoiceItems.length, toast]);
   
-  const performSave = useCallback(() => {
-    if (!validateInvoice()) return null;
-    
+
+  const handleSaveAndRedirect = () => {
+     if (!validateInvoice()) return;
+
+    const newId = `INV-${Date.now()}`;
     saveInvoice({
-      id: invoiceId,
+      id: newId,
       customerName,
       customerAddress,
       customerPhone,
@@ -149,16 +190,15 @@ export default function InvoicePage() {
       paidAmount,
       dueAmount,
     });
-    clearInvoiceForm();
-    const newInvoiceId = `INV-${Date.now()}`;
-    setInvoiceId(newInvoiceId);
-    return invoiceId;
-  }, [saveInvoice, invoiceId, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, validateInvoice]);
+    
+    toast({
+        title: "Invoice Saved",
+        description: `Invoice ${newId.slice(-6)} has been saved.`,
+    });
 
-  const handleSaveAndRedirect = () => {
-    if (performSave()) {
-      router.push('/dashboard/buyers');
-    }
+    clearInvoiceForm();
+    setInvoiceId(`INV-${Date.now()}`); // Generate a new ID for the next form
+    router.push('/dashboard/buyers');
   };
 
   return (
@@ -298,26 +338,10 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
               <h2 className="text-lg font-semibold">Live Print Preview</h2>
-               <ReactToPrint
-                    trigger={() => (
-                        <button className={cn(buttonVariants())}>
-                            <Printer className="mr-2"/> 
-                            {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & A4 Print'}
-                        </button>
-                    )}
-                    content={() => componentToPrintRef.current}
-                    onBeforeGetContent={() => {
-                        if (!validateInvoice()) {
-                            return Promise.reject(); 
-                        }
-                        return Promise.resolve();
-                    }}
-                    onAfterPrint={() => {
-                        if (performSave()) {
-                            router.push('/dashboard/buyers');
-                        }
-                    }}
-                />
+              <Button onClick={handlePrint}>
+                  <Printer className="mr-2"/> 
+                  {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & A4 Print'}
+              </Button>
           </div>
           <div className="border rounded-lg overflow-hidden">
              <InvoicePrintLayout 

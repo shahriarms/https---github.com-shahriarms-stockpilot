@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
-import ReactToPrint from 'react-to-print';
+import { useReactToPrint } from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -18,9 +18,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
 import { Input } from '@/components/ui/input';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { Button } from '@/components/ui/button';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
-import { cn } from '@/lib/utils';
 
 
 export default function BuyersPage() {
@@ -33,6 +32,10 @@ export default function BuyersPage() {
   const [buyerSearchTerm, setBuyerSearchTerm] = useState('');
 
   const componentToPrintRef = useRef<HTMLDivElement>(null);
+
+  const handlePrint = useReactToPrint({
+    content: () => componentToPrintRef.current,
+  });
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -61,15 +64,6 @@ export default function BuyersPage() {
         (buyer.phone && buyer.phone.toLowerCase().includes(buyerSearchTerm.toLowerCase()))
     );
   }, [buyers, buyerSearchTerm]);
-
-  // The button needs to be wrapped in forwardRef to avoid findDOMNode error
-  const PrintTrigger = React.forwardRef<HTMLButtonElement, {}>((props, ref) => (
-      <button ref={ref} className={cn(buttonVariants())}>
-          <Printer className="mr-2 h-4 w-4" />
-          Print Invoice
-      </button>
-  ));
-  PrintTrigger.displayName = 'PrintTrigger';
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -176,10 +170,10 @@ export default function BuyersPage() {
           <div className="flex items-center justify-between">
               <h2 className="text-lg font-semibold">Invoice Details</h2>
               {selectedInvoice && (
-                  <ReactToPrint
-                    trigger={() => <PrintTrigger />}
-                    content={() => componentToPrintRef.current}
-                  />
+                  <Button onClick={handlePrint}>
+                      <Printer className="mr-2 h-4 w-4" />
+                      Print Invoice
+                  </Button>
               )}
           </div>
           <ScrollArea className="flex-1 rounded-lg border">
