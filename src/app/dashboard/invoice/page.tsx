@@ -5,14 +5,7 @@ import { useState, useRef, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
-import { Plus, Trash2, Printer, X, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Printer, X, Loader2, Search } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
@@ -36,6 +29,8 @@ import { useSettings } from '@/hooks/use-settings';
 import printJS from 'print-js';
 import { useTranslation } from '@/hooks/use-translation';
 import type { DraftInvoice } from '@/hooks/use-invoice-form';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import type { Product } from '@/lib/types';
 
 
 export default function InvoicePage() {
@@ -63,6 +58,11 @@ export default function InvoicePage() {
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
+
+  const [categorySearch, setCategorySearch] = useState('');
+  const [subCategorySearch, setSubCategorySearch] = useState('');
+  const [productSearch, setProductSearch] = useState('');
+  
   
   // Destructure activeDraft properties only when it's available
   const { id: draftId, items, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount } = activeDraft || {};
@@ -201,42 +201,52 @@ export default function InvoicePage() {
   const resetFilters = () => {
     setCategoryFilter('');
     setSubCategoryFilter('');
+    setProductSearch('');
+    setCategorySearch('');
+    setSubCategorySearch('');
   };
   
-  // Effect to reset filters when main category changes
   useEffect(() => {
     resetFilters();
   }, [mainCategoryFilter]);
+  
+  useEffect(() => {
+    setSubCategoryFilter('');
+    setSubCategorySearch('');
+  }, [categoryFilter]);
 
   const categories = useMemo(() => {
-      return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter).map(p => p.category))];
-  }, [products, mainCategoryFilter]);
+    const allCategories = [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter).map(p => p.category))];
+    if (!categorySearch) return allCategories;
+    return allCategories.filter(c => c.toLowerCase().includes(categorySearch.toLowerCase()));
+  }, [products, mainCategoryFilter, categorySearch]);
   
   const subCategories = useMemo(() => {
-    if (!categoryFilter) {
-      return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter).map(p => p.subCategory))];
-    }
-    return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter && p.category === categoryFilter).map(p => p.subCategory))];
-  }, [products, mainCategoryFilter, categoryFilter]);
+    const allSubCategories = [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter && p.category === categoryFilter).map(p => p.subCategory))];
+     if (!subCategorySearch) return allSubCategories;
+    return allSubCategories.filter(sc => sc.toLowerCase().includes(subCategorySearch.toLowerCase()));
+  }, [products, mainCategoryFilter, categoryFilter, subCategorySearch]);
 
   const filteredProducts = useMemo(() => {
-    return products
+    let prods = products
       .filter(p => p.mainCategory === mainCategoryFilter)
       .filter(p => categoryFilter ? p.category === categoryFilter : true)
       .filter(p => subCategoryFilter ? p.subCategory === subCategoryFilter : true);
-  }, [products, mainCategoryFilter, categoryFilter, subCategoryFilter]);
 
-
-  const handleAddProduct = (productId: string) => {
-    if (!activeDraft) return;
-    const product = products.find((p) => p.id === productId);
-    if (product) {
-      const existingItem = activeDraft.items.find((item) => item.id === productId);
-      const newItems = existingItem
-        ? activeDraft.items.map((item) => item.id === productId ? { ...item, quantity: item.quantity + 1 } : item)
-        : [...activeDraft.items, { ...product, quantity: 1 }];
-      updateActiveDraft({ items: newItems });
+    if (productSearch) {
+      prods = prods.filter(p => p.name.toLowerCase().includes(productSearch.toLowerCase()));
     }
+    return prods;
+  }, [products, mainCategoryFilter, categoryFilter, subCategoryFilter, productSearch]);
+
+
+  const handleAddProduct = (product: Product) => {
+    if (!activeDraft) return;
+    const existingItem = activeDraft.items.find((item) => item.id === product.id);
+    const newItems = existingItem
+      ? activeDraft.items.map((item) => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item)
+      : [...activeDraft.items, { ...product, quantity: 1 }];
+    updateActiveDraft({ items: newItems });
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
@@ -254,7 +264,6 @@ export default function InvoicePage() {
   };
 
   const handleDeleteDraftClick = (draft: DraftInvoice) => {
-    // Cannot delete the last draft
     if (drafts.length <= 1) {
         toast({
             variant: 'destructive',
@@ -283,7 +292,6 @@ export default function InvoicePage() {
 
   return (
     <div className="flex flex-col gap-4 h-full">
-        {/* Memo Tabs */}
         <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
@@ -312,156 +320,171 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start flex-1 min-h-0">
-            {/* Left Column: Invoice Form */}
-            <div className="flex flex-col gap-6 h-full overflow-y-auto">
-            <Card>
-                <CardHeader>
-                <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                <div className="space-y-4">
-                    <div className="flex justify-between items-center">
-                        <span className="font-medium">{t('invoice_no_label')}: {draftId ? draftId.slice(-6) : '...'}</span>
-                        <span className="text-muted-foreground">{t('date_label')}: {new Date().toLocaleDateString()}</span>
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="customerName">{t('customer_name_label')}</Label>
-                        <Input id="customerName" placeholder={t('customer_name_placeholder')} value={customerName} onChange={(e) => updateActiveDraft({ customerName: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="customerAddress">{t('customer_address_label')}</Label>
-                        <Input id="customerAddress" placeholder={t('customer_address_placeholder')} value={customerAddress} onChange={(e) => updateActiveDraft({ customerAddress: e.target.value })} />
-                    </div>
-                    <div className="space-y-2">
-                        <Label htmlFor="customerPhone">{t('customer_phone_label')}</Label>
-                        <Input id="customerPhone" placeholder={t('customer_phone_placeholder')} value={customerPhone} onChange={(e) => updateActiveDraft({ customerPhone: e.target.value })} />
-                    </div>
-                </div>
-
-                <Separator />
-                
-                <div className="space-y-4">
-                    <Label>{t('add_products_label')}</Label>
-                    
-                    <RadioGroup
-                        value={mainCategoryFilter}
-                        onValueChange={(value) => {
-                            setMainCategoryFilter(value as 'Material' | 'Hardware');
-                        }}
-                        className="flex space-x-4"
-                        >
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Material" id="r-material" />
-                            <Label htmlFor="r-material">{t('material_tab')}</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="Hardware" id="r-hardware" />
-                            <Label htmlFor="r-hardware">{t('hardware_tab')}</Label>
-                        </div>
-                    </RadioGroup>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setSubCategoryFilter(''); }}>
-                            <SelectTrigger>
-                                <SelectValue placeholder={t('filter_by_category_placeholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('all_categories')}</SelectItem>
-                                {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                        <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)} disabled={!categoryFilter}>
-                            <SelectTrigger>
-                                <SelectValue placeholder={t('filter_by_subcategory_placeholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">{t('all_subcategories')}</SelectItem>
-                                {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                    <div className="flex gap-2">
-                        <Select onValueChange={handleAddProduct}>
-                            <SelectTrigger>
-                                <SelectValue placeholder={t('select_product_placeholder')} />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {filteredProducts.map((p) => (
-                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                        <Button onClick={() => filteredProducts.length > 0 && handleAddProduct(filteredProducts[0].id)}><Plus className="mr-2"/>{t('add_item_button')}</Button>
-                    </div>
-
-                    <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-                        {items.map(item => (
-                            <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                                <span className="flex-1">{item.name}</span>
-                                <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
-                                <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
-                                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                                    <Trash2 className="w-4 h-4 text-destructive" />
-                                </Button>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start flex-1 min-h-0">
+            {/* Left Column: Invoice Form & Items */}
+            <div className="flex flex-col gap-4 h-full">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
+                        <CardDescription>{t('invoice_no_label')}: {draftId ? draftId.slice(-6) : '...'}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="customerName">{t('customer_name_label')}</Label>
+                                <Input id="customerName" placeholder={t('customer_name_placeholder')} value={customerName} onChange={(e) => updateActiveDraft({ customerName: e.target.value })} />
                             </div>
-                        ))}
-                    </div>
-
-                    <div className="mt-6 pt-4 border-t flex items-end justify-end">
-                        <div className="space-y-2 text-right">
-                            <div className="flex justify-end items-center gap-4">
-                                <span className="font-medium">{t('subtotal_label')}:</span>
-                                <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                            <div className="space-y-2">
+                                <Label htmlFor="customerPhone">{t('customer_phone_label')}</Label>
+                                <Input id="customerPhone" placeholder={t('customer_phone_placeholder')} value={customerPhone} onChange={(e) => updateActiveDraft({ customerPhone: e.target.value })} />
                             </div>
-                            <div className="flex justify-end items-center gap-4">
-                                <span className="font-medium">{t('paid_label')}:</span>
-                                <div className="relative w-28 flex items-center gap-1">
-                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                    <Input
-                                        type="number"
-                                        value={paidAmount}
-                                        onChange={(e) => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })}
-                                        className="font-bold pl-5 text-right"
-                                        placeholder="0.00"
-                                    />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="customerAddress">{t('customer_address_label')}</Label>
+                            <Input id="customerAddress" placeholder={t('customer_address_placeholder')} value={customerAddress} onChange={(e) => updateActiveDraft({ customerAddress: e.target.value })} />
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="flex-1 flex flex-col">
+                    <CardHeader>
+                        <CardTitle>Invoice Items</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col gap-4">
+                        <ScrollArea className="flex-1 -mr-6 pr-6">
+                            <div className="space-y-2">
+                                {items.length === 0 ? (
+                                    <div className="text-center text-muted-foreground py-10">Select products from the right panel to add them here.</div>
+                                ) : (
+                                    items.map(item => (
+                                        <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                            <span className="flex-1 font-medium">{item.name}</span>
+                                            <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
+                                            <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
+                                                <Trash2 className="w-4 h-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </ScrollArea>
+                        
+                        {items.length > 0 && (
+                            <div className="mt-auto pt-4 border-t flex items-end justify-end">
+                                <div className="space-y-2 text-right">
+                                    <div className="flex justify-end items-center gap-4">
+                                        <span className="font-medium">{t('subtotal_label')}:</span>
+                                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-end items-center gap-4">
+                                        <span className="font-medium">{t('paid_label')}:</span>
+                                        <div className="relative w-28 flex items-center gap-1">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                            <Input
+                                                type="number"
+                                                value={paidAmount}
+                                                onChange={(e) => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })}
+                                                className="font-bold pl-5 text-right"
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end items-center gap-4 text-primary">
+                                        <span className="font-medium">{t('due_label')}:</span>
+                                        <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <div className="flex justify-end items-center gap-4 text-primary">
-                                <span className="font-medium">{t('due_label')}:</span>
-                                <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                </CardContent>
-            </Card>
+                        )}
+                    </CardContent>
+                </Card>
             </div>
 
-            {/* Right Column: Print Preview */}
-            <div className="flex flex-col gap-4 h-full overflow-y-auto">
-                <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                    <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
-                    <Button onClick={handlePrint} disabled={!items || items.length === 0}>
-                        <Printer className="mr-2"/> 
-                        {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
-                    </Button>
-                </div>
-                <div className="border rounded-lg overflow-hidden flex-1">
-                    <div ref={componentToPrintRef} className="print-container bg-white h-full">
-                    <InvoicePrintLayout 
-                        invoiceId={draftId}
-                        currentDate={new Date().toLocaleDateString()}
-                        customerName={customerName}
-                        customerAddress={customerAddress}
-                        customerPhone={customerPhone}
-                        invoiceItems={items}
-                        subtotal={subtotal}
-                        paidAmount={paidAmount}
-                        dueAmount={dueAmount}
-                        printFormat={settings.printFormat}
-                        locale={settings.locale}
-                    />
+            {/* Right Column: Product Selection & Print Preview */}
+            <div className="flex flex-col gap-4 h-full">
+                <Card className="flex-1 flex flex-col">
+                    <CardHeader>
+                        <CardTitle>{t('add_products_label')}</CardTitle>
+                        <RadioGroup
+                            value={mainCategoryFilter}
+                            onValueChange={(value) => setMainCategoryFilter(value as 'Material' | 'Hardware')}
+                            className="flex space-x-4 pt-2"
+                        >
+                            <div className="flex items-center space-x-2"><RadioGroupItem value="Material" id="r-material" /><Label htmlFor="r-material">{t('material_tab')}</Label></div>
+                            <div className="flex items-center space-x-2"><RadioGroupItem value="Hardware" id="r-hardware" /><Label htmlFor="r-hardware">{t('hardware_tab')}</Label></div>
+                        </RadioGroup>
+                    </CardHeader>
+                    <CardContent className="flex-1 grid grid-cols-3 gap-4 min-h-0">
+                        {/* Category List */}
+                        <div className="flex flex-col gap-2">
+                           <Label>{t('category_header')}</Label>
+                            <div className="relative">
+                               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                               <Input placeholder="Search..." className="pl-8 h-9" value={categorySearch} onChange={e => setCategorySearch(e.target.value)} />
+                            </div>
+                           <ScrollArea className="border rounded-md flex-1">
+                               <div className="p-2 space-y-1">
+                                    <Button variant={!categoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setCategoryFilter('')}>{t('all_categories')}</Button>
+                                    {categories.map(c => <Button key={c} variant={categoryFilter === c ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setCategoryFilter(c)}>{c}</Button>)}
+                               </div>
+                           </ScrollArea>
+                        </div>
+                        {/* Sub-Category List */}
+                        <div className="flex flex-col gap-2">
+                            <Label>{t('subcategory_header')}</Label>
+                            <div className="relative">
+                               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                               <Input placeholder="Search..." className="pl-8 h-9" value={subCategorySearch} onChange={e => setSubCategorySearch(e.target.value)} disabled={!categoryFilter}/>
+                            </div>
+                           <ScrollArea className="border rounded-md flex-1">
+                                <div className="p-2 space-y-1">
+                                     <Button variant={!subCategoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setSubCategoryFilter('')} disabled={!categoryFilter}>{t('all_subcategories')}</Button>
+                                     {categoryFilter && subCategories.map(sc => <Button key={sc} variant={subCategoryFilter === sc ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setSubCategoryFilter(sc)}>{sc}</Button>)}
+                                </div>
+                           </ScrollArea>
+                        </div>
+                        {/* Product List */}
+                         <div className="flex flex-col gap-2">
+                            <Label>{t('products_sidebar')}</Label>
+                            <div className="relative">
+                               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                               <Input placeholder="Search..." className="pl-8 h-9" value={productSearch} onChange={e => setProductSearch(e.target.value)} />
+                            </div>
+                           <ScrollArea className="border rounded-md flex-1">
+                                <div className="p-2 space-y-1">
+                                     {filteredProducts.map(p => <Button key={p.id} variant="ghost" className="w-full justify-start" onClick={() => handleAddProduct(p)}>{p.name}</Button>)}
+                                </div>
+                           </ScrollArea>
+                        </div>
+                    </CardContent>
+                </Card>
+                <div className="flex flex-col gap-4">
+                    <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
+                        <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
+                        <Button onClick={handlePrint} disabled={!items || items.length === 0}>
+                            <Printer className="mr-2"/> 
+                            {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
+                        </Button>
+                    </div>
+                    <div className="border rounded-lg overflow-hidden flex-1 max-h-[50vh]">
+                        <ScrollArea className="h-full">
+                           <div ref={componentToPrintRef} className="print-container bg-white">
+                                <InvoicePrintLayout 
+                                    invoiceId={draftId}
+                                    currentDate={new Date().toLocaleDateString()}
+                                    customerName={customerName}
+                                    customerAddress={customerAddress}
+                                    customerPhone={customerPhone}
+                                    invoiceItems={items}
+                                    subtotal={subtotal}
+                                    paidAmount={paidAmount}
+                                    dueAmount={dueAmount}
+                                    printFormat={settings.printFormat}
+                                    locale={settings.locale}
+                                />
+                           </div>
+                        </ScrollArea>
                     </div>
                 </div>
             </div>
