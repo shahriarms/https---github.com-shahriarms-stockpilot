@@ -5,7 +5,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { InvoiceItem, PrintFormat, Locale } from '@/lib/types';
-import { cn } from '@/lib/utils';
+import { cn, numberToWords, numberToWordsBn } from '@/lib/utils';
 import { translations } from '@/lib/i18n/all';
 
 interface InvoicePrintLayoutProps {
@@ -51,6 +51,8 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
     const isPos = printFormat === 'pos';
     const isBn = locale === 'bn';
 
+    const amountInWords = isBn ? numberToWordsBn(subtotal) : numberToWords(subtotal);
+
     return (
         <div ref={ref}>
             <Card className={cn("w-full shadow-none border-0 print-card", isPos ? "max-w-xs mx-auto" : "")}>
@@ -66,9 +68,9 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                         <span>{t('date_label')}: {currentDate || '...'}</span>
                     </div>
                     <div className={cn("mb-4", isPos ? "text-xs" : "")}>
-                        <p>{t('customer_name_label')}: {customerName || '..................'}</p>
-                        <p>{t('customer_address_label')}: {customerAddress || '..................'}</p>
-                        <p>{t('customer_phone_label')}: {customerPhone || '..................'}</p>
+                        <p><span className="font-bold">{t('customer_name_label')}:</span> {customerName || '..................'}</p>
+                        <p><span className="font-bold">{t('customer_address_label')}:</span> {customerAddress || '..................'}</p>
+                        <p><span className="font-bold">{t('customer_phone_label')}:</span> {customerPhone || '..................'}</p>
                     </div>
 
                     <Table className={cn(isPos ? "text-xs" : "")}>
@@ -115,7 +117,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                     
                     {!isPos && (
                         <div className="mt-4 border-t pt-2">
-                            <p>{t('in_words_label')}: ............................................</p>
+                            <p><span className="font-bold">{t('in_words_label')}:</span> {amountInWords}</p>
                         </div>
                     )}
 

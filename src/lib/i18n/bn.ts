@@ -129,7 +129,7 @@ export const bn = {
     'rate_header': 'দর',
     'amount_header': 'টাকা',
     'no_items_added': 'এখনও কোনো আইটেম যোগ করা হয়নি।',
-    'in_words_label': 'টাকায় কথায়',
+    'in_words_label': 'কথায়',
 
     // Buyers Page
     'buyers_page_title': 'ক্রেতা ও চালানের ইতিহাস',
@@ -258,7 +258,7 @@ export const bn = {
     'address_placeholder': 'কর্মচারীর সম্পূর্ণ ঠিকানা',
     'salary_label': 'বেতন',
     'joining_date_label': 'যোগদানের তারিখ',
-
+    
     // Salaries Page
     'salaries_page_title': 'বেতন প্রদান',
     'salaries_employee_list_description': 'বেতন প্রক্রিয়া করতে একজন কর্মচারী নির্বাচন করুন।',
