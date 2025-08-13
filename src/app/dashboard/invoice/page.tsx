@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,8 +23,9 @@ import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
-import { useReactToPrint } from 'react-to-print';
 import { useSettings } from '@/hooks/use-settings';
+import printJS from 'print-js';
+import { cn } from '@/lib/utils';
 
 
 export default function InvoicePage() {
@@ -88,20 +89,34 @@ export default function InvoicePage() {
     router.push('/dashboard/buyers');
   }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast]);
 
-  const handlePrint = useReactToPrint({
-    content: () => componentToPrintRef.current,
-    onAfterPrint: () => {
-        performSave();
-    },
-    onBeforeGetContent: () => {
-      return new Promise<void>((resolve) => {
-        if (!validateInvoice()) {
-            return;
-        }
-        resolve();
+  const handlePrint = () => {
+    if (!validateInvoice()) return;
+
+    if (componentToPrintRef.current) {
+      printJS({
+        printable: componentToPrintRef.current.innerHTML,
+        type: 'raw-html',
+        style: `
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+            body { font-family: 'Inter', sans-serif; }
+            .print-card { margin: 0; padding: 1rem; border: none; box-shadow: none; }
+            .print-title { font-size: 1.5rem; font-weight: bold; text-align: center; }
+            .print-subtitle { font-size: 1.25rem; font-weight: bold; text-align: center; }
+            .print-text-xs { font-size: 0.75rem; text-align: center; }
+            .print-flex { display: flex; justify-content: space-between; }
+            .print-border-b { border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+            .print-table { width: 100%; border-collapse: collapse; }
+            .print-table th, .print-table td { text-align: left; padding: 0.25rem; border-bottom: 1px solid #eee; }
+            .print-table th { font-weight: bold; }
+            .print-text-right { text-align: right; }
+            .print-mt-6 { margin-top: 1.5rem; }
+            .print-font-bold { font-weight: bold; }
+        `,
+        documentTitle: `Invoice - ${invoiceId.slice(-6)}`,
+        onPrintDialogClose: performSave,
       });
     }
-  });
+  };
 
   const resetFilters = () => {
     setCategoryFilter('');
@@ -361,19 +376,20 @@ export default function InvoicePage() {
       </div>
        {/* Hidden component for printing */}
       <div style={{ display: "none" }}>
-        <InvoicePrintLayout
-          ref={componentToPrintRef}
-          invoiceId={invoiceId}
-          currentDate={currentDate}
-          customerName={customerName}
-          customerAddress={customerAddress}
-          customerPhone={customerPhone}
-          invoiceItems={invoiceItems}
-          subtotal={subtotal}
-          paidAmount={paidAmount}
-          dueAmount={dueAmount}
-          printFormat={settings.printFormat}
-        />
+        <div ref={componentToPrintRef}>
+            <InvoicePrintLayout
+            invoiceId={invoiceId}
+            currentDate={currentDate}
+            customerName={customerName}
+            customerAddress={customerAddress}
+            customerPhone={customerPhone}
+            invoiceItems={invoiceItems}
+            subtotal={subtotal}
+            paidAmount={paidAmount}
+            dueAmount={dueAmount}
+            printFormat={settings.printFormat}
+            />
+        </div>
       </div>
     </>
   );

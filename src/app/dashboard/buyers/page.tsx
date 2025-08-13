@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import printJS from 'print-js';
 import { useInvoices } from '@/hooks/use-invoices';
 import { useSettings } from '@/hooks/use-settings';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -33,9 +33,32 @@ export default function BuyersPage() {
 
   const componentToPrintRef = useRef<HTMLDivElement>(null);
 
-  const handlePrint = useReactToPrint({
-    content: () => componentToPrintRef.current,
-  });
+  const handlePrint = () => {
+    if (componentToPrintRef.current) {
+        printJS({
+            printable: componentToPrintRef.current.innerHTML,
+            type: 'raw-html',
+            style: `
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+                body { font-family: 'Inter', sans-serif; }
+                .print-card { margin: 0; padding: 1rem; border: none; box-shadow: none; }
+                .print-title { font-size: 1.5rem; font-weight: bold; text-align: center; }
+                .print-subtitle { font-size: 1.25rem; font-weight: bold; text-align: center; }
+                .print-text-xs { font-size: 0.75rem; text-align: center; }
+                .print-flex { display: flex; justify-content: space-between; }
+                .print-border-b { border-bottom: 1px solid #ccc; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+                .print-table { width: 100%; border-collapse: collapse; }
+                .print-table th, .print-table td { text-align: left; padding: 0.25rem; border-bottom: 1px solid #eee; }
+                .print-table th { font-weight: bold; }
+                .print-text-right { text-align: right; }
+                .print-mt-6 { margin-top: 1.5rem; }
+                .print-font-bold { font-weight: bold; }
+            `,
+            documentTitle: `Invoice - ${selectedInvoice?.id.slice(-6)}`,
+        });
+    }
+  };
+
 
   const handleSelectBuyer = (buyer: Buyer) => {
     setSelectedBuyer(buyer);
@@ -205,19 +228,20 @@ export default function BuyersPage() {
       {/* Hidden component for printing */}
       <div style={{ display: 'none' }}>
         {selectedInvoice && (
-            <InvoicePrintLayout
-                ref={componentToPrintRef}
-                invoiceId={selectedInvoice.id}
-                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
-                customerName={selectedInvoice.customerName}
-                customerAddress={selectedInvoice.customerAddress}
-                customerPhone={selectedInvoice.customerPhone}
-                invoiceItems={selectedInvoice.items}
-                subtotal={selectedInvoice.subtotal}
-                paidAmount={selectedInvoice.paidAmount}
-                dueAmount={selectedInvoice.dueAmount}
-                printFormat={settings.printFormat}
-            />
+            <div ref={componentToPrintRef}>
+                <InvoicePrintLayout
+                    invoiceId={selectedInvoice.id}
+                    currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                    customerName={selectedInvoice.customerName}
+                    customerAddress={selectedInvoice.customerAddress}
+                    customerPhone={selectedInvoice.customerPhone}
+                    invoiceItems={selectedInvoice.items}
+                    subtotal={selectedInvoice.subtotal}
+                    paidAmount={selectedInvoice.paidAmount}
+                    dueAmount={selectedInvoice.dueAmount}
+                    printFormat={settings.printFormat}
+                />
+            </div>
         )}
       </div>
     </div>

@@ -59,38 +59,13 @@
   }
 }
 
-@layer utilities {
-    .print-only {
-        display: none;
+/* Styles for print-js */
+@media print {
+    #print-modal .modal-box {
+        border: none !important;
+        box-shadow: none !important;
     }
-    @media print {
-        body * {
-            visibility: hidden;
-        }
-        .print-container, .print-container * {
-            visibility: visible;
-        }
-        .print-container {
-            position: absolute;
-            left: 0;
-            top: 0;
-            width: 100%;
-        }
-        .print-hidden {
-            display: none !important;
-        }
-        .print\:block {
-            display: block !important;
-        }
-        .print\:shadow-none {
-            box-shadow: none !important;
-        }
-        .print\:border-0 {
-            border-width: 0 !important;
-        }
-        @page {
-            size: auto;
-            margin: 0;
-        }
+    .print-header {
+        display: none !important;
     }
 }
