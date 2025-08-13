@@ -440,7 +440,7 @@ export default function InvoicePage() {
 
             {/* Right Column: Print Preview */}
             <div className="flex flex-col gap-4 overflow-y-auto">
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
                 <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
                 <Button onClick={handlePrint} disabled={!items || items.length === 0}>
                     <Printer className="mr-2"/> 
