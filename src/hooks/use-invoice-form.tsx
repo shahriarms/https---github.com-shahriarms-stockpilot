@@ -3,8 +3,9 @@
 
 import { useState, createContext, useContext, ReactNode, useMemo, useCallback, useEffect } from 'react';
 import type { InvoiceItem } from '@/lib/types';
+import { useToast } from './use-toast';
 
-interface DraftInvoice {
+export interface DraftInvoice {
     id: string;
     items: InvoiceItem[];
     customerName: string;
@@ -23,10 +24,12 @@ interface InvoiceFormContextType {
     removeDraft: (draftId: string) => void;
     setActiveDraftIndex: (index: number) => void;
     updateActiveDraft: (update: Partial<Omit<DraftInvoice, 'id' | 'subtotal' | 'dueAmount'>>) => void;
-    clearAllDrafts: () => void;
+    isFormLoading: boolean;
 }
 
 const InvoiceFormContext = createContext<InvoiceFormContextType | undefined>(undefined);
+
+const INVOICE_DRAFTS_KEY = 'stockpilot-invoice-drafts';
 
 const createNewDraft = (): DraftInvoice => ({
     id: `draft-${Date.now()}`,
@@ -42,32 +45,63 @@ const createNewDraft = (): DraftInvoice => ({
 export function InvoiceFormProvider({ children }: { children: ReactNode }) {
     const [drafts, setDrafts] = useState<DraftInvoice[]>([]);
     const [activeDraftIndex, setActiveDraftIndex] = useState(0);
+    const [isFormLoading, setFormLoading] = useState(true);
+    const { toast } = useToast();
 
-    // Initialize with one draft if none exist
+    // Load drafts from localStorage on initial render
     useEffect(() => {
-        if (drafts.length === 0) {
+        try {
+            const savedDrafts = localStorage.getItem(INVOICE_DRAFTS_KEY);
+            if (savedDrafts) {
+                const parsedDrafts = JSON.parse(savedDrafts);
+                if (Array.isArray(parsedDrafts) && parsedDrafts.length > 0) {
+                    setDrafts(parsedDrafts);
+                    setActiveDraftIndex(0);
+                } else {
+                     setDrafts([createNewDraft()]);
+                }
+            } else {
+                setDrafts([createNewDraft()]);
+            }
+        } catch (error) {
+            console.error("Failed to load invoice drafts from localStorage", error);
             setDrafts([createNewDraft()]);
-            setActiveDraftIndex(0);
         }
-    }, [drafts.length]);
+        setFormLoading(false);
+    }, []);
+    
+    // Save drafts to localStorage whenever they change
+    useEffect(() => {
+        if (!isFormLoading) {
+            localStorage.setItem(INVOICE_DRAFTS_KEY, JSON.stringify(drafts));
+        }
+    }, [drafts, isFormLoading]);
     
     const activeDraft = useMemo(() => drafts[activeDraftIndex] || null, [drafts, activeDraftIndex]);
     
     const addNewDraft = useCallback(() => {
+        if (drafts.length >= 10) {
+            toast({
+                variant: 'destructive',
+                title: "Memo Limit Reached",
+                description: "You can only have a maximum of 10 open memos at a time.",
+            });
+            return;
+        }
         const newDraft = createNewDraft();
         setDrafts(prev => [...prev, newDraft]);
         setActiveDraftIndex(drafts.length); // Switch to the new draft
-    }, [drafts.length]);
+    }, [drafts.length, toast]);
     
     const removeDraft = useCallback((draftId: string) => {
         setDrafts(prev => {
             const newDrafts = prev.filter(d => d.id !== draftId);
+            
             if (newDrafts.length === 0) {
-                // If last draft is removed, create a new one
                 setActiveDraftIndex(0);
                 return [createNewDraft()];
             }
-            // Adjust active index if necessary
+
             if (activeDraftIndex >= newDrafts.length) {
                 setActiveDraftIndex(newDrafts.length - 1);
             }
@@ -81,12 +115,10 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
                 if (index === activeDraftIndex) {
                     const updatedDraft = { ...draft, ...update };
                     
-                    // Recalculate subtotal if items change
                     if (update.items) {
                         updatedDraft.subtotal = update.items.reduce((acc, item) => acc + item.price * item.quantity, 0);
                     }
                     
-                    // Recalculate due amount if subtotal or paidAmount changes
                     updatedDraft.dueAmount = updatedDraft.subtotal - updatedDraft.paidAmount;
 
                     return updatedDraft;
@@ -96,11 +128,6 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         });
     }, [activeDraftIndex]);
 
-    const clearAllDrafts = useCallback(() => {
-        setDrafts([createNewDraft()]);
-        setActiveDraftIndex(0);
-    }, []);
-
     const value = useMemo(() => ({
         drafts,
         activeDraftIndex,
@@ -109,8 +136,8 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         removeDraft,
         setActiveDraftIndex,
         updateActiveDraft,
-        clearAllDrafts
-    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, updateActiveDraft, clearAllDrafts]);
+        isFormLoading,
+    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, updateActiveDraft, isFormLoading]);
 
     return (
         <InvoiceFormContext.Provider value={value}>

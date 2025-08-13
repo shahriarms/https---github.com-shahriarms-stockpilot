@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useRef, useMemo, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -13,10 +13,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
-import { Plus, Trash2, Printer, X, Save } from 'lucide-react';
-import type { Product } from '@/lib/types';
+import { Plus, Trash2, Printer, X, Loader2 } from 'lucide-react';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
@@ -25,8 +34,9 @@ import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useSettings } from '@/hooks/use-settings';
 import printJS from 'print-js';
-import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
+import type { DraftInvoice } from '@/hooks/use-invoice-form';
+
 
 export default function InvoicePage() {
   const { products } = useProducts();
@@ -45,7 +55,10 @@ export default function InvoicePage() {
     removeDraft,
     setActiveDraftIndex,
     updateActiveDraft,
+    isFormLoading
   } = useInvoiceForm();
+  
+  const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -67,18 +80,18 @@ export default function InvoicePage() {
   };
 
   const performSave = () => {
-    if (!validateInvoice()) return;
+    if (!validateInvoice() || !activeDraft) return;
 
     const newId = `INV-${Date.now()}`;
     saveInvoice({
       id: newId,
-      customerName: customerName!,
-      customerAddress: customerAddress!,
-      customerPhone: customerPhone!,
-      items: items!,
-      subtotal: subtotal!,
-      paidAmount: paidAmount!,
-      dueAmount: dueAmount!,
+      customerName: activeDraft.customerName,
+      customerAddress: activeDraft.customerAddress,
+      customerPhone: activeDraft.customerPhone,
+      items: activeDraft.items,
+      subtotal: activeDraft.subtotal,
+      paidAmount: activeDraft.paidAmount,
+      dueAmount: activeDraft.dueAmount,
     });
     
     toast({
@@ -86,7 +99,7 @@ export default function InvoicePage() {
         description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
     });
 
-    removeDraft(draftId!);
+    removeDraft(activeDraft.id);
     router.push('/dashboard/buyers');
   };
 
@@ -189,6 +202,11 @@ export default function InvoicePage() {
     setCategoryFilter('');
     setSubCategoryFilter('');
   };
+  
+  // Effect to reset filters when main category changes
+  useEffect(() => {
+    resetFilters();
+  }, [mainCategoryFilter]);
 
   const categories = useMemo(() => {
       return [...new Set(products.filter(p => p.mainCategory === mainCategoryFilter).map(p => p.category))];
@@ -234,14 +252,31 @@ export default function InvoicePage() {
     const newItems = activeDraft.items.filter((item) => item.id !== productId);
     updateActiveDraft({ items: newItems });
   };
+
+  const handleDeleteDraftClick = (draft: DraftInvoice) => {
+    // Cannot delete the last draft
+    if (drafts.length <= 1) {
+        toast({
+            variant: 'destructive',
+            title: "Cannot Delete",
+            description: "You cannot delete the last remaining memo.",
+        });
+        return;
+    }
+    setDraftToDelete(draft);
+  };
   
-  // Early return or loading state if activeDraft is not available
-  if (!activeDraft) {
+  const confirmDeleteDraft = () => {
+    if (draftToDelete) {
+        removeDraft(draftToDelete.id);
+        setDraftToDelete(null);
+    }
+  };
+  
+  if (isFormLoading || !activeDraft) {
     return (
         <div className="flex justify-center items-center h-full">
-            <Button onClick={addNewDraft}>
-                <Plus className="mr-2"/> {t('create_invoice_title')}
-            </Button>
+            <Loader2 className="w-8 h-8 animate-spin" />
         </div>
     )
   }
@@ -249,9 +284,9 @@ export default function InvoicePage() {
   return (
     <div className="flex flex-col gap-4 h-full">
         {/* Memo Tabs */}
-        <div className="flex items-center gap-2 border-b pb-2">
+        <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
-                <div key={draft.id} className="relative">
+                <div key={draft.id} className="relative group">
                     <Button 
                         variant={index === activeDraftIndex ? 'secondary' : 'ghost'}
                         onClick={() => setActiveDraftIndex(index)}
@@ -262,24 +297,24 @@ export default function InvoicePage() {
                     <Button 
                         variant="ghost" 
                         size="icon" 
-                        className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
+                        className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8 opacity-50 group-hover:opacity-100"
                         onClick={(e) => {
                             e.stopPropagation();
-                            removeDraft(draft.id);
+                            handleDeleteDraftClick(draft);
                         }}
                     >
                         <X className="h-4 w-4" />
                     </Button>
                 </div>
             ))}
-            <Button variant="outline" size="icon" onClick={addNewDraft}>
+            <Button variant="outline" size="icon" onClick={addNewDraft} disabled={drafts.length >= 10}>
                 <Plus className="h-4 w-4"/>
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start flex-1">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start flex-1 min-h-0">
             {/* Left Column: Invoice Form */}
-            <div className="flex flex-col gap-6">
+            <div className="flex flex-col gap-6 overflow-y-auto">
             <Card>
                 <CardHeader>
                 <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -313,7 +348,6 @@ export default function InvoicePage() {
                         value={mainCategoryFilter}
                         onValueChange={(value) => {
                             setMainCategoryFilter(value as 'Material' | 'Hardware');
-                            resetFilters();
                         }}
                         className="flex space-x-4"
                         >
@@ -405,10 +439,10 @@ export default function InvoicePage() {
             </div>
 
             {/* Right Column: Print Preview */}
-            <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 overflow-y-auto">
             <div className="flex justify-between items-center">
                 <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
-                <Button onClick={handlePrint} disabled={items.length === 0}>
+                <Button onClick={handlePrint} disabled={!items || items.length === 0}>
                     <Printer className="mr-2"/> 
                     {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
                 </Button>
@@ -432,6 +466,20 @@ export default function InvoicePage() {
             </div>
             </div>
         </div>
+        <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
+                    <AlertDialogDescription>
+                       Are you sure you want to delete this memo? This action cannot be undone.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmDeleteDraft} className="bg-destructive hover:bg-destructive/90">{t('delete_button')}</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }
