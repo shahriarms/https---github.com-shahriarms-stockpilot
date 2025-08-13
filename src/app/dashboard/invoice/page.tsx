@@ -314,7 +314,7 @@ export default function InvoicePage() {
 
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start flex-1 min-h-0">
             {/* Left Column: Invoice Form */}
-            <div className="flex flex-col gap-6 overflow-y-auto">
+            <div className="flex flex-col gap-6 h-full overflow-y-auto">
             <Card>
                 <CardHeader>
                 <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -439,7 +439,7 @@ export default function InvoicePage() {
             </div>
 
             {/* Right Column: Print Preview */}
-            <div className="flex flex-col gap-4 overflow-y-auto">
+            <div className="flex flex-col gap-4 h-full overflow-y-auto">
                 <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
                     <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
                     <Button onClick={handlePrint} disabled={!items || items.length === 0}>
@@ -447,8 +447,8 @@ export default function InvoicePage() {
                         {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
                     </Button>
                 </div>
-                <div className="border rounded-lg overflow-hidden">
-                    <div ref={componentToPrintRef} className="print-container bg-white">
+                <div className="border rounded-lg overflow-hidden flex-1">
+                    <div ref={componentToPrintRef} className="print-container bg-white h-full">
                     <InvoicePrintLayout 
                         invoiceId={draftId}
                         currentDate={new Date().toLocaleDateString()}
