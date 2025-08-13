@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import ReactToPrint from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { useSettings } from '@/hooks/use-settings';
@@ -62,6 +62,14 @@ export default function BuyersPage() {
     );
   }, [buyers, buyerSearchTerm]);
 
+  // The button needs to be wrapped in forwardRef to avoid findDOMNode error
+  const PrintTrigger = React.forwardRef<HTMLButtonElement, {}>((props, ref) => (
+      <button ref={ref} className={cn(buttonVariants())}>
+          <Printer className="mr-2 h-4 w-4" />
+          Print Invoice
+      </button>
+  ));
+  PrintTrigger.displayName = 'PrintTrigger';
 
   return (
     <div className="flex flex-col h-full gap-4">
@@ -169,12 +177,7 @@ export default function BuyersPage() {
               <h2 className="text-lg font-semibold">Invoice Details</h2>
               {selectedInvoice && (
                   <ReactToPrint
-                    trigger={() => (
-                      <button className={cn(buttonVariants())}>
-                        <Printer className="mr-2 h-4 w-4" />
-                        Print Invoice
-                      </button>
-                    )}
+                    trigger={() => <PrintTrigger />}
                     content={() => componentToPrintRef.current}
                   />
               )}
@@ -183,7 +186,6 @@ export default function BuyersPage() {
             <div className="p-4 space-y-4 bg-background">
               {selectedInvoice ? (
                    <InvoicePrintLayout
-                      ref={componentToPrintRef}
                       invoiceId={selectedInvoice.id}
                       currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
                       customerName={selectedInvoice.customerName}
@@ -206,7 +208,24 @@ export default function BuyersPage() {
           </ScrollArea>
         </div>
       </div>
+      {/* Hidden component for printing */}
+      <div style={{ display: 'none' }}>
+        {selectedInvoice && (
+            <InvoicePrintLayout
+                ref={componentToPrintRef}
+                invoiceId={selectedInvoice.id}
+                currentDate={new Date(selectedInvoice.date).toLocaleDateString()}
+                customerName={selectedInvoice.customerName}
+                customerAddress={selectedInvoice.customerAddress}
+                customerPhone={selectedInvoice.customerPhone}
+                invoiceItems={selectedInvoice.items}
+                subtotal={selectedInvoice.subtotal}
+                paidAmount={selectedInvoice.paidAmount}
+                dueAmount={selectedInvoice.dueAmount}
+                printFormat={settings.printFormat}
+            />
+        )}
+      </div>
     </div>
   );
 }
-
