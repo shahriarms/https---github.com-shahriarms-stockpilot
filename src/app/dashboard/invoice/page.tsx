@@ -312,7 +312,7 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start flex-1 min-h-0">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-8 items-start flex-1 min-h-0">
             {/* Left Column: Invoice Form */}
             <div className="flex flex-col gap-6 overflow-y-auto">
             <Card>
@@ -440,30 +440,30 @@ export default function InvoicePage() {
 
             {/* Right Column: Print Preview */}
             <div className="flex flex-col gap-4 overflow-y-auto">
-            <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
-                <Button onClick={handlePrint} disabled={!items || items.length === 0}>
-                    <Printer className="mr-2"/> 
-                    {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
-                </Button>
-            </div>
-            <div className="border rounded-lg overflow-hidden">
-                <div ref={componentToPrintRef} className="print-container bg-white">
-                <InvoicePrintLayout 
-                    invoiceId={draftId}
-                    currentDate={new Date().toLocaleDateString()}
-                    customerName={customerName}
-                    customerAddress={customerAddress}
-                    customerPhone={customerPhone}
-                    invoiceItems={items}
-                    subtotal={subtotal}
-                    paidAmount={paidAmount}
-                    dueAmount={dueAmount}
-                    printFormat={settings.printFormat}
-                    locale={settings.locale}
-                />
+                <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
+                    <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
+                    <Button onClick={handlePrint} disabled={!items || items.length === 0}>
+                        <Printer className="mr-2"/> 
+                        {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
+                    </Button>
                 </div>
-            </div>
+                <div className="border rounded-lg overflow-hidden">
+                    <div ref={componentToPrintRef} className="print-container bg-white">
+                    <InvoicePrintLayout 
+                        invoiceId={draftId}
+                        currentDate={new Date().toLocaleDateString()}
+                        customerName={customerName}
+                        customerAddress={customerAddress}
+                        customerPhone={customerPhone}
+                        invoiceItems={items}
+                        subtotal={subtotal}
+                        paidAmount={paidAmount}
+                        dueAmount={dueAmount}
+                        printFormat={settings.printFormat}
+                        locale={settings.locale}
+                    />
+                    </div>
+                </div>
             </div>
         </div>
         <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
