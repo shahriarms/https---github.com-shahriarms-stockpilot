@@ -19,8 +19,6 @@ import {
 import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
 import { Plus, Trash2, Printer, X, Loader2, Search } from 'lucide-react';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
@@ -320,8 +318,8 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start flex-1 min-h-0">
-            {/* Left Column: Invoice Form & Items */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start flex-1 min-h-0">
+            {/* Left Column: Customer Details & Product Selection */}
             <div className="flex flex-col gap-4 h-full">
                 <Card>
                     <CardHeader>
@@ -346,63 +344,6 @@ export default function InvoicePage() {
                     </CardContent>
                 </Card>
 
-                <Card className="flex-1 flex flex-col">
-                    <CardHeader>
-                        <CardTitle>Invoice Items</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col gap-4">
-                        <ScrollArea className="flex-1 -mr-6 pr-6">
-                            <div className="space-y-2">
-                                {items.length === 0 ? (
-                                    <div className="text-center text-muted-foreground py-10">Select products from the right panel to add them here.</div>
-                                ) : (
-                                    items.map(item => (
-                                        <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                                            <span className="flex-1 font-medium">{item.name}</span>
-                                            <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
-                                            <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
-                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                                                <Trash2 className="w-4 h-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </ScrollArea>
-                        
-                        {items.length > 0 && (
-                            <div className="mt-auto pt-4 border-t flex items-end justify-end">
-                                <div className="space-y-2 text-right">
-                                    <div className="flex justify-end items-center gap-4">
-                                        <span className="font-medium">{t('subtotal_label')}:</span>
-                                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-end items-center gap-4">
-                                        <span className="font-medium">{t('paid_label')}:</span>
-                                        <div className="relative w-28 flex items-center gap-1">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                            <Input
-                                                type="number"
-                                                value={paidAmount}
-                                                onChange={(e) => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })}
-                                                className="font-bold pl-5 text-right"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-end items-center gap-4 text-primary">
-                                        <span className="font-medium">{t('due_label')}:</span>
-                                        <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-            </div>
-
-            {/* Right Column: Product Selection & Print Preview */}
-            <div className="flex flex-col gap-4 h-full">
                 <Card className="flex-1 flex flex-col">
                     <CardHeader>
                         <CardTitle>{t('add_products_label')}</CardTitle>
@@ -459,6 +400,64 @@ export default function InvoicePage() {
                         </div>
                     </CardContent>
                 </Card>
+            </div>
+
+            {/* Right Column: Invoice Items & Print Preview */}
+            <div className="flex flex-col gap-4 h-full">
+                <Card className="flex-1 flex flex-col">
+                    <CardHeader>
+                        <CardTitle>Invoice Items</CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 flex flex-col gap-4">
+                        <ScrollArea className="flex-1 -mr-6 pr-6">
+                            <div className="space-y-2">
+                                {items.length === 0 ? (
+                                    <div className="text-center text-muted-foreground py-10">Select products to add them here.</div>
+                                ) : (
+                                    items.map(item => (
+                                        <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                            <span className="flex-1 font-medium">{item.name}</span>
+                                            <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
+                                            <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                                            <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
+                                                <Trash2 className="w-4 h-4 text-destructive" />
+                                            </Button>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        </ScrollArea>
+                        
+                        {items.length > 0 && (
+                            <div className="mt-auto pt-4 border-t flex items-end justify-end">
+                                <div className="space-y-2 text-right">
+                                    <div className="flex justify-end items-center gap-4">
+                                        <span className="font-medium">{t('subtotal_label')}:</span>
+                                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-end items-center gap-4">
+                                        <span className="font-medium">{t('paid_label')}:</span>
+                                        <div className="relative w-28 flex items-center gap-1">
+                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                            <Input
+                                                type="number"
+                                                value={paidAmount}
+                                                onChange={(e) => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })}
+                                                className="font-bold pl-5 text-right"
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+                                    <div className="flex justify-end items-center gap-4 text-primary">
+                                        <span className="font-medium">{t('due_label')}:</span>
+                                        <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
+
                 <div className="flex flex-col gap-4">
                     <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
                         <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
@@ -506,3 +505,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
