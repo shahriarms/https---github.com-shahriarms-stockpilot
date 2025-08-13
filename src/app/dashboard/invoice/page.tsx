@@ -63,7 +63,27 @@ export default function InvoicePage() {
     setCurrentDate(now.toLocaleDateString('en-GB'));
     setInvoiceId(`INV-${now.getTime()}`);
   }, []);
+
+  const subtotal = useMemo(() => {
+    return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  }, [invoiceItems]);
+
+  const dueAmount = useMemo(() => {
+    return subtotal - paidAmount;
+  }, [subtotal, paidAmount]);
   
+  const validateInvoice = useCallback(() => {
+    if (!customerName) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter the customer\'s name.' });
+      return false;
+    }
+    if (invoiceItems.length === 0) {
+      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please add at least one item to the invoice.' });
+      return false;
+    }
+    return true;
+  }, [customerName, invoiceItems.length, toast]);
+
   const performSave = useCallback(() => {
     if (!validateInvoice()) return null;
     
@@ -87,7 +107,7 @@ export default function InvoicePage() {
     clearInvoiceForm();
     setInvoiceId(`INV-${Date.now()}`); // Generate a new ID for the next form
     router.push('/dashboard/buyers');
-  }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast]);
+  }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast, validateInvoice]);
 
   const handlePrint = () => {
     if (!validateInvoice()) return;
@@ -170,27 +190,6 @@ export default function InvoicePage() {
     setInvoiceItems(invoiceItems.filter((item) => item.id !== productId));
   };
   
-  const subtotal = useMemo(() => {
-    return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  }, [invoiceItems]);
-
-  const dueAmount = useMemo(() => {
-    return subtotal - paidAmount;
-  }, [subtotal, paidAmount]);
-
-  const validateInvoice = useCallback(() => {
-    if (!customerName) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter the customer\'s name.' });
-      return false;
-    }
-    if (invoiceItems.length === 0) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please add at least one item to the invoice.' });
-      return false;
-    }
-    return true;
-  }, [customerName, invoiceItems.length, toast]);
-  
-
   const handleSaveAndRedirect = () => {
      if (!validateInvoice()) return;
 
@@ -394,3 +393,5 @@ export default function InvoicePage() {
     </>
   );
 }
+
+    
