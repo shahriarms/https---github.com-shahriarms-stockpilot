@@ -1,8 +1,8 @@
 
 'use client';
 
-import { useState, useMemo, useEffect, useCallback, useRef } from 'react';
-import { Button, buttonVariants } from '@/components/ui/button';
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select';
 import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
-import { PlusCircle, Trash2, Printer, Save } from 'lucide-react';
+import { Plus, Trash2, Printer, X, Save } from 'lucide-react';
 import type { Product } from '@/lib/types';
 import { Separator } from '@/components/ui/separator';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -28,7 +28,6 @@ import printJS from 'print-js';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/use-translation';
 
-
 export default function InvoicePage() {
   const { products } = useProducts();
   const { saveInvoice } = useInvoices();
@@ -37,84 +36,72 @@ export default function InvoicePage() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const componentToPrintRef = useRef<HTMLDivElement>(null);
-  
-  const {
-    items: invoiceItems,
-    customerName,
-    customerAddress,
-    customerPhone,
-    paidAmount,
-    setItems: setInvoiceItems,
-    setCustomerName,
-    setCustomerAddress,
-    setCustomerPhone,
-    setPaidAmount,
-    clearInvoiceForm,
-  } = useInvoiceForm();
 
-  const [currentDate, setCurrentDate] = useState('');
-  const [invoiceId, setInvoiceId] = useState('');
+  const {
+    drafts,
+    activeDraftIndex,
+    activeDraft,
+    addNewDraft,
+    removeDraft,
+    setActiveDraftIndex,
+    updateActiveDraft,
+  } = useInvoiceForm();
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
+  
+  // Early return or loading state if activeDraft is not available
+  if (!activeDraft) {
+    return (
+        <div className="flex justify-center items-center h-full">
+            <Button onClick={addNewDraft}>
+                <Plus className="mr-2"/> {t('create_invoice_title')}
+            </Button>
+        </div>
+    )
+  }
 
-  useEffect(() => {
-    // These need to be in useEffect to avoid hydration errors
-    const now = new Date();
-    setCurrentDate(now.toLocaleDateString());
-    setInvoiceId(`INV-${now.getTime()}`);
-  }, []);
+  const { id: draftId, items, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount } = activeDraft;
 
-  const subtotal = useMemo(() => {
-    return invoiceItems.reduce((acc, item) => acc + item.price * item.quantity, 0);
-  }, [invoiceItems]);
-
-  const dueAmount = useMemo(() => {
-    return subtotal - paidAmount;
-  }, [subtotal, paidAmount]);
-
-  const validateInvoice = useCallback(() => {
+  const validateInvoice = () => {
     if (!customerName) {
       toast({ variant: 'destructive', title: t('validation_error_title'), description: t('customer_name_required_error') });
       return false;
     }
-    if (invoiceItems.length === 0) {
+    if (items.length === 0) {
       toast({ variant: 'destructive', title: t('validation_error_title'), description: t('invoice_items_required_error') });
       return false;
     }
     return true;
-  }, [customerName, invoiceItems.length, toast, t]);
-  
-  const performSave = useCallback(() => {
-    if (!validateInvoice()) return null;
-    
+  };
+
+  const performSave = () => {
+    if (!validateInvoice()) return;
+
     const newId = `INV-${Date.now()}`;
     saveInvoice({
       id: newId,
       customerName,
       customerAddress,
       customerPhone,
-      items: invoiceItems,
+      items,
       subtotal,
       paidAmount,
       dueAmount,
     });
     
     toast({
-        title: t('invoice_saved_and_printed_toast_title'),
+        title: t('invoice_saved_toast_title'),
         description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
     });
 
-    clearInvoiceForm();
-    setInvoiceId(`INV-${Date.now()}`); // Generate a new ID for the next form
+    removeDraft(draftId);
     router.push('/dashboard/buyers');
-  }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast, validateInvoice, t]);
-
+  };
 
   const handlePrint = () => {
     if (!validateInvoice()) return;
-
     if (componentToPrintRef.current) {
         const isPos = settings.printFormat === 'pos';
         const printStyles = `
@@ -126,18 +113,24 @@ export default function InvoicePage() {
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            .print-container { 
-                margin: 0; 
-                padding: 0;
-            }
-            .print-card { 
-                border: none !important; 
-                box-shadow: none !important; 
-                background-color: white !important;
-                color: black !important;
-            }
-            .print-card * {
-                color: black !important;
+            @media print {
+              body {
+                background-color: #fff !important;
+              }
+              .print-container { 
+                  margin: 0; 
+                  padding: 0;
+                  background-color: #fff !important;
+              }
+              .print-card { 
+                  border: none !important; 
+                  box-shadow: none !important; 
+                  background-color: white !important;
+                  color: black !important;
+              }
+              .print-card * {
+                  color: black !important;
+              }
             }
             table {
                 width: 100%;
@@ -196,7 +189,7 @@ export default function InvoicePage() {
             type: 'raw-html',
             style: printStyles,
             scanStyles: false,
-            documentTitle: `${t('invoice_title')} - ${invoiceId.slice(-6)}`,
+            documentTitle: `${t('invoice_title')} - ${draftId.slice(-6)}`,
             onPrintDialogClose: performSave,
         });
     }
@@ -229,214 +222,212 @@ export default function InvoicePage() {
   const handleAddProduct = (productId: string) => {
     const product = products.find((p) => p.id === productId);
     if (product) {
-      const existingItem = invoiceItems.find((item) => item.id === productId);
-      if (existingItem) {
-        setInvoiceItems(
-          invoiceItems.map((item) =>
-            item.id === productId ? { ...item, quantity: item.quantity + 1 } : item
-          )
-        );
-      } else {
-        setInvoiceItems([...invoiceItems, { ...product, quantity: 1 }]);
-      }
+      const existingItem = items.find((item) => item.id === productId);
+      const newItems = existingItem
+        ? items.map((item) => item.id === productId ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...items, { ...product, quantity: 1 }];
+      updateActiveDraft({ items: newItems });
     }
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
-    setInvoiceItems(
-      invoiceItems.map((item) =>
-        item.id === productId ? { ...item, quantity: Math.max(0, quantity) } : item
-      )
+    const newItems = items.map((item) =>
+      item.id === productId ? { ...item, quantity: Math.max(0, quantity) } : item
     );
+    updateActiveDraft({ items: newItems });
   };
 
   const handleRemoveItem = (productId: string) => {
-    setInvoiceItems(invoiceItems.filter((item) => item.id !== productId));
-  };
-  
-  const handleSaveAndRedirect = () => {
-     if (!validateInvoice()) return;
-
-    const newId = `INV-${Date.now()}`;
-    saveInvoice({
-      id: newId,
-      customerName,
-      customerAddress,
-      customerPhone,
-      items: invoiceItems,
-      subtotal,
-      paidAmount,
-      dueAmount,
-    });
-    
-    toast({
-        title: t('invoice_saved_toast_title'),
-        description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
-    });
-
-    clearInvoiceForm();
-    setInvoiceId(`INV-${Date.now()}`); // Generate a new ID for the next form
-    router.push('/dashboard/buyers');
+    const newItems = items.filter((item) => item.id !== productId);
+    updateActiveDraft({ items: newItems });
   };
 
   return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-        {/* Left Column: Invoice Form */}
-        <div className="flex flex-col gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>{t('create_invoice_title')}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-               <div className="space-y-4">
-                  <div className="flex justify-between items-center">
-                      <span className="font-medium">{t('invoice_no_label')}: {invoiceId ? invoiceId.slice(-6) : '...'}</span>
-                      <span className="text-muted-foreground">{t('date_label')}: {currentDate || '...'}</span>
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerName">{t('customer_name_label')}</Label>
-                    <Input id="customerName" placeholder={t('customer_name_placeholder')} value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerAddress">{t('customer_address_label')}</Label>
-                    <Input id="customerAddress" placeholder={t('customer_address_placeholder')} value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="customerPhone">{t('customer_phone_label')}</Label>
-                    <Input id="customerPhone" placeholder={t('customer_phone_placeholder')} value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
-                  </div>
-              </div>
-
-              <Separator />
-              
-              <div className="space-y-4">
-                  <Label>{t('add_products_label')}</Label>
-                  
-                  <RadioGroup
-                      value={mainCategoryFilter}
-                      onValueChange={(value) => {
-                          setMainCategoryFilter(value as 'Material' | 'Hardware');
-                          resetFilters();
-                      }}
-                      className="flex space-x-4"
-                      >
-                      <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Material" id="r-material" />
-                          <Label htmlFor="r-material">{t('material_tab')}</Label>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                          <RadioGroupItem value="Hardware" id="r-hardware" />
-                          <Label htmlFor="r-hardware">{t('hardware_tab')}</Label>
-                      </div>
-                  </RadioGroup>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setSubCategoryFilter(''); }}>
-                        <SelectTrigger>
-                            <SelectValue placeholder={t('filter_by_category_placeholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('all_categories')}</SelectItem>
-                            {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                    <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)} disabled={!categoryFilter}>
-                        <SelectTrigger>
-                            <SelectValue placeholder={t('filter_by_subcategory_placeholder')} />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">{t('all_subcategories')}</SelectItem>
-                            {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
-                        </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex gap-2">
-                      <Select onValueChange={handleAddProduct}>
-                          <SelectTrigger>
-                              <SelectValue placeholder={t('select_product_placeholder')} />
-                          </SelectTrigger>
-                          <SelectContent>
-                              {filteredProducts.map((p) => (
-                                  <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
-                              ))}
-                          </SelectContent>
-                      </Select>
-                      <Button onClick={() => filteredProducts.length > 0 && handleAddProduct(filteredProducts[0].id)}><PlusCircle className="mr-2"/>{t('add_item_button')}</Button>
-                  </div>
-
-                  <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
-                      {invoiceItems.map(item => (
-                          <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                              <span className="flex-1">{item.name}</span>
-                              <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
-                              <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
-                              <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
-                                  <Trash2 className="w-4 h-4 text-destructive" />
-                              </Button>
-                          </div>
-                      ))}
-                  </div>
-
-                  <div className="mt-6 pt-4 border-t flex items-end justify-end">
-                      <div className="space-y-2 text-right">
-                          <div className="flex justify-end items-center gap-4">
-                              <span className="font-medium">{t('subtotal_label')}:</span>
-                              <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
-                          </div>
-                           <div className="flex justify-end items-center gap-4">
-                              <span className="font-medium">{t('paid_label')}:</span>
-                              <div className="relative w-28 flex items-center gap-1">
-                                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                  <Input
-                                      type="number"
-                                      value={paidAmount}
-                                      onChange={(e) => setPaidAmount(parseFloat(e.target.value) || 0)}
-                                      className="font-bold pl-5 text-right"
-                                      placeholder="0.00"
-                                  />
-                              </div>
-                          </div>
-                           <div className="flex justify-end items-center gap-4 text-primary">
-                              <span className="font-medium">{t('due_label')}:</span>
-                              <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                          </div>
-                      </div>
-                  </div>
-              </div>
-              
-            </CardContent>
-          </Card>
+    <div className="flex flex-col gap-4 h-full">
+        {/* Memo Tabs */}
+        <div className="flex items-center gap-2 border-b pb-2">
+            {drafts.map((draft, index) => (
+                <div key={draft.id} className="relative">
+                    <Button 
+                        variant={index === activeDraftIndex ? 'secondary' : 'ghost'}
+                        onClick={() => setActiveDraftIndex(index)}
+                        className="pr-8"
+                    >
+                        Memo {index + 1}
+                    </Button>
+                    <Button 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute right-0 top-1/2 -translate-y-1/2 h-8 w-8"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            removeDraft(draft.id);
+                        }}
+                    >
+                        <X className="h-4 w-4" />
+                    </Button>
+                </div>
+            ))}
+            <Button variant="outline" size="icon" onClick={addNewDraft}>
+                <Plus className="h-4 w-4"/>
+            </Button>
         </div>
 
-        {/* Right Column: Print Preview */}
-        <div className="flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
-              <Button onClick={handlePrint} disabled={invoiceItems.length === 0}>
-                  <Printer className="mr-2"/> 
-                  {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
-              </Button>
-          </div>
-          <div className="border rounded-lg overflow-hidden">
-            <div ref={componentToPrintRef} className="print-container">
-             <InvoicePrintLayout 
-                invoiceId={invoiceId}
-                currentDate={currentDate}
-                customerName={customerName}
-                customerAddress={customerAddress}
-                customerPhone={customerPhone}
-                invoiceItems={invoiceItems}
-                subtotal={subtotal}
-                paidAmount={paidAmount}
-                dueAmount={dueAmount}
-                printFormat={settings.printFormat}
-                locale={settings.locale}
-            />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start flex-1">
+            {/* Left Column: Invoice Form */}
+            <div className="flex flex-col gap-6">
+            <Card>
+                <CardHeader>
+                <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                        <span className="font-medium">{t('invoice_no_label')}: {draftId ? draftId.slice(-6) : '...'}</span>
+                        <span className="text-muted-foreground">{t('date_label')}: {new Date().toLocaleDateString()}</span>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="customerName">{t('customer_name_label')}</Label>
+                        <Input id="customerName" placeholder={t('customer_name_placeholder')} value={customerName} onChange={(e) => updateActiveDraft({ customerName: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="customerAddress">{t('customer_address_label')}</Label>
+                        <Input id="customerAddress" placeholder={t('customer_address_placeholder')} value={customerAddress} onChange={(e) => updateActiveDraft({ customerAddress: e.target.value })} />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="customerPhone">{t('customer_phone_label')}</Label>
+                        <Input id="customerPhone" placeholder={t('customer_phone_placeholder')} value={customerPhone} onChange={(e) => updateActiveDraft({ customerPhone: e.target.value })} />
+                    </div>
+                </div>
+
+                <Separator />
+                
+                <div className="space-y-4">
+                    <Label>{t('add_products_label')}</Label>
+                    
+                    <RadioGroup
+                        value={mainCategoryFilter}
+                        onValueChange={(value) => {
+                            setMainCategoryFilter(value as 'Material' | 'Hardware');
+                            resetFilters();
+                        }}
+                        className="flex space-x-4"
+                        >
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Material" id="r-material" />
+                            <Label htmlFor="r-material">{t('material_tab')}</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="Hardware" id="r-hardware" />
+                            <Label htmlFor="r-hardware">{t('hardware_tab')}</Label>
+                        </div>
+                    </RadioGroup>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setSubCategoryFilter(''); }}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('filter_by_category_placeholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t('all_categories')}</SelectItem>
+                                {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                        <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)} disabled={!categoryFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('filter_by_subcategory_placeholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">{t('all_subcategories')}</SelectItem>
+                                {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="flex gap-2">
+                        <Select onValueChange={handleAddProduct}>
+                            <SelectTrigger>
+                                <SelectValue placeholder={t('select_product_placeholder')} />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {filteredProducts.map((p) => (
+                                    <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Button onClick={() => filteredProducts.length > 0 && handleAddProduct(filteredProducts[0].id)}><Plus className="mr-2"/>{t('add_item_button')}</Button>
+                    </div>
+
+                    <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
+                        {items.map(item => (
+                            <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
+                                <span className="flex-1">{item.name}</span>
+                                <Input type="number" value={item.quantity} onChange={e => handleQuantityChange(item.id, parseInt(e.target.value))} className="w-20" />
+                                <span className="w-24 text-right">${(item.price * item.quantity).toFixed(2)}</span>
+                                <Button variant="ghost" size="icon" onClick={() => handleRemoveItem(item.id)}>
+                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                </Button>
+                            </div>
+                        ))}
+                    </div>
+
+                    <div className="mt-6 pt-4 border-t flex items-end justify-end">
+                        <div className="space-y-2 text-right">
+                            <div className="flex justify-end items-center gap-4">
+                                <span className="font-medium">{t('subtotal_label')}:</span>
+                                <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-end items-center gap-4">
+                                <span className="font-medium">{t('paid_label')}:</span>
+                                <div className="relative w-28 flex items-center gap-1">
+                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                    <Input
+                                        type="number"
+                                        value={paidAmount}
+                                        onChange={(e) => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })}
+                                        className="font-bold pl-5 text-right"
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                            </div>
+                            <div className="flex justify-end items-center gap-4 text-primary">
+                                <span className="font-medium">{t('due_label')}:</span>
+                                <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                </CardContent>
+            </Card>
             </div>
-          </div>
+
+            {/* Right Column: Print Preview */}
+            <div className="flex flex-col gap-4">
+            <div className="flex justify-between items-center">
+                <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
+                <Button onClick={handlePrint} disabled={items.length === 0}>
+                    <Printer className="mr-2"/> 
+                    {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
+                </Button>
+            </div>
+            <div className="border rounded-lg overflow-hidden">
+                <div ref={componentToPrintRef} className="print-container bg-white">
+                <InvoicePrintLayout 
+                    invoiceId={draftId}
+                    currentDate={new Date().toLocaleDateString()}
+                    customerName={customerName}
+                    customerAddress={customerAddress}
+                    customerPhone={customerPhone}
+                    invoiceItems={items}
+                    subtotal={subtotal}
+                    paidAmount={paidAmount}
+                    dueAmount={dueAmount}
+                    printFormat={settings.printFormat}
+                    locale={settings.locale}
+                />
+                </div>
+            </div>
+            </div>
         </div>
-      </div>
+    </div>
   );
 }
-
-    

@@ -23,19 +23,19 @@ export default function DashboardLayout({
       <SettingsProvider>
         <TranslationProvider>
           <ProductProvider>
-            <InvoiceProvider>
-              <PaymentProvider>
-                <ExpenseProvider>
-                  <EmployeeProvider>
-                    <SalaryProvider>
-                      <InvoiceFormProvider>
-                        <Providers header={<SiteHeader />}>{children}</Providers>
-                      </InvoiceFormProvider>
-                    </SalaryProvider>
-                  </EmployeeProvider>
-                </ExpenseProvider>
-              </PaymentProvider>
-            </InvoiceProvider>
+            <InvoiceFormProvider>
+              <InvoiceProvider>
+                <PaymentProvider>
+                  <ExpenseProvider>
+                    <EmployeeProvider>
+                      <SalaryProvider>
+                          <Providers header={<SiteHeader />}>{children}</Providers>
+                      </SalaryProvider>
+                    </EmployeeProvider>
+                  </ExpenseProvider>
+                </PaymentProvider>
+              </InvoiceProvider>
+            </InvoiceFormProvider>
           </ProductProvider>
         </TranslationProvider>
       </SettingsProvider>
