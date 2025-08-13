@@ -51,25 +51,15 @@ export default function InvoicePage() {
   const [categoryFilter, setCategoryFilter] = useState('');
   const [subCategoryFilter, setSubCategoryFilter] = useState('');
   
-  // Early return or loading state if activeDraft is not available
-  if (!activeDraft) {
-    return (
-        <div className="flex justify-center items-center h-full">
-            <Button onClick={addNewDraft}>
-                <Plus className="mr-2"/> {t('create_invoice_title')}
-            </Button>
-        </div>
-    )
-  }
-
-  const { id: draftId, items, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount } = activeDraft;
+  // Destructure activeDraft properties only when it's available
+  const { id: draftId, items, customerName, customerAddress, customerPhone, paidAmount, subtotal, dueAmount } = activeDraft || {};
 
   const validateInvoice = () => {
     if (!customerName) {
       toast({ variant: 'destructive', title: t('validation_error_title'), description: t('customer_name_required_error') });
       return false;
     }
-    if (items.length === 0) {
+    if (!items || items.length === 0) {
       toast({ variant: 'destructive', title: t('validation_error_title'), description: t('invoice_items_required_error') });
       return false;
     }
@@ -82,13 +72,13 @@ export default function InvoicePage() {
     const newId = `INV-${Date.now()}`;
     saveInvoice({
       id: newId,
-      customerName,
-      customerAddress,
-      customerPhone,
-      items,
-      subtotal,
-      paidAmount,
-      dueAmount,
+      customerName: customerName!,
+      customerAddress: customerAddress!,
+      customerPhone: customerPhone!,
+      items: items!,
+      subtotal: subtotal!,
+      paidAmount: paidAmount!,
+      dueAmount: dueAmount!,
     });
     
     toast({
@@ -96,7 +86,7 @@ export default function InvoicePage() {
         description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
     });
 
-    removeDraft(draftId);
+    removeDraft(draftId!);
     router.push('/dashboard/buyers');
   };
 
@@ -189,7 +179,7 @@ export default function InvoicePage() {
             type: 'raw-html',
             style: printStyles,
             scanStyles: false,
-            documentTitle: `${t('invoice_title')} - ${draftId.slice(-6)}`,
+            documentTitle: `${t('invoice_title')} - ${draftId!.slice(-6)}`,
             onPrintDialogClose: performSave,
         });
     }
@@ -220,27 +210,41 @@ export default function InvoicePage() {
 
 
   const handleAddProduct = (productId: string) => {
+    if (!activeDraft) return;
     const product = products.find((p) => p.id === productId);
     if (product) {
-      const existingItem = items.find((item) => item.id === productId);
+      const existingItem = activeDraft.items.find((item) => item.id === productId);
       const newItems = existingItem
-        ? items.map((item) => item.id === productId ? { ...item, quantity: item.quantity + 1 } : item)
-        : [...items, { ...product, quantity: 1 }];
+        ? activeDraft.items.map((item) => item.id === productId ? { ...item, quantity: item.quantity + 1 } : item)
+        : [...activeDraft.items, { ...product, quantity: 1 }];
       updateActiveDraft({ items: newItems });
     }
   };
 
   const handleQuantityChange = (productId: string, quantity: number) => {
-    const newItems = items.map((item) =>
+    if (!activeDraft) return;
+    const newItems = activeDraft.items.map((item) =>
       item.id === productId ? { ...item, quantity: Math.max(0, quantity) } : item
     );
     updateActiveDraft({ items: newItems });
   };
 
   const handleRemoveItem = (productId: string) => {
-    const newItems = items.filter((item) => item.id !== productId);
+    if (!activeDraft) return;
+    const newItems = activeDraft.items.filter((item) => item.id !== productId);
     updateActiveDraft({ items: newItems });
   };
+  
+  // Early return or loading state if activeDraft is not available
+  if (!activeDraft) {
+    return (
+        <div className="flex justify-center items-center h-full">
+            <Button onClick={addNewDraft}>
+                <Plus className="mr-2"/> {t('create_invoice_title')}
+            </Button>
+        </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4 h-full">
