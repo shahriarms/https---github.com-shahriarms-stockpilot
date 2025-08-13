@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import type { Product } from '@/lib/types';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 const productSchema = z.object({
@@ -46,6 +47,8 @@ interface AddProductDialogProps {
 
 export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) {
   const { addProduct } = useProducts();
+  const { t } = useTranslation();
+  
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -76,9 +79,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add New Product</DialogTitle>
+          <DialogTitle>{t('add_product_dialog_title')}</DialogTitle>
           <DialogDescription>
-            Enter the details for the new product to add it to your inventory.
+            {t('add_product_dialog_description')}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -88,7 +91,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               name="mainCategory"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Main Category</FormLabel>
+                  <FormLabel>{t('main_category_label')}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -99,13 +102,13 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                         <FormControl>
                           <RadioGroupItem value="Material" />
                         </FormControl>
-                        <FormLabel className="font-normal">Material</FormLabel>
+                        <FormLabel className="font-normal">{t('material_tab')}</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-2 space-y-0">
                         <FormControl>
                           <RadioGroupItem value="Hardware" />
                         </FormControl>
-                        <FormLabel className="font-normal">Hardware</FormLabel>
+                        <FormLabel className="font-normal">{t('hardware_tab')}</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -118,9 +121,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Name</FormLabel>
+                  <FormLabel>{t('product_name_label')}</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Angel 1-inch" {...field} />
+                    <Input placeholder={t('product_name_placeholder')} {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -132,9 +135,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>{t('category_label')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., Angel" {...field} />
+                      <Input placeholder={t('category_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -145,9 +148,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 name="subCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sub-Category</FormLabel>
+                    <FormLabel>{t('subcategory_label')}</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g., 28" {...field} />
+                      <Input placeholder={t('subcategory_placeholder')} {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -160,9 +163,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   name="sku"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>SKU</FormLabel>
+                      <FormLabel>{t('sku_label')}</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., ANG-1-4" {...field} />
+                        <Input placeholder={t('sku_placeholder')} {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -173,7 +176,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                   name="price"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Price ($)</FormLabel>
+                      <FormLabel>{t('price_label')}</FormLabel>
                       <FormControl>
                         <Input type="number" step="0.01" placeholder="10.50" {...field} />
                       </FormControl>
@@ -187,7 +190,7 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
                 name="stock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Initial Stock</FormLabel>
+                    <FormLabel>{t('initial_stock_label')}</FormLabel>
                     <FormControl>
                       <Input type="number" step="1" placeholder="100" {...field} />
                     </FormControl>
@@ -197,9 +200,9 @@ export function AddProductDialog({ open, onOpenChange }: AddProductDialogProps) 
               />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
+                {t('cancel_button')}
               </Button>
-              <Button type="submit">Add Product</Button>
+              <Button type="submit">{t('add_product_button')}</Button>
             </DialogFooter>
           </form>
         </Form>

@@ -50,11 +50,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function EmployeesPage() {
     const { employees, attendance, markAttendance, getAttendanceForDate, deleteEmployee } = useEmployees();
     const { user } = useUser();
+    const { t } = useTranslation();
     
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [employeeToEdit, setEmployeeToEdit] = useState<Employee | null>(null);
@@ -79,7 +81,7 @@ export default function EmployeesPage() {
 
     const handleEdit = (employee: Employee) => {
         if (user?.role !== 'admin') {
-            alert("Only admins can edit employee data.");
+            alert(t('admin_only_edit_employee_alert'));
             return;
         }
         setEmployeeToEdit(employee);
@@ -88,7 +90,7 @@ export default function EmployeesPage() {
     
     const handleDelete = (employee: Employee) => {
         if (user?.role !== 'admin') {
-            alert("Only admins can delete employees.");
+            alert(t('admin_only_delete_employee_alert'));
             return;
         }
         setEmployeeToDelete(employee);
@@ -134,10 +136,10 @@ export default function EmployeesPage() {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold flex items-center gap-2"><Users className="w-6 h-6"/> Employee Attendance</h1>
+                <h1 className="text-2xl font-semibold flex items-center gap-2"><Users className="w-6 h-6"/>{t('attendance_page_title')}</h1>
                 <div className="flex gap-2">
                     <Button onClick={handleAddNew} disabled={user?.role !== 'admin'}>
-                        <PlusCircle className="mr-2 h-4 w-4" /> Add Employee
+                        <PlusCircle className="mr-2 h-4 w-4" /> {t('add_employee_button')}
                     </Button>
                 </div>
             </div>
@@ -145,8 +147,8 @@ export default function EmployeesPage() {
             {/* Attendance Section */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Daily Attendance</CardTitle>
-                    <CardDescription>Mark attendance for all employees for the selected date.</CardDescription>
+                    <CardTitle>{t('daily_attendance_title')}</CardTitle>
+                    <CardDescription>{t('daily_attendance_description')}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                      <div className="flex flex-col md:flex-row gap-4 items-center">
@@ -161,7 +163,7 @@ export default function EmployeesPage() {
                                     )}
                                 >
                                     <CalendarIcon className="mr-2 h-4 w-4" />
-                                    {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
+                                    {selectedDate ? format(selectedDate, "PPP") : <span>{t('pick_a_date')}</span>}
                                 </Button>
                                 </PopoverTrigger>
                                 <PopoverContent className="w-auto p-0">
@@ -175,9 +177,9 @@ export default function EmployeesPage() {
                             </Popover>
                         </div>
                          <div className="flex gap-4 text-sm">
-                            <div className="flex items-center gap-2 p-2 rounded-md bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"><UserCheck className="w-5 h-5"/> Present: <span className="font-bold">{attendanceSummary.present}</span></div>
-                            <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"><UserX className="w-5 h-5"/> Absent: <span className="font-bold">{attendanceSummary.absent}</span></div>
-                            <div className="flex items-center gap-2 p-2 rounded-md bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300"><NotebookText className="w-5 h-5"/> On Leave: <span className="font-bold">{attendanceSummary.leave}</span></div>
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300"><UserCheck className="w-5 h-5"/> {t('present_label')}: <span className="font-bold">{attendanceSummary.present}</span></div>
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300"><UserX className="w-5 h-5"/> {t('absent_label')}: <span className="font-bold">{attendanceSummary.absent}</span></div>
+                            <div className="flex items-center gap-2 p-2 rounded-md bg-yellow-100 dark:bg-yellow-900/50 text-yellow-700 dark:text-yellow-300"><NotebookText className="w-5 h-5"/> {t('on_leave_label')}: <span className="font-bold">{attendanceSummary.leave}</span></div>
                         </div>
                     </div>
 
@@ -185,9 +187,9 @@ export default function EmployeesPage() {
                         <Table>
                              <TableHeader>
                                 <TableRow>
-                                    <TableHead>Employee Name</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead className="text-right">Attendance Status</TableHead>
+                                    <TableHead>{t('employee_name_header')}</TableHead>
+                                    <TableHead>{t('role_header')}</TableHead>
+                                    <TableHead className="text-right">{t('attendance_status_header')}</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -206,9 +208,9 @@ export default function EmployeesPage() {
                                                         <SelectValue />
                                                     </SelectTrigger>
                                                     <SelectContent>
-                                                        <SelectItem value="Present">Present</SelectItem>
-                                                        <SelectItem value="Absent">Absent</SelectItem>
-                                                        <SelectItem value="Leave">On Leave</SelectItem>
+                                                        <SelectItem value="Present">{t('present_label')}</SelectItem>
+                                                        <SelectItem value="Absent">{t('absent_label')}</SelectItem>
+                                                        <SelectItem value="Leave">{t('on_leave_label')}</SelectItem>
                                                     </SelectContent>
                                                 </Select>
                                             </TableCell>
@@ -224,12 +226,12 @@ export default function EmployeesPage() {
             {/* Employee List Table */}
             <Card>
                 <CardHeader>
-                    <CardTitle>Employee List</CardTitle>
-                    <CardDescription>A complete list of all employees in the system.</CardDescription>
+                    <CardTitle>{t('employee_list_title')}</CardTitle>
+                    <CardDescription>{t('employee_list_description')}</CardDescription>
                 </CardHeader>
                  <CardContent className="space-y-4">
                     <Input 
-                        placeholder="Search by name or role..."
+                        placeholder={t('search_by_name_or_role_placeholder')}
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
@@ -237,11 +239,11 @@ export default function EmployeesPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead>Role</TableHead>
-                                    <TableHead>Phone</TableHead>
-                                    <TableHead>Joining Date</TableHead>
-                                    <TableHead className="text-right">Salary</TableHead>
+                                    <TableHead>{t('name_header')}</TableHead>
+                                    <TableHead>{t('role_header')}</TableHead>
+                                    <TableHead>{t('phone_header')}</TableHead>
+                                    <TableHead>{t('joining_date_header')}</TableHead>
+                                    <TableHead className="text-right">{t('salary_header')}</TableHead>
                                     <TableHead className="w-12"></TableHead>
                                 </TableRow>
                             </TableHeader>
@@ -261,9 +263,9 @@ export default function EmployeesPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEdit(employee)} disabled={user?.role !== 'admin'}><Pencil className="mr-2 h-4 w-4"/> Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEdit(employee)} disabled={user?.role !== 'admin'}><Pencil className="mr-2 h-4 w-4"/> {t('edit_button')}</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => handleDelete(employee)} disabled={user?.role !== 'admin'} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> Delete</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleDelete(employee)} disabled={user?.role !== 'admin'} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> {t('delete_button')}</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -284,14 +286,14 @@ export default function EmployeesPage() {
             <AlertDialog open={!!employeeToDelete} onOpenChange={() => setEmployeeToDelete(null)}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                        <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
                         <AlertDialogDescription>
-                            This will permanently delete the employee record for {employeeToDelete?.name}. This action cannot be undone.
+                            {t('delete_employee_confirmation_description', { name: employeeToDelete?.name })}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                        <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
+                        <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">{t('delete_button')}</AlertDialogAction>
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>

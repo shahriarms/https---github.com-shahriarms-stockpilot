@@ -21,12 +21,14 @@ import { Input } from '@/components/ui/input';
 import { Users, ChevronRight, DollarSign, Wallet, History, AlertCircle, ShieldCheck } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function SalariesPage() {
   const { employees } = useEmployees();
   const { user } = useUser();
   const { getPaymentsForMonth, addSalaryPayment, getDueSalaryForMonth } = useSalaries();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
   const [paymentAmount, setPaymentAmount] = useState<number | ''>('');
@@ -66,8 +68,8 @@ export default function SalariesPage() {
     if (!selectedEmployee || typeof paymentAmount !== 'number' || paymentAmount <= 0) {
       toast({
         variant: 'destructive',
-        title: 'Invalid Amount',
-        description: 'Please enter a valid payment amount.',
+        title: t('invalid_amount_toast_title'),
+        description: t('invalid_amount_toast_description'),
       });
       return;
     }
@@ -75,8 +77,8 @@ export default function SalariesPage() {
     if (isOverpayment && user?.role !== 'admin') {
       toast({
         variant: 'destructive',
-        title: 'Amount Exceeds Due Salary',
-        description: 'You do not have permission to pay more than the due amount. Please ask an admin.',
+        title: t('overpayment_error_toast_title'),
+        description: t('overpayment_permission_error'),
       });
       return;
     }
@@ -89,8 +91,8 @@ export default function SalariesPage() {
     });
 
     toast({
-      title: 'Payment Successful',
-      description: `Paid $${paymentAmount.toFixed(2)} to ${selectedEmployee.name}.`,
+      title: t('payment_successful_toast_title'),
+      description: t('payment_successful_toast_description', { amount: paymentAmount.toFixed(2), name: selectedEmployee.name }),
     });
     
     // Optimistically update the selected employee to re-trigger memos
@@ -99,21 +101,21 @@ export default function SalariesPage() {
 
     setPaymentAmount('');
 
-  }, [selectedEmployee, paymentAmount, isOverpayment, user, addSalaryPayment, toast, employees]);
+  }, [selectedEmployee, paymentAmount, isOverpayment, user, addSalaryPayment, toast, employees, t]);
 
 
   return (
     <div className="flex flex-col h-full gap-4">
       <h1 className="text-2xl font-semibold flex items-center gap-2">
         <Wallet className="w-6 h-6" />
-        Salary Disbursement
+        {t('salaries_page_title')}
       </h1>
       <div className="grid md:grid-cols-3 gap-6 flex-1">
         {/* Employee List */}
         <Card className="md:col-span-1 flex flex-col">
           <CardHeader>
-            <CardTitle>Employee List</CardTitle>
-            <CardDescription>Select an employee to process salary.</CardDescription>
+            <CardTitle>{t('employee_list_title')}</CardTitle>
+            <CardDescription>{t('salaries_employee_list_description')}</CardDescription>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <ScrollArea className="h-full">
@@ -143,33 +145,33 @@ export default function SalariesPage() {
         {/* Payment Processing Card */}
         <Card className="md:col-span-2 flex flex-col">
           <CardHeader>
-            <CardTitle>Process Salary Payment</CardTitle>
+            <CardTitle>{t('process_salary_payment_title')}</CardTitle>
              <CardDescription>
-                {selectedEmployee ? `For ${selectedEmployee.name}` : 'Select an employee from the list.'}
+                {selectedEmployee ? t('for_employee_subtitle', { name: selectedEmployee.name }) : t('select_employee_from_list')}
              </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             {!selectedEmployee ? (
                 <div className="text-center text-muted-foreground py-12">
                     <Users className="mx-auto h-12 w-12 text-muted-foreground/50"/>
-                    <p className="mt-4">Please select an employee.</p>
+                    <p className="mt-4">{t('please_select_employee')}</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Payment Input Section */}
                     <div className="space-y-4">
-                        <h3 className="font-semibold text-lg">Payment Details</h3>
+                        <h3 className="font-semibold text-lg">{t('payment_details_title')}</h3>
                         <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                            <div className="flex justify-between text-sm"><span>Monthly Salary:</span> <span className="font-mono">${selectedEmployee.salary.toFixed(2)}</span></div>
-                            <div className="flex justify-between text-sm"><span>Paid This Month:</span> <span className="font-mono">${paidThisMonth.toFixed(2)}</span></div>
-                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>Due This Month:</span> <span className="font-mono text-primary">${dueSalary.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span>{t('monthly_salary_label')}:</span> <span className="font-mono">${selectedEmployee.salary.toFixed(2)}</span></div>
+                            <div className="flex justify-between text-sm"><span>{t('paid_this_month_label')}:</span> <span className="font-mono">${paidThisMonth.toFixed(2)}</span></div>
+                            <div className="flex justify-between font-bold text-base border-t pt-2 mt-2"><span>{t('due_this_month_label')}:</span> <span className="font-mono text-primary">${dueSalary.toFixed(2)}</span></div>
                         </div>
 
                         <div className="relative">
                             <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                             <Input 
                                 type="number" 
-                                placeholder="Enter amount to pay..."
+                                placeholder={t('enter_amount_to_pay_placeholder')}
                                 className="pl-8"
                                 value={paymentAmount}
                                 onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
@@ -181,27 +183,27 @@ export default function SalariesPage() {
                                 {user?.role === 'admin' ? <ShieldCheck className="h-5 w-5"/> : <AlertCircle className="h-5 w-5"/>}
                                 <div>
                                     <p className="font-semibold">
-                                     {user?.role === 'admin' ? 'Admin Advance Payment' : 'Amount Exceeds Due Salary'}
+                                     {user?.role === 'admin' ? t('admin_advance_payment') : t('amount_exceeds_due')}
                                     </p>
-                                    <p>{user?.role === 'admin' ? 'You are authorizing an advance payment.' : 'Please ask an admin to approve.'}</p>
+                                    <p>{user?.role === 'admin' ? t('authorizing_advance_payment') : t('ask_admin_for_approval')}</p>
                                 </div>
                             </div>
                         )}
                         
                         <Button className="w-full" disabled={!canProcessPayment} onClick={handleAddPayment}>
-                            Pay ${typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00'}
+                            {t('pay_button', { amount: typeof paymentAmount === 'number' ? paymentAmount.toFixed(2) : '0.00' })}
                         </Button>
                     </div>
 
                     {/* Payment History Section */}
                     <div className="space-y-4">
-                        <h3 className="font-semibold text-lg flex items-center gap-2"><History className="w-5 h-5"/> Monthly Payment History</h3>
+                        <h3 className="font-semibold text-lg flex items-center gap-2"><History className="w-5 h-5"/> {t('monthly_payment_history_title')}</h3>
                         <ScrollArea className="h-64 rounded-md border">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
-                                        <TableHead>Date</TableHead>
-                                        <TableHead className="text-right">Amount</TableHead>
+                                        <TableHead>{t('date_header')}</TableHead>
+                                        <TableHead className="text-right">{t('amount_header')}</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -215,7 +217,7 @@ export default function SalariesPage() {
                                     ) : (
                                         <TableRow>
                                             <TableCell colSpan={2} className="text-center h-24 text-muted-foreground">
-                                                No payments this month.
+                                                {t('no_payments_this_month')}
                                             </TableCell>
                                         </TableRow>
                                     )}
@@ -231,4 +233,3 @@ export default function SalariesPage() {
     </div>
   );
 }
-

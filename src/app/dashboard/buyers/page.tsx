@@ -20,11 +20,14 @@ import type { Buyer, Invoice } from '@/lib/types';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function BuyersPage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
   const { settings } = useSettings();
+  const { t } = useTranslation();
+
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -115,7 +118,7 @@ export default function BuyersPage() {
             type: 'raw-html',
             style: printStyles,
             scanStyles: false,
-            documentTitle: `Invoice - ${selectedInvoice?.id.slice(-6)}`,
+            documentTitle: `${t('invoice_title')} - ${selectedInvoice?.id.slice(-6)}`,
         });
     }
   };
@@ -154,19 +157,19 @@ export default function BuyersPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-semibold flex items-center gap-2">
             <Users className="w-6 h-6" />
-            Buyers &amp; Invoice History
+            {t('buyers_page_title')}
         </h1>
       </div>
       <div className="grid md:grid-cols-4 gap-6 flex-1">
         {/* Buyers List */}
         <Card className="md:col-span-1 flex flex-col">
           <CardHeader className="space-y-4">
-            <CardTitle>All Buyers</CardTitle>
+            <CardTitle>{t('all_buyers_title')}</CardTitle>
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
                     type="search" 
-                    placeholder="Search by name or phone..." 
+                    placeholder={t('search_by_name_or_phone_placeholder')}
                     className="pl-8" 
                     value={buyerSearchTerm}
                     onChange={e => setBuyerSearchTerm(e.target.value)}
@@ -201,12 +204,12 @@ export default function BuyersPage() {
         {/* Invoice Log List */}
         <Card className="md:col-span-1 flex flex-col">
            <CardHeader className="space-y-4">
-             <CardTitle className="truncate">{selectedBuyer ? `${selectedBuyer.name}'s Invoices` : 'Invoice Log'}</CardTitle>
+             <CardTitle className="truncate">{selectedBuyer ? t('buyers_invoices_title', { name: selectedBuyer.name }) : t('invoice_log_title')}</CardTitle>
              <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
                     type="search" 
-                    placeholder="Search by invoice no or date..." 
+                    placeholder={t('search_by_invoice_no_or_date_placeholder')}
                     className="pl-8" 
                     value={invoiceSearchTerm}
                     onChange={e => setInvoiceSearchTerm(e.target.value)}
@@ -227,7 +230,7 @@ export default function BuyersPage() {
                             selectedInvoice?.id === invoice.id ? 'bg-muted' : ''
                           }`}
                         >
-                            <div className="font-medium">Inv: {invoice.id.slice(-6)}</div>
+                            <div className="font-medium">{t('inv_short')}: {invoice.id.slice(-6)}</div>
                             <div className="text-sm text-muted-foreground flex items-center gap-2 mt-1">
                                 <Calendar className="w-3.5 h-3.5"/>
                                 <span>{new Date(invoice.date).toLocaleDateString()}</span>
@@ -239,10 +242,10 @@ export default function BuyersPage() {
                         </button>
                       ))
                     ) : (
-                      <div className="text-center p-4 text-sm text-muted-foreground">No invoices found.</div>
+                      <div className="text-center p-4 text-sm text-muted-foreground">{t('no_invoices_found')}</div>
                     )
                   ) : (
-                    <div className="text-center p-4 text-sm text-muted-foreground">Select a buyer.</div>
+                    <div className="text-center p-4 text-sm text-muted-foreground">{t('select_a_buyer')}</div>
                   )}
                  </div>
               </ScrollArea>
@@ -252,11 +255,11 @@ export default function BuyersPage() {
         {/* Invoice Display */}
         <div className="md:col-span-2 flex flex-col gap-4">
           <div className="flex items-center justify-between">
-              <h2 className="text-lg font-semibold">Invoice Details</h2>
+              <h2 className="text-lg font-semibold">{t('invoice_details_title')}</h2>
               {selectedInvoice && (
                   <Button onClick={handlePrint} disabled={!selectedInvoice}>
                       <Printer className="mr-2 h-4 w-4" />
-                      Print Invoice
+                      {t('print_invoice_button')}
                   </Button>
               )}
           </div>
@@ -275,13 +278,14 @@ export default function BuyersPage() {
                         paidAmount={selectedInvoice.paidAmount}
                         dueAmount={selectedInvoice.dueAmount}
                         printFormat={settings.printFormat}
+                        locale={settings.locale}
                      />
                    </div>
               ) : (
                 <div className="text-center py-12 text-muted-foreground h-full flex flex-col justify-center items-center">
                     <FileText className="w-12 h-12 text-muted-foreground/50 mb-4" />
-                    <p className="font-semibold">No Invoice Selected</p>
-                    <p className="text-sm">Please select a buyer and then an invoice to view its details.</p>
+                    <p className="font-semibold">{t('no_invoice_selected_title')}</p>
+                    <p className="text-sm">{t('no_invoice_selected_description')}</p>
                 </div>
               )}
             </div>

@@ -32,7 +32,7 @@ export interface Invoice {
   paidAmount: number;
   dueAmount: number;
   date: string; // ISO 8601 date string
-  payments: Payment[];
+  payments?: Payment[];
 }
 
 export interface Buyer {
@@ -80,7 +80,9 @@ export interface SalaryPayment {
 }
 
 export type PrintFormat = 'normal' | 'pos';
+export type Locale = 'en' | 'bn';
 
 export interface AppSettings {
     printFormat: PrintFormat;
+    locale: Locale;
 }

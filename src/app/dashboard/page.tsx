@@ -12,9 +12,11 @@ import { useProducts } from '@/hooks/use-products.tsx';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Package, DollarSign, PackageX, Loader2 } from 'lucide-react';
 import { useMemo } from 'react';
+import { useTranslation } from '@/hooks/use-translation';
 
 export default function Dashboard() {
   const { products, isLoading } = useProducts();
+  const { t } = useTranslation();
 
   const stats = useMemo(() => {
     const totalProducts = products.length;
@@ -42,7 +44,7 @@ export default function Dashboard() {
 
   const chartConfig = {
     stock: {
-      label: 'Stock',
+      label: t('stock_label'),
     },
   } satisfies ChartConfig;
 
@@ -59,20 +61,20 @@ export default function Dashboard() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         <Card className="transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('total_products_card_title')}</CardTitle>
             <Package className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.totalProducts}</div>
             <p className="text-xs text-muted-foreground">
-              Unique products in inventory
+              {t('total_products_card_description')}
             </p>
           </CardContent>
         </Card>
         <Card className="transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">
-              Total Stock Value
+              {t('total_stock_value_card_title')}
             </CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
@@ -81,26 +83,26 @@ export default function Dashboard() {
               ${stats.totalStockValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <p className="text-xs text-muted-foreground">
-              Current value of all stock
+              {t('total_stock_value_card_description')}
             </p>
           </CardContent>
         </Card>
         <Card className="transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-xl">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Out of Stock</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('out_of_stock_card_title')}</CardTitle>
             <PackageX className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats.outOfStockItems}</div>
             <p className="text-xs text-muted-foreground">
-              Items with zero quantity
+              {t('out_of_stock_card_description')}
             </p>
           </CardContent>
         </Card>
       </div>
       <Card className="transition-transform duration-300 ease-in-out hover:scale-102 hover:shadow-xl">
         <CardHeader>
-          <CardTitle>Top 5 Stocked Products</CardTitle>
+          <CardTitle>{t('top_5_stocked_products_chart_title')}</CardTitle>
         </CardHeader>
         <CardContent>
           <ChartContainer config={chartConfig} className="min-h-[200px] w-full">

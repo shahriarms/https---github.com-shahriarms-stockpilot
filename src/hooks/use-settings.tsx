@@ -2,13 +2,14 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import type { AppSettings, PrintFormat } from '@/lib/types';
+import type { AppSettings, PrintFormat, Locale } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 
 const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
 
 const defaultSettings: AppSettings = {
     printFormat: 'normal',
+    locale: 'en',
 };
 
 interface SettingsContextType {
@@ -43,6 +44,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     const updated = { ...settings, ...newSettings };
     setSettings(updated);
     localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+    if (newSettings.locale) {
+        document.documentElement.lang = newSettings.locale;
+    }
     toast({
         title: "Settings Updated",
         description: "Your changes have been saved.",

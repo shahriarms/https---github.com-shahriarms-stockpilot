@@ -26,6 +26,7 @@ import {
 import type { Product } from '@/lib/types';
 import { useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
+import { useTranslation } from '@/hooks/use-translation';
 
 const productSchema = z.object({
   name: z.string().min(2, { message: 'Product name must be at least 2 characters.' }),
@@ -47,6 +48,7 @@ interface EditProductDialogProps {
 
 export function EditProductDialog({ open, onOpenChange, product }: EditProductDialogProps) {
   const { updateProduct } = useProducts();
+  const { t } = useTranslation();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: product,
@@ -72,9 +74,9 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Product</DialogTitle>
+          <DialogTitle>{t('edit_product_dialog_title')}</DialogTitle>
           <DialogDescription>
-            Update the details for '{product.name}'.
+            {t('edit_product_dialog_description', { name: product.name })}
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -84,7 +86,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
               name="mainCategory"
               render={({ field }) => (
                 <FormItem className="space-y-3">
-                  <FormLabel>Main Category</FormLabel>
+                  <FormLabel>{t('main_category_label')}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
@@ -95,13 +97,13 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                         <FormControl>
                           <RadioGroupItem value="Material" />
                         </FormControl>
-                        <FormLabel className="font-normal">Material</FormLabel>
+                        <FormLabel className="font-normal">{t('material_tab')}</FormLabel>
                       </FormItem>
                       <FormItem className="flex items-center space-x-2 space-y-0">
                         <FormControl>
                           <RadioGroupItem value="Hardware" />
                         </FormControl>
-                        <FormLabel className="font-normal">Hardware</FormLabel>
+                        <FormLabel className="font-normal">{t('hardware_tab')}</FormLabel>
                       </FormItem>
                     </RadioGroup>
                   </FormControl>
@@ -114,7 +116,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Name</FormLabel>
+                  <FormLabel>{t('product_name_label')}</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Classic T-Shirt" {...field} />
                   </FormControl>
@@ -128,7 +130,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 name="category"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Category</FormLabel>
+                    <FormLabel>{t('category_label')}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., Angel" {...field} />
                     </FormControl>
@@ -141,7 +143,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 name="subCategory"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sub-Category</FormLabel>
+                    <FormLabel>{t('subcategory_label')}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., 28" {...field} />
                     </FormControl>
@@ -156,7 +158,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 name="sku"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SKU</FormLabel>
+                    <FormLabel>{t('sku_label')}</FormLabel>
                     <FormControl>
                       <Input placeholder="e.g., ANG-1-4" {...field} />
                     </FormControl>
@@ -169,7 +171,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 name="price"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Price ($)</FormLabel>
+                    <FormLabel>{t('price_label')}</FormLabel>
                     <FormControl>
                       <Input type="number" step="0.01" placeholder="25.99" {...field} />
                     </FormControl>
@@ -183,7 +185,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 name="stock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Stock</FormLabel>
+                    <FormLabel>{t('stock_label')}</FormLabel>
                     <FormControl>
                       <Input type="number" step="1" placeholder="100" {...field} />
                     </FormControl>
@@ -193,9 +195,9 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
               />
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
-                Cancel
+                {t('cancel_button')}
               </Button>
-              <Button type="submit">Save Changes</Button>
+              <Button type="submit">{t('save_changes_button')}</Button>
             </DialogFooter>
           </form>
         </Form>

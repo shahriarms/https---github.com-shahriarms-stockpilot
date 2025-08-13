@@ -26,6 +26,7 @@ import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useSettings } from '@/hooks/use-settings';
 import printJS from 'print-js';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function InvoicePage() {
@@ -34,6 +35,7 @@ export default function InvoicePage() {
   const { settings } = useSettings();
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const componentToPrintRef = useRef<HTMLDivElement>(null);
   
   const {
@@ -71,19 +73,19 @@ export default function InvoicePage() {
   const dueAmount = useMemo(() => {
     return subtotal - paidAmount;
   }, [subtotal, paidAmount]);
-  
+
   const validateInvoice = useCallback(() => {
     if (!customerName) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please enter the customer\'s name.' });
+      toast({ variant: 'destructive', title: t('validation_error_title'), description: t('customer_name_required_error') });
       return false;
     }
     if (invoiceItems.length === 0) {
-      toast({ variant: 'destructive', title: 'Validation Error', description: 'Please add at least one item to the invoice.' });
+      toast({ variant: 'destructive', title: t('validation_error_title'), description: t('invoice_items_required_error') });
       return false;
     }
     return true;
-  }, [customerName, invoiceItems.length, toast]);
-
+  }, [customerName, invoiceItems.length, toast, t]);
+  
   const performSave = useCallback(() => {
     if (!validateInvoice()) return null;
     
@@ -100,14 +102,15 @@ export default function InvoicePage() {
     });
     
     toast({
-        title: "Invoice Saved & Printed",
-        description: `Invoice ${newId.slice(-6)} has been saved.`,
+        title: t('invoice_saved_and_printed_toast_title'),
+        description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
     });
 
     clearInvoiceForm();
     setInvoiceId(`INV-${Date.now()}`); // Generate a new ID for the next form
     router.push('/dashboard/buyers');
-  }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast, validateInvoice]);
+  }, [saveInvoice, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, router, toast, validateInvoice, t]);
+
 
   const handlePrint = () => {
     if (!validateInvoice()) return;
@@ -193,7 +196,7 @@ export default function InvoicePage() {
             type: 'raw-html',
             style: printStyles,
             scanStyles: false,
-            documentTitle: `Invoice - ${invoiceId.slice(-6)}`,
+            documentTitle: `${t('invoice_title')} - ${invoiceId.slice(-6)}`,
             onPrintDialogClose: performSave,
         });
     }
@@ -267,8 +270,8 @@ export default function InvoicePage() {
     });
     
     toast({
-        title: "Invoice Saved",
-        description: `Invoice ${newId.slice(-6)} has been saved.`,
+        title: t('invoice_saved_toast_title'),
+        description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
     });
 
     clearInvoiceForm();
@@ -282,32 +285,32 @@ export default function InvoicePage() {
         <div className="flex flex-col gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Create Invoice</CardTitle>
+              <CardTitle>{t('create_invoice_title')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
                <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                      <span className="font-medium">Invoice No: {invoiceId ? invoiceId.slice(-6) : '...'}</span>
-                      <span className="text-muted-foreground">Date: {currentDate || '...'}</span>
+                      <span className="font-medium">{t('invoice_no_label')}: {invoiceId ? invoiceId.slice(-6) : '...'}</span>
+                      <span className="text-muted-foreground">{t('date_label')}: {currentDate || '...'}</span>
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customerName">Name</Label>
-                    <Input id="customerName" placeholder="Enter customer name" value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
+                    <Label htmlFor="customerName">{t('customer_name_label')}</Label>
+                    <Input id="customerName" placeholder={t('customer_name_placeholder')} value={customerName} onChange={(e) => setCustomerName(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customerAddress">Address</Label>
-                    <Input id="customerAddress" placeholder="Enter customer address" value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
+                    <Label htmlFor="customerAddress">{t('customer_address_label')}</Label>
+                    <Input id="customerAddress" placeholder={t('customer_address_placeholder')} value={customerAddress} onChange={(e) => setCustomerAddress(e.target.value)} />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="customerPhone">Phone</Label>
-                    <Input id="customerPhone" placeholder="Enter phone number" value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
+                    <Label htmlFor="customerPhone">{t('customer_phone_label')}</Label>
+                    <Input id="customerPhone" placeholder={t('customer_phone_placeholder')} value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} />
                   </div>
               </div>
 
               <Separator />
               
               <div className="space-y-4">
-                  <Label>Add Products</Label>
+                  <Label>{t('add_products_label')}</Label>
                   
                   <RadioGroup
                       value={mainCategoryFilter}
@@ -319,30 +322,30 @@ export default function InvoicePage() {
                       >
                       <div className="flex items-center space-x-2">
                           <RadioGroupItem value="Material" id="r-material" />
-                          <Label htmlFor="r-material">Material</Label>
+                          <Label htmlFor="r-material">{t('material_tab')}</Label>
                       </div>
                       <div className="flex items-center space-x-2">
                           <RadioGroupItem value="Hardware" id="r-hardware" />
-                          <Label htmlFor="r-hardware">Hardware</Label>
+                          <Label htmlFor="r-hardware">{t('hardware_tab')}</Label>
                       </div>
                   </RadioGroup>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     <Select value={categoryFilter} onValueChange={(value) => { setCategoryFilter(value === 'all' ? '' : value); setSubCategoryFilter(''); }}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Filter by Category" />
+                            <SelectValue placeholder={t('filter_by_category_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
+                            <SelectItem value="all">{t('all_categories')}</SelectItem>
                             {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)} disabled={!categoryFilter}>
                         <SelectTrigger>
-                            <SelectValue placeholder="Filter by Sub-Category" />
+                            <SelectValue placeholder={t('filter_by_subcategory_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Sub-Categories</SelectItem>
+                            <SelectItem value="all">{t('all_subcategories')}</SelectItem>
                             {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
                         </SelectContent>
                     </Select>
@@ -350,7 +353,7 @@ export default function InvoicePage() {
                   <div className="flex gap-2">
                       <Select onValueChange={handleAddProduct}>
                           <SelectTrigger>
-                              <SelectValue placeholder="Select Product" />
+                              <SelectValue placeholder={t('select_product_placeholder')} />
                           </SelectTrigger>
                           <SelectContent>
                               {filteredProducts.map((p) => (
@@ -358,7 +361,7 @@ export default function InvoicePage() {
                               ))}
                           </SelectContent>
                       </Select>
-                      <Button onClick={() => filteredProducts.length > 0 && handleAddProduct(filteredProducts[0].id)}><PlusCircle className="mr-2"/> Add Item</Button>
+                      <Button onClick={() => filteredProducts.length > 0 && handleAddProduct(filteredProducts[0].id)}><PlusCircle className="mr-2"/>{t('add_item_button')}</Button>
                   </div>
 
                   <div className="mt-4 space-y-2 max-h-60 overflow-y-auto">
@@ -377,11 +380,11 @@ export default function InvoicePage() {
                   <div className="mt-6 pt-4 border-t flex items-end justify-end">
                       <div className="space-y-2 text-right">
                           <div className="flex justify-end items-center gap-4">
-                              <span className="font-medium">Subtotal:</span>
+                              <span className="font-medium">{t('subtotal_label')}:</span>
                               <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
                           </div>
                            <div className="flex justify-end items-center gap-4">
-                              <span className="font-medium">Paid:</span>
+                              <span className="font-medium">{t('paid_label')}:</span>
                               <div className="relative w-28 flex items-center gap-1">
                                   <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
                                   <Input
@@ -394,7 +397,7 @@ export default function InvoicePage() {
                               </div>
                           </div>
                            <div className="flex justify-end items-center gap-4 text-primary">
-                              <span className="font-medium">Due:</span>
+                              <span className="font-medium">{t('due_label')}:</span>
                               <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
                           </div>
                       </div>
@@ -402,7 +405,7 @@ export default function InvoicePage() {
               </div>
               
                <Button className="w-full mt-6" onClick={handleSaveAndRedirect}>
-                  <Save className="mr-2 h-4 w-4"/> Save Invoice
+                  <Save className="mr-2 h-4 w-4"/> {t('save_invoice_button')}
               </Button>
             </CardContent>
           </Card>
@@ -411,10 +414,10 @@ export default function InvoicePage() {
         {/* Right Column: Print Preview */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Live Print Preview</h2>
+              <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
               <Button onClick={handlePrint} disabled={invoiceItems.length === 0}>
                   <Printer className="mr-2"/> 
-                  {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
+                  {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
               </Button>
           </div>
           <div className="border rounded-lg overflow-hidden">
@@ -430,6 +433,7 @@ export default function InvoicePage() {
                 paidAmount={paidAmount}
                 dueAmount={dueAmount}
                 printFormat={settings.printFormat}
+                locale={settings.locale}
             />
             </div>
           </div>

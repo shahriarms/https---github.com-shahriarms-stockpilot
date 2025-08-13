@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback } from 'react';
-import { useReactToPrint } from 'react-to-print';
+import printJS from 'print-js';
 import { useInvoices } from '@/hooks/use-invoices';
 import { usePayments } from '@/hooks/use-payments';
 import type { Buyer, Invoice, Payment } from '@/lib/types';
@@ -21,11 +21,14 @@ import { Button } from '@/components/ui/button';
 import { Users, FileText, ChevronRight, DollarSign, HandCoins, History, Printer, Search } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { PaymentReceipt } from '@/components/payment-receipt';
+import { useTranslation } from '@/hooks/use-translation';
+
 
 export default function BuyersDuePage() {
   const { buyers, getInvoicesForBuyer } = useInvoices();
   const { addPayment, getPaymentsForInvoice } = usePayments();
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const [selectedBuyer, setSelectedBuyer] = useState<Buyer | null>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
@@ -79,8 +82,8 @@ export default function BuyersDuePage() {
     });
     
     toast({
-        title: 'Payment Received',
-        description: `Successfully recorded payment of $${(paymentAmount as number).toFixed(2)} for invoice ${selectedInvoice.id.slice(-6)}.`,
+        title: t('payment_received_toast_title'),
+        description: t('payment_received_toast_description', { amount: (paymentAmount as number).toFixed(2), invoiceId: selectedInvoice.id.slice(-6) }),
     });
 
     setPaymentAmount('');
@@ -92,21 +95,15 @@ export default function BuyersDuePage() {
         const freshBuyerData = JSON.parse(JSON.stringify(buyers.find(b => b.id === selectedBuyer!.id)));
         setSelectedBuyer(freshBuyerData);
     }
-  }, [addPayment, paymentAmount, selectedBuyer, selectedInvoice, toast, buyers]);
+  }, [addPayment, paymentAmount, selectedBuyer, selectedInvoice, toast, buyers, t]);
 
-  const handlePrint = useReactToPrint({
-    content: () => componentToPrintRef.current,
-    onAfterPrint: () => {
-      completePaymentTransaction();
-    },
-  });
 
   const handleAddPaymentAndPrint = () => {
     if (!selectedInvoice || !paymentAmount || paymentAmount <= 0) {
       toast({
         variant: 'destructive',
-        title: 'Invalid Amount',
-        description: 'Please enter a valid payment amount.',
+        title: t('invalid_amount_toast_title'),
+        description: t('invalid_amount_toast_description'),
       });
       return;
     }
@@ -114,13 +111,25 @@ export default function BuyersDuePage() {
     if (paymentAmount > selectedInvoice.dueAmount) {
         toast({
           variant: 'destructive',
-          title: 'Overpayment Error',
-          description: `Payment cannot be greater than the due amount of $${selectedInvoice.dueAmount.toFixed(2)}.`,
+          title: t('overpayment_error_toast_title'),
+          description: t('overpayment_error_toast_description', { amount: selectedInvoice.dueAmount.toFixed(2) }),
         });
         return;
     }
     
-    handlePrint();
+    if (componentToPrintRef.current) {
+         printJS({
+            printable: (componentToPrintRef.current as any).innerHTML,
+            type: 'raw-html',
+            onPrintDialogClose: completePaymentTransaction,
+            style: `
+                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+                @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
+                body { font-family: 'Tiro Bangla', serif; }
+                .print-card * { color: black !important; }
+            `
+        });
+    }
   };
 
   const receiptPaymentHistory = useMemo(() => {
@@ -140,18 +149,18 @@ export default function BuyersDuePage() {
     <div className="flex flex-col h-full gap-4">
       <h1 className="text-2xl font-semibold flex items-center gap-2">
         <HandCoins className="w-6 h-6" />
-        Buyers Due
+        {t('buyers_due_page_title')}
       </h1>
       <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers with Due List */}
         <Card className="md:col-span-1 flex flex-col">
           <CardHeader className="space-y-4">
-            <CardTitle>Buyers with Due</CardTitle>
+            <CardTitle>{t('buyers_with_due_title')}</CardTitle>
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input 
                     type="search" 
-                    placeholder="Search by name or phone..." 
+                    placeholder={t('search_by_name_or_phone_placeholder')}
                     className="pl-8" 
                     value={buyerSearchTerm}
                     onChange={e => setBuyerSearchTerm(e.target.value)}
@@ -178,7 +187,7 @@ export default function BuyersDuePage() {
                     </div>
                   </button>
                 )) : (
-                    <div className="p-4 text-center text-muted-foreground">No buyers with due balances.</div>
+                    <div className="p-4 text-center text-muted-foreground">{t('no_buyers_with_due')}</div>
                 )}
               </div>
             </ScrollArea>
@@ -188,8 +197,8 @@ export default function BuyersDuePage() {
         {/* Due Invoices List */}
         <Card className="md:col-span-1 flex flex-col">
           <CardHeader>
-            <CardTitle className="truncate">{selectedBuyer ? `Due Invoices` : 'Select Buyer'}</CardTitle>
-             <CardDescription>{selectedBuyer ? `For ${selectedBuyer.name}` : 'Outstanding balances'}</CardDescription>
+            <CardTitle className="truncate">{selectedBuyer ? t('due_invoices_title') : t('select_buyer_title')}</CardTitle>
+             <CardDescription>{selectedBuyer ? t('for_buyer_subtitle', { name: selectedBuyer.name }) : t('outstanding_balances_subtitle')}</CardDescription>
           </CardHeader>
           <CardContent className="p-0 flex-1">
             <ScrollArea className="h-full">
@@ -205,17 +214,17 @@ export default function BuyersDuePage() {
                         }`}
                       >
                         <div className="flex justify-between font-medium">
-                            <span>Inv: {invoice.id.slice(-6)}</span>
+                            <span>{t('inv_short')}: {invoice.id.slice(-6)}</span>
                             <span className="text-destructive">${invoice.dueAmount.toFixed(2)}</span>
                         </div>
                         <div className="text-sm text-muted-foreground">{new Date(invoice.date).toLocaleDateString()}</div>
                       </button>
                     ))
                   ) : (
-                    <div className="p-4 text-center text-muted-foreground">This buyer has no due invoices.</div>
+                    <div className="p-4 text-center text-muted-foreground">{t('buyer_has_no_due_invoices')}</div>
                   )
                 ) : (
-                  <div className="p-4 text-center text-muted-foreground">Select a buyer to see their due invoices.</div>
+                  <div className="p-4 text-center text-muted-foreground">{t('select_buyer_to_see_dues')}</div>
                 )}
               </div>
             </ScrollArea>
@@ -225,16 +234,16 @@ export default function BuyersDuePage() {
         {/* Payment Section */}
         <Card className="md:col-span-3 flex flex-col">
             <CardHeader>
-                <CardTitle>Receive Payment</CardTitle>
-                <CardDescription>Record a new payment for the selected invoice.</CardDescription>
+                <CardTitle>{t('receive_payment_title')}</CardTitle>
+                <CardDescription>{t('receive_payment_description')}</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                 {selectedInvoice ? (
                     <>
                         <div className="flex justify-between items-start">
                            <div>
-                              <p>Invoice: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
-                              <p>Due Amount: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
+                              <p>{t('invoice_label')}: <span className="font-mono">{selectedInvoice.id.slice(-6)}</span></p>
+                              <p>{t('due_amount_label')}: <span className="font-bold text-destructive">${selectedInvoice.dueAmount.toFixed(2)}</span></p>
                            </div>
                         </div>
                         <div className="flex items-center gap-2">
@@ -242,23 +251,23 @@ export default function BuyersDuePage() {
                                 <DollarSign className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                                 <Input 
                                     type="number" 
-                                    placeholder="Enter amount..."
+                                    placeholder={t('enter_amount_placeholder')}
                                     className="pl-8"
                                     value={paymentAmount}
                                     onChange={(e) => setPaymentAmount(e.target.value === '' ? '' : parseFloat(e.target.value))}
                                 />
                             </div>
-                            <Button onClick={handleAddPaymentAndPrint}><Printer className="mr-2 h-4 w-4"/> Receive & Print</Button>
+                            <Button onClick={handleAddPaymentAndPrint}><Printer className="mr-2 h-4 w-4"/>{t('receive_and_print_button')}</Button>
                         </div>
                     </>
                 ) : (
-                    <div className="text-center text-muted-foreground py-8">Select an invoice to receive payment.</div>
+                    <div className="text-center text-muted-foreground py-8">{t('select_invoice_to_receive_payment')}</div>
                 )}
             </CardContent>
             <div className="flex-1 flex flex-col min-h-0">
                 <div className="flex items-center gap-2 px-6 pt-4">
                     <History className="w-5 h-5" />
-                    <h3 className="text-lg font-semibold">Live Receipt Preview</h3>
+                    <h3 className="text-lg font-semibold">{t('live_receipt_preview_title')}</h3>
                 </div>
                 <div className="p-6 pt-2 flex-1">
                      <ScrollArea className="h-full border rounded-lg">
@@ -274,7 +283,7 @@ export default function BuyersDuePage() {
                         ) : (
                             <div className="text-center text-muted-foreground p-8 flex flex-col justify-center items-center h-full">
                                 <FileText className="w-12 h-12 mb-4 text-muted-foreground/50"/>
-                                <p>Select an invoice to see a receipt preview.</p>
+                                <p>{t('select_invoice_for_preview')}</p>
                            </div>
                         )}
                     </ScrollArea>

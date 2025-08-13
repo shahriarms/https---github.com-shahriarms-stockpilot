@@ -11,6 +11,7 @@ import { ExpenseProvider } from '@/hooks/use-expenses';
 import { EmployeeProvider } from '@/hooks/use-employees';
 import { SalaryProvider } from '@/hooks/use-salaries';
 import { SettingsProvider } from '@/hooks/use-settings';
+import { TranslationProvider } from '@/hooks/use-translation';
 
 export default function DashboardLayout({
   children,
@@ -20,21 +21,23 @@ export default function DashboardLayout({
   return (
     <UserProvider>
       <SettingsProvider>
-        <ProductProvider>
-          <InvoiceProvider>
-            <PaymentProvider>
-              <ExpenseProvider>
-                <EmployeeProvider>
-                  <SalaryProvider>
-                    <InvoiceFormProvider>
-                      <Providers header={<SiteHeader />}>{children}</Providers>
-                    </InvoiceFormProvider>
-                  </SalaryProvider>
-                </EmployeeProvider>
-              </ExpenseProvider>
-            </PaymentProvider>
-          </InvoiceProvider>
-        </ProductProvider>
+        <TranslationProvider>
+          <ProductProvider>
+            <InvoiceProvider>
+              <PaymentProvider>
+                <ExpenseProvider>
+                  <EmployeeProvider>
+                    <SalaryProvider>
+                      <InvoiceFormProvider>
+                        <Providers header={<SiteHeader />}>{children}</Providers>
+                      </InvoiceFormProvider>
+                    </SalaryProvider>
+                  </EmployeeProvider>
+                </ExpenseProvider>
+              </PaymentProvider>
+            </InvoiceProvider>
+          </ProductProvider>
+        </TranslationProvider>
       </SettingsProvider>
     </UserProvider>
   );

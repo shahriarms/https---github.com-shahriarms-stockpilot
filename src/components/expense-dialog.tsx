@@ -42,6 +42,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
+import { useTranslation } from '@/hooks/use-translation';
 
 const expenseSchema = z.object({
   category: z.string({ required_error: "Please select a category." }),
@@ -61,6 +62,7 @@ interface ExpenseDialogProps {
 
 export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProps) {
     const { addExpense, updateExpense } = useExpenses();
+    const { t } = useTranslation();
     const isEditMode = !!expense;
 
     const form = useForm<ExpenseFormValues>({
@@ -106,9 +108,9 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>{isEditMode ? 'Edit Expense' : 'Add New Expense'}</DialogTitle>
+                    <DialogTitle>{isEditMode ? t('edit_expense_dialog_title') : t('add_expense_dialog_title')}</DialogTitle>
                     <DialogDescription>
-                        {isEditMode ? 'Update the details of your expense.' : 'Fill in the details to record a new expense.'}
+                        {isEditMode ? t('edit_expense_dialog_description') : t('add_expense_dialog_description_new')}
                     </DialogDescription>
                 </DialogHeader>
                 <Form {...form}>
@@ -118,19 +120,19 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                             name="category"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Category</FormLabel>
+                                    <FormLabel>{t('category_label')}</FormLabel>
                                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                                         <FormControl>
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select an expense category" />
+                                                <SelectValue placeholder={t('select_expense_category_placeholder')} />
                                             </SelectTrigger>
                                         </FormControl>
                                         <SelectContent>
-                                            <SelectItem value="Rent">Rent</SelectItem>
-                                            <SelectItem value="Utility">Utility</SelectItem>
-                                            <SelectItem value="Salary">Salary</SelectItem>
-                                            <SelectItem value="Equipment">Equipment</SelectItem>
-                                            <SelectItem value="Misc">Miscellaneous</SelectItem>
+                                            <SelectItem value="Rent">{t('expense_category_rent')}</SelectItem>
+                                            <SelectItem value="Utility">{t('expense_category_utility')}</SelectItem>
+                                            <SelectItem value="Salary">{t('expense_category_salary')}</SelectItem>
+                                            <SelectItem value="Equipment">{t('expense_category_equipment')}</SelectItem>
+                                            <SelectItem value="Misc">{t('expense_category_misc')}</SelectItem>
                                         </SelectContent>
                                     </Select>
                                     <FormMessage />
@@ -142,9 +144,9 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                             name="description"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Description</FormLabel>
+                                    <FormLabel>{t('description_label')}</FormLabel>
                                     <FormControl>
-                                        <Textarea placeholder="e.g., Office electricity bill for July" {...field} />
+                                        <Textarea placeholder={t('expense_description_placeholder')} {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
@@ -155,7 +157,7 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                             name="amount"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Amount</FormLabel>
+                                    <FormLabel>{t('amount_label')}</FormLabel>
                                     <FormControl>
                                         <Input type="number" placeholder="0.00" {...field} />
                                     </FormControl>
@@ -169,12 +171,12 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                                 name="date"
                                 render={({ field }) => (
                                     <FormItem className="flex flex-col">
-                                        <FormLabel>Date of Expense</FormLabel>
+                                        <FormLabel>{t('date_of_expense_label')}</FormLabel>
                                         <Popover>
                                             <PopoverTrigger asChild>
                                                 <FormControl>
                                                     <Button variant="outline" className={cn("pl-3 text-left font-normal", !field.value && "text-muted-foreground")}>
-                                                        {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                                        {field.value ? format(field.value, "PPP") : <span>{t('pick_a_date')}</span>}
                                                         <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                                                     </Button>
                                                 </FormControl>
@@ -198,18 +200,18 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                                 name="paymentMethod"
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Payment Method</FormLabel>
+                                        <FormLabel>{t('payment_method_label')}</FormLabel>
                                          <Select onValueChange={field.onChange} defaultValue={field.value}>
                                             <FormControl>
                                                 <SelectTrigger>
-                                                    <SelectValue placeholder="Select method" />
+                                                    <SelectValue placeholder={t('select_payment_method_placeholder')} />
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
-                                                <SelectItem value="Cash">Cash</SelectItem>
-                                                <SelectItem value="bKash">bKash</SelectItem>
-                                                <SelectItem value="Card">Card</SelectItem>
-                                                <SelectItem value="Bank">Bank</SelectItem>
+                                                <SelectItem value="Cash">{t('payment_method_cash')}</SelectItem>
+                                                <SelectItem value="bKash">{t('payment_method_bkash')}</SelectItem>
+                                                <SelectItem value="Card">{t('payment_method_card')}</SelectItem>
+                                                <SelectItem value="Bank">{t('payment_method_bank')}</SelectItem>
                                             </SelectContent>
                                         </Select>
                                         <FormMessage />
@@ -218,8 +220,8 @@ export function ExpenseDialog({ open, onOpenChange, expense }: ExpenseDialogProp
                             />
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-                            <Button type="submit">{isEditMode ? 'Save Changes' : 'Add Expense'}</Button>
+                            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>{t('cancel_button')}</Button>
+                            <Button type="submit">{isEditMode ? t('save_changes_button') : t('add_expense_button')}</Button>
                         </DialogFooter>
                     </form>
                 </Form>

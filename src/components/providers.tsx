@@ -14,10 +14,8 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { StockPilotLogo } from './stock-pilot-logo';
-import { SiteHeader } from './site-header';
-import { ProductProvider } from '@/hooks/use-products.tsx';
-import { UserProvider } from '@/hooks/use-user.tsx';
 import { LayoutDashboard, Package, FileText, Users, HandCoins, Receipt, UserCog, Wallet, Settings } from 'lucide-react';
+import { useTranslation } from '@/hooks/use-translation';
 
 export function Providers({
   children,
@@ -27,6 +25,7 @@ export function Providers({
   header: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const { t } = useTranslation();
 
   if (pathname === '/login' || pathname === '/signup') {
     return <>{children}</>;
@@ -50,10 +49,10 @@ export function Providers({
               <Link href="/dashboard">
                 <SidebarMenuButton
                   isActive={pathname === '/dashboard'}
-                  tooltip={{ children: 'Dashboard' }}
+                  tooltip={{ children: t('dashboard_sidebar') }}
                 >
                   <LayoutDashboard className="h-6 w-6" />
-                  <span>Dashboard</span>
+                  <span>{t('dashboard_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -61,10 +60,10 @@ export function Providers({
               <Link href="/dashboard/products">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/products')}
-                  tooltip={{ children: 'Products' }}
+                  tooltip={{ children: t('products_sidebar') }}
                 >
                    <Package className="h-6 w-6" />
-                  <span>Products</span>
+                  <span>{t('products_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -72,10 +71,10 @@ export function Providers({
               <Link href="/dashboard/invoice">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/invoice')}
-                  tooltip={{ children: 'Invoice' }}
+                  tooltip={{ children: t('invoice_sidebar') }}
                 >
                    <FileText className="h-6 w-6" />
-                  <span>Invoice</span>
+                  <span>{t('invoice_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -83,10 +82,10 @@ export function Providers({
               <Link href="/dashboard/buyers">
                 <SidebarMenuButton
                   isActive={pathname === '/dashboard/buyers'}
-                  tooltip={{ children: 'Buyer purchases' }}
+                  tooltip={{ children: t('buyer_purchases_sidebar') }}
                 >
                    <Users className="h-6 w-6" />
-                  <span>Buyer purchases</span>
+                  <span>{t('buyer_purchases_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -94,10 +93,10 @@ export function Providers({
               <Link href="/dashboard/buyers-due">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/buyers-due')}
-                  tooltip={{ children: 'Buyers Due' }}
+                  tooltip={{ children: t('buyers_due_sidebar') }}
                 >
                    <HandCoins className="h-6 w-6" />
-                  <span>Buyers Due</span>
+                  <span>{t('buyers_due_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -105,10 +104,10 @@ export function Providers({
               <Link href="/dashboard/expenses">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/expenses')}
-                  tooltip={{ children: 'Expenses' }}
+                  tooltip={{ children: t('expenses_sidebar') }}
                 >
                    <Receipt className="h-6 w-6" />
-                  <span>Expenses</span>
+                  <span>{t('expenses_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -116,10 +115,10 @@ export function Providers({
               <Link href="/dashboard/employees">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/employees')}
-                  tooltip={{ children: 'Employee Attendance' }}
+                  tooltip={{ children: t('employee_attendance_sidebar') }}
                 >
                    <UserCog className="h-6 w-6" />
-                  <span>Employee Attendance</span>
+                  <span>{t('employee_attendance_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -127,10 +126,10 @@ export function Providers({
               <Link href="/dashboard/salaries">
                 <SidebarMenuButton
                   isActive={pathname.startsWith('/dashboard/salaries')}
-                  tooltip={{ children: 'Salaries' }}
+                  tooltip={{ children: t('salaries_sidebar') }}
                 >
                    <Wallet className="h-6 w-6" />
-                  <span>Salaries</span>
+                  <span>{t('salaries_sidebar')}</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>
@@ -142,10 +141,10 @@ export function Providers({
                     <Link href="/dashboard/settings">
                         <SidebarMenuButton
                         isActive={pathname.startsWith('/dashboard/settings')}
-                        tooltip={{ children: 'Settings' }}
+                        tooltip={{ children: t('settings_sidebar') }}
                         >
                         <Settings className="h-6 w-6" />
-                        <span>Settings</span>
+                        <span>{t('settings_sidebar')}</span>
                         </SidebarMenuButton>
                     </Link>
                 </SidebarMenuItem>

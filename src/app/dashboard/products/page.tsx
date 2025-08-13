@@ -46,12 +46,14 @@ import {
 } from "@/components/ui/alert-dialog";
 import * as XLSX from 'xlsx';
 import { useToast } from '@/hooks/use-toast';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 export default function ProductsPage() {
   const { products, isLoading, addMultipleProducts, deleteProduct } = useProducts();
   const { user } = useUser();
   const { toast } = useToast();
+  const { t } = useTranslation();
   const [isAddDialogOpen, setAddDialogOpen] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
@@ -145,22 +147,22 @@ export default function ProductsPage() {
         if (newProducts.length > 0) {
           addMultipleProducts(newProducts);
           toast({
-            title: 'Upload Successful',
-            description: `${newProducts.length} products have been added to the inventory.`,
+            title: t('upload_successful_toast_title'),
+            description: t('upload_successful_toast_description', { count: newProducts.length }),
           });
         } else {
           toast({
             variant: 'destructive',
-            title: 'Upload Failed',
-            description: 'No valid products found in the file. Please check the file format.',
+            title: t('upload_failed_toast_title'),
+            description: t('upload_failed_toast_description'),
           });
         }
       } catch (error) {
         console.error("Error parsing uploaded file:", error);
         toast({
           variant: 'destructive',
-          title: 'Upload Error',
-          description: 'Failed to parse the uploaded file. Make sure it is a valid Excel or CSV file.',
+          title: t('upload_error_toast_title'),
+          description: t('upload_error_toast_description'),
         });
       }
     };
@@ -180,7 +182,7 @@ export default function ProductsPage() {
   return (
     <div className="flex flex-col gap-4 h-full">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Products</h1>
+        <h1 className="text-2xl font-semibold">{t('products_page_title')}</h1>
         <div className="flex gap-2">
           <input
             type="file"
@@ -191,15 +193,15 @@ export default function ProductsPage() {
           />
           <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
             <Upload className="mr-2 h-4 w-4" />
-            Upload
+            {t('upload_button')}
           </Button>
           <Button variant="outline" onClick={handleDownload} disabled={isLoading || filteredProducts.length === 0}>
             <Download className="mr-2 h-4 w-4" />
-            Download Report
+            {t('download_report_button')}
           </Button>
           <Button onClick={() => setAddDialogOpen(true)}>
             <PlusCircle className="mr-2 h-4 w-4" />
-            Add Product
+            {t('add_product_button')}
           </Button>
         </div>
       </div>
@@ -208,8 +210,8 @@ export default function ProductsPage() {
         resetFilters();
       }}>
         <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="Material">Material Items</TabsTrigger>
-            <TabsTrigger value="Hardware">Hardware Items</TabsTrigger>
+            <TabsTrigger value="Material">{t('material_tab')}</TabsTrigger>
+            <TabsTrigger value="Hardware">{t('hardware_tab')}</TabsTrigger>
         </TabsList>
         <TabsContent value={activeTab}>
             <Card className="w-full flex-1 flex flex-col">
@@ -220,7 +222,7 @@ export default function ProductsPage() {
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input 
                             type="search" 
-                            placeholder="Search by product name..." 
+                            placeholder={t('search_by_product_name_placeholder')}
                             className="pl-8" 
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -228,19 +230,19 @@ export default function ProductsPage() {
                     </div>
                     <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-[180px]">
-                            <SelectValue placeholder="Filter by Category" />
+                            <SelectValue placeholder={t('filter_by_category_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="all">All Categories</SelectItem>
+                             <SelectItem value="all">{t('all_categories')}</SelectItem>
                             {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <Select value={subCategoryFilter} onValueChange={(value) => setSubCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-[180px]">
-                            <SelectValue placeholder="Filter by Sub-Category" />
+                            <SelectValue placeholder={t('filter_by_subcategory_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                             <SelectItem value="all">All Sub-Categories</SelectItem>
+                             <SelectItem value="all">{t('all_subcategories')}</SelectItem>
                             {subCategories.map(sc => <SelectItem key={sc} value={sc}>{sc}</SelectItem>)}
                         </SelectContent>
                     </Select>
@@ -255,12 +257,12 @@ export default function ProductsPage() {
                 <Table>
                     <TableHeader className="sticky top-0 bg-card z-10">
                     <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>SKU</TableHead>
-                        <TableHead>Category</TableHead>
-                        <TableHead>Sub-Category</TableHead>
-                        <TableHead className="text-right">Price</TableHead>
-                        <TableHead className="text-right">Stock</TableHead>
+                        <TableHead>{t('name_header')}</TableHead>
+                        <TableHead>{t('sku_header')}</TableHead>
+                        <TableHead>{t('category_header')}</TableHead>
+                        <TableHead>{t('subcategory_header')}</TableHead>
+                        <TableHead className="text-right">{t('price_header')}</TableHead>
+                        <TableHead className="text-right">{t('stock_header')}</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
                     </TableHeader>
@@ -281,19 +283,19 @@ export default function ProductsPage() {
                             <DropdownMenu>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">{t('open_menu_sr')}</span>
                                 <MoreHorizontal className="h-4 w-4" />
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                                 <DropdownMenuItem onClick={() => handleEditClick(product)}>
                                 <Pencil className="mr-2 h-4 w-4" />
-                                Edit Product
+                                {t('edit_product_button')}
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => handleDeleteClick(product)} className="text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" />
-                                Delete Product
+                                {t('delete_product_button')}
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                             </DropdownMenu>
@@ -306,13 +308,13 @@ export default function ProductsPage() {
                 <div className="flex justify-center items-center text-center h-full">
                     <div>
                     <PackageOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-                    <h3 className="mt-4 text-lg font-semibold">No Products Found</h3>
+                    <h3 className="mt-4 text-lg font-semibold">{t('no_products_found_title')}</h3>
                     <p className="mt-1 text-sm text-muted-foreground">
-                        Try adjusting your filters or add a new product.
+                        {t('no_products_found_description')}
                     </p>
                      <Button className="mt-4" onClick={() => setAddDialogOpen(true)}>
                         <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Product
+                        {t('add_product_button')}
                     </Button>
                     </div>
                 </div>
@@ -340,15 +342,15 @@ export default function ProductsPage() {
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
-              <ShieldAlert className="text-destructive"/> Access Denied
+              <ShieldAlert className="text-destructive"/> {t('access_denied_title')}
             </AlertDialogTitle>
             <AlertDialogDescription>
-              You do not have permission to perform this action. Please log in as an administrator.
+              {t('admin_permission_required_description')}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogAction onClick={() => setShowAdminAlert(false)}>
-              OK
+              {t('ok_button')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -356,16 +358,15 @@ export default function ProductsPage() {
        <AlertDialog open={!!productToDelete} onOpenChange={() => setProductToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the product
-              <span className="font-semibold"> {productToDelete?.name}</span> from your inventory.
+              {t('delete_product_confirmation_description', { name: productToDelete?.name })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setProductToDelete(null)}>Cancel</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setProductToDelete(null)}>{t('cancel_button')}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
-                Delete
+                {t('delete_button')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

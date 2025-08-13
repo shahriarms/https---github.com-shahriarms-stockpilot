@@ -52,6 +52,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from '
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { useTranslation } from '@/hooks/use-translation';
 
 
 const expenseCategories = ["Rent", "Utility", "Salary", "Equipment", "Misc"];
@@ -66,6 +67,7 @@ interface SummaryStats {
 
 export default function ExpensesPage() {
     const { expenses, isLoading, deleteExpense } = useExpenses();
+    const { t } = useTranslation();
     const [isDialogOpen, setDialogOpen] = useState(false);
     const [expenseToEdit, setExpenseToEdit] = useState<Expense | null>(null);
     const [expenseToDelete, setExpenseToDelete] = useState<Expense | null>(null);
@@ -152,26 +154,26 @@ export default function ExpensesPage() {
         setMonthChartData(newMonthChartData);
         
         const todayCategoryData = expenseCategories.map(cat => ({
-            name: cat,
+            name: t(`expense_category_${cat.toLowerCase()}` as any),
             value: todayExpenses.filter(e => e.category === cat).reduce((sum, e) => sum + e.amount, 0)
         })).filter(d => d.value > 0);
         
         setSummaryStats({ todayTotal, monthTotal, todayCategoryData });
-    }, [expenses, isLoading]);
+    }, [expenses, isLoading, t]);
     
     const chartConfig: ChartConfig = {
-      Expense: { label: "Expense", color: "hsl(var(--primary))" },
+      Expense: { label: t('expense_label'), color: "hsl(var(--primary))" },
     };
 
     const handleExport = (fileType: 'csv' | 'xlsx' | 'pdf') => {
         if (fileType === 'pdf') {
             const doc = new jsPDF();
-            doc.text("Expense Report", 14, 16);
+            doc.text(t('expense_report_title'), 14, 16);
             (doc as any).autoTable({
-                head: [['Date', 'Category', 'Description', 'Amount', 'Payment Method']],
+                head: [[t('date_header'), t('category_header'), t('description_header'), t('amount_header'), t('payment_method_header')]],
                 body: filteredAndSortedExpenses.map(e => [
                     format(new Date(e.date), 'yyyy-MM-dd'),
-                    e.category,
+                    t(`expense_category_${e.category.toLowerCase()}` as any),
                     e.description,
                     `$${e.amount.toFixed(2)}`,
                     e.paymentMethod
@@ -180,14 +182,14 @@ export default function ExpensesPage() {
             doc.save('expenses.pdf');
         } else {
             const worksheet = XLSX.utils.json_to_sheet(filteredAndSortedExpenses.map(e => ({
-                Date: format(new Date(e.date), 'yyyy-MM-dd'),
-                Category: e.category,
-                Description: e.description,
-                Amount: e.amount,
-                'Payment Method': e.paymentMethod,
+                [t('date_header')]: format(new Date(e.date), 'yyyy-MM-dd'),
+                [t('category_header')]: t(`expense_category_${e.category.toLowerCase()}` as any),
+                [t('description_header')]: e.description,
+                [t('amount_header')]: e.amount,
+                [t('payment_method_header')]: e.paymentMethod,
             })));
             const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Expenses");
+            XLSX.utils.book_append_sheet(workbook, worksheet, t('expenses_tab_title'));
             XLSX.writeFile(workbook, `expenses.${fileType}`);
         }
     };
@@ -196,20 +198,20 @@ export default function ExpensesPage() {
     return (
       <div className="flex flex-col gap-6">
         <div className="flex items-center justify-between">
-          <h1 className="text-2xl font-semibold flex items-center gap-2"><Receipt className="w-6 h-6"/> Expense Management</h1>
+          <h1 className="text-2xl font-semibold flex items-center gap-2"><Receipt className="w-6 h-6"/> {t('expenses_page_title')}</h1>
           <div className="flex gap-2">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline"><Download className="mr-2 h-4 w-4"/> Export</Button>
+                <Button variant="outline"><Download className="mr-2 h-4 w-4"/> {t('export_button')}</Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => handleExport('csv')}>Export as CSV</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('xlsx')}>Export as Excel</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => handleExport('pdf')}>Export as PDF</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('csv')}>{t('export_as_csv')}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('xlsx')}>{t('export_as_excel')}</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>{t('export_as_pdf')}</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
             <Button onClick={handleAddNew}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Add Expense
+              <PlusCircle className="mr-2 h-4 w-4" /> {t('add_expense_button')}
             </Button>
           </div>
         </div>
@@ -218,8 +220,8 @@ export default function ExpensesPage() {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Today's Expenses</CardTitle>
-                    <CardDescription>Total amount spent today</CardDescription>
+                    <CardTitle>{t('todays_expenses_title')}</CardTitle>
+                    <CardDescription>{t('todays_expenses_description')}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     {!summaryStats ? <Loader2 className="h-6 w-6 animate-spin"/> : (
@@ -236,15 +238,15 @@ export default function ExpensesPage() {
                                         <ChartTooltip content={<ChartTooltipContent nameKey="name" />} />
                                     </PieChart>
                                 </ChartContainer>
-                            ) : <p className="text-sm text-muted-foreground mt-4">No expenses recorded today.</p>}
+                            ) : <p className="text-sm text-muted-foreground mt-4">{t('no_expenses_today')}</p>}
                         </>
                     )}
                 </CardContent>
             </Card>
             <Card className="lg:col-span-2">
                 <CardHeader>
-                    <CardTitle>This Month's Expenses</CardTitle>
-                     {!summaryStats ? <div className="h-5"/> : <CardDescription>Total: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
+                    <CardTitle>{t('this_months_expenses_title')}</CardTitle>
+                     {!summaryStats ? <div className="h-5"/> : <CardDescription>{t('total_label')}: <span className="font-bold">${summaryStats.monthTotal.toFixed(2)}</span></CardDescription>}
                 </CardHeader>
                 <CardContent>
                     {!monthChartData ? <div className="flex justify-center items-center min-h-48"><Loader2 className="h-6 w-6 animate-spin"/></div> : (
@@ -266,8 +268,8 @@ export default function ExpensesPage() {
         {/* Expenses Table */}
         <Card>
             <CardHeader>
-                <CardTitle>All Expenses</CardTitle>
-                <CardDescription>A log of all recorded business expenses.</CardDescription>
+                <CardTitle>{t('all_expenses_title')}</CardTitle>
+                <CardDescription>{t('all_expenses_description')}</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
                  <div className="flex flex-col md:flex-row gap-2">
@@ -275,7 +277,7 @@ export default function ExpensesPage() {
                         <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input 
                             type="search" 
-                            placeholder="Search by description..." 
+                            placeholder={t('search_by_description_placeholder')}
                             className="pl-8" 
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
@@ -283,11 +285,11 @@ export default function ExpensesPage() {
                     </div>
                     <Select value={categoryFilter} onValueChange={(value) => setCategoryFilter(value === 'all' ? '' : value)}>
                         <SelectTrigger className="w-full md:w-48">
-                            <SelectValue placeholder="Filter by Category" />
+                            <SelectValue placeholder={t('filter_by_category_placeholder')} />
                         </SelectTrigger>
                         <SelectContent>
-                            <SelectItem value="all">All Categories</SelectItem>
-                            {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
+                            <SelectItem value="all">{t('all_categories')}</SelectItem>
+                            {expenseCategories.map(cat => <SelectItem key={cat} value={cat}>{t(`expense_category_${cat.toLowerCase()}` as any)}</SelectItem>)}
                         </SelectContent>
                     </Select>
                  </div>
@@ -295,11 +297,11 @@ export default function ExpensesPage() {
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Date</TableHead>
-                                <TableHead>Category</TableHead>
-                                <TableHead>Description</TableHead>
-                                <TableHead className="text-right">Amount</TableHead>
-                                <TableHead>Method</TableHead>
+                                <TableHead>{t('date_header')}</TableHead>
+                                <TableHead>{t('category_header')}</TableHead>
+                                <TableHead>{t('description_header')}</TableHead>
+                                <TableHead className="text-right">{t('amount_header')}</TableHead>
+                                <TableHead>{t('method_header')}</TableHead>
                                 <TableHead className="w-12"></TableHead>
                             </TableRow>
                         </TableHeader>
@@ -314,7 +316,7 @@ export default function ExpensesPage() {
                                 filteredAndSortedExpenses.map(expense => (
                                     <TableRow key={expense.id}>
                                         <TableCell>{format(new Date(expense.date), 'PP')}</TableCell>
-                                        <TableCell><span className="font-medium">{expense.category}</span></TableCell>
+                                        <TableCell><span className="font-medium">{t(`expense_category_${expense.category.toLowerCase()}` as any)}</span></TableCell>
                                         <TableCell>{expense.description}</TableCell>
                                         <TableCell className="text-right font-mono">${expense.amount.toFixed(2)}</TableCell>
                                         <TableCell>{expense.paymentMethod}</TableCell>
@@ -326,9 +328,9 @@ export default function ExpensesPage() {
                                                     </Button>
                                                 </DropdownMenuTrigger>
                                                 <DropdownMenuContent align="end">
-                                                    <DropdownMenuItem onClick={() => handleEdit(expense)}><Pencil className="mr-2 h-4 w-4"/> Edit</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleEdit(expense)}><Pencil className="mr-2 h-4 w-4"/> {t('edit_button')}</DropdownMenuItem>
                                                     <DropdownMenuSeparator />
-                                                    <DropdownMenuItem onClick={() => handleDelete(expense)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> Delete</DropdownMenuItem>
+                                                    <DropdownMenuItem onClick={() => handleDelete(expense)} className="text-destructive"><Trash2 className="mr-2 h-4 w-4"/> {t('delete_button')}</DropdownMenuItem>
                                                 </DropdownMenuContent>
                                             </DropdownMenu>
                                         </TableCell>
@@ -338,8 +340,8 @@ export default function ExpensesPage() {
                                 <TableRow>
                                     <TableCell colSpan={6} className="h-24 text-center">
                                         <PackageOpen className="mx-auto h-12 w-12 text-muted-foreground" />
-                                        <p className="mt-4">No expenses found.</p>
-                                        <p className="text-sm text-muted-foreground">Try adjusting your filters or add a new expense.</p>
+                                        <p className="mt-4">{t('no_expenses_found')}</p>
+                                        <p className="text-sm text-muted-foreground">{t('adjust_filters_or_add_expense')}</p>
                                     </TableCell>
                                 </TableRow>
                             )}
@@ -357,14 +359,14 @@ export default function ExpensesPage() {
         <AlertDialog open={!!expenseToDelete} onOpenChange={() => setExpenseToDelete(null)}>
             <AlertDialogContent>
                 <AlertDialogHeader>
-                    <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                    <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
                     <AlertDialogDescription>
-                        This will permanently delete the expense record. This action cannot be undone.
+                        {t('delete_expense_confirmation')}
                     </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">Delete</AlertDialogAction>
+                    <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
+                    <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">{t('delete_button')}</AlertDialogAction>
                 </AlertDialogFooter>
             </AlertDialogContent>
         </AlertDialog>
