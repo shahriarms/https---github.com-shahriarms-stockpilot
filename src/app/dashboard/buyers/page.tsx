@@ -2,10 +2,10 @@
 'use client';
 
 import { useState, useMemo, useRef } from 'react';
-import { useReactToPrint, ReactToPrint } from 'react-to-print';
+import ReactToPrint from 'react-to-print';
 import { useInvoices } from '@/hooks/use-invoices';
 import { useSettings } from '@/hooks/use-settings';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Users, FileText, ChevronRight, Calendar, DollarSign, Search, Printer } from 'lucide-react';
 import type { Buyer, Invoice } from '@/lib/types';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Button, buttonVariants } from '@/components/ui/button';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { cn } from '@/lib/utils';
 
@@ -65,10 +65,12 @@ export default function BuyersPage() {
 
   return (
     <div className="flex flex-col h-full gap-4">
-      <h1 className="text-2xl font-semibold flex items-center gap-2">
-        <Users className="w-6 h-6" />
-        Buyers &amp; Invoice History
-      </h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-semibold flex items-center gap-2">
+            <Users className="w-6 h-6" />
+            Buyers &amp; Invoice History
+        </h1>
+      </div>
       <div className="grid md:grid-cols-4 gap-6 flex-1">
         {/* Buyers List */}
         <Card className="md:col-span-1 flex flex-col">
@@ -168,10 +170,10 @@ export default function BuyersPage() {
               {selectedInvoice && (
                   <ReactToPrint
                     trigger={() => (
-                      <Button>
+                      <button className={cn(buttonVariants())}>
                         <Printer className="mr-2 h-4 w-4" />
                         Print Invoice
-                      </Button>
+                      </button>
                     )}
                     content={() => componentToPrintRef.current}
                   />
@@ -207,3 +209,4 @@ export default function BuyersPage() {
     </div>
   );
 }
+

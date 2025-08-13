@@ -137,6 +137,8 @@ export default function InvoicePage() {
   }, [customerName, invoiceItems.length, toast]);
   
   const performSave = useCallback(() => {
+    if (!validateInvoice()) return null;
+    
     saveInvoice({
       id: invoiceId,
       customerName,
@@ -150,18 +152,18 @@ export default function InvoicePage() {
     clearInvoiceForm();
     const newInvoiceId = `INV-${Date.now()}`;
     setInvoiceId(newInvoiceId);
-    return newInvoiceId;
-  }, [saveInvoice, invoiceId, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm]);
+    return invoiceId;
+  }, [saveInvoice, invoiceId, customerName, customerAddress, customerPhone, invoiceItems, subtotal, paidAmount, dueAmount, clearInvoiceForm, validateInvoice]);
 
   const handleSaveAndRedirect = () => {
-    if (!validateInvoice()) return;
-    performSave();
-    router.push('/dashboard/buyers');
+    if (performSave()) {
+      router.push('/dashboard/buyers');
+    }
   };
 
   return (
     <>
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
         {/* Left Column: Invoice Form */}
         <div className="flex flex-col gap-6">
           <Card>
@@ -295,30 +297,30 @@ export default function InvoicePage() {
         {/* Right Column: Print Preview */}
         <div className="flex flex-col gap-4">
           <div className="flex justify-between items-center">
-              <h2 className="text-lg font-semibold">Print Preview</h2>
+              <h2 className="text-lg font-semibold">Live Print Preview</h2>
                <ReactToPrint
                     trigger={() => (
                         <button className={cn(buttonVariants())}>
                             <Printer className="mr-2"/> 
-                            {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & Print'}
+                            {settings.printFormat === 'pos' ? 'Save & POS Print' : 'Save & A4 Print'}
                         </button>
                     )}
                     content={() => componentToPrintRef.current}
                     onBeforeGetContent={() => {
                         if (!validateInvoice()) {
-                            return Promise.reject(); // Prevents printing if validation fails
+                            return Promise.reject(); 
                         }
                         return Promise.resolve();
                     }}
                     onAfterPrint={() => {
-                        performSave();
-                        router.push('/dashboard/buyers');
+                        if (performSave()) {
+                            router.push('/dashboard/buyers');
+                        }
                     }}
                 />
           </div>
           <div className="border rounded-lg overflow-hidden">
              <InvoicePrintLayout 
-                ref={componentToPrintRef}
                 invoiceId={invoiceId}
                 currentDate={currentDate}
                 customerName={customerName}
@@ -332,6 +334,22 @@ export default function InvoicePage() {
             />
           </div>
         </div>
+      </div>
+       {/* Hidden component for printing */}
+      <div style={{ display: "none" }}>
+        <InvoicePrintLayout
+          ref={componentToPrintRef}
+          invoiceId={invoiceId}
+          currentDate={currentDate}
+          customerName={customerName}
+          customerAddress={customerAddress}
+          customerPhone={customerPhone}
+          invoiceItems={invoiceItems}
+          subtotal={subtotal}
+          paidAmount={paidAmount}
+          dueAmount={dueAmount}
+          printFormat={settings.printFormat}
+        />
       </div>
     </>
   );
