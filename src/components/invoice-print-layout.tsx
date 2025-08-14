@@ -61,8 +61,8 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 
     return (
         <div ref={ref}>
-            <Card className={cn("w-full shadow-none border-0 print-card", isPos ? "max-w-xs mx-auto" : "")}>
-                <CardContent className={cn("bg-white text-black", isPos ? "p-1 font-sans" : "p-6 font-serif")}>
+            <Card className={cn("w-full shadow-none border-0 print-card", isPos ? "mx-auto" : "")}>
+                <CardContent className={cn("bg-white text-black", isPos ? "p-1 font-sans text-xs" : "p-6 font-serif")}>
                     <div className="text-center mb-6">
                         <h1 className={cn("font-bold", isBn ? 'font-bangla' : '', isPos ? "text-lg" : "text-2xl")}>{t('memo_title')}</h1>
                         <h2 className={cn("font-bold", isPos ? "text-base" : "text-xl")}>{t('shop_name')}</h2>
@@ -148,3 +148,5 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 );
 
 InvoicePrintLayout.displayName = 'InvoicePrintLayout';
+
+    

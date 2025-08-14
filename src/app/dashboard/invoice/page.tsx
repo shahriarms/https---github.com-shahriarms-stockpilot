@@ -303,9 +303,9 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
-            {/* Left Column */}
-            <div className="flex w-full lg:w-1/3 flex-col gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
+            {/* Column 1: Customer Info & Product Search */}
+            <div className="flex flex-col gap-4 lg:col-span-1">
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -389,8 +389,8 @@ export default function InvoicePage() {
                 </Card>
             </div>
 
-            {/* Middle Column */}
-            <div className="flex w-full lg:w-1/3 flex-col gap-4">
+            {/* Column 2: Invoice Items */}
+            <div className="flex flex-col gap-4 lg:col-span-1">
                 <Card className="flex-1 flex flex-col min-h-0">
                     <CardHeader>
                         <CardTitle>Invoice Items</CardTitle>
@@ -440,9 +440,8 @@ export default function InvoicePage() {
                 </Card>
             </div>
 
-
-            {/* Right Column */}
-            <div className="flex w-full lg:w-1/3 flex-col gap-4">
+            {/* Column 3: Live Preview */}
+            <div className="flex flex-col gap-4 lg:col-span-1">
                 <Card className="flex-1 flex flex-col min-h-0">
                    <CardHeader className="flex-row items-center justify-between">
                        <CardTitle>{t('live_print_preview_title')}</CardTitle>
@@ -454,7 +453,7 @@ export default function InvoicePage() {
                    <CardContent className="flex-1 min-h-0">
                        <ScrollArea className="border rounded-lg h-full">
                             <div className="bg-muted/50 p-4">
-                                <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "max-w-xs" : "w-full")}>
+                                <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
                                     <InvoicePrintLayout 
                                         isInteractive
                                         invoiceId={draftId}
