@@ -9,8 +9,6 @@ import { cn, numberToWords, numberToWordsBn } from '@/lib/utils';
 import { translations } from '@/lib/i18n/all';
 import type { DraftInvoiceItem } from '@/hooks/use-invoice-form';
 import { Input } from './ui/input';
-import { Button } from './ui/button';
-import { Trash2 } from 'lucide-react';
 
 interface InvoicePrintLayoutProps {
     invoiceId: string;
@@ -25,8 +23,6 @@ interface InvoicePrintLayoutProps {
     printFormat?: PrintFormat;
     locale?: Locale;
     isInteractive?: boolean;
-    onUpdateItem?: (itemId: string, update: Partial<DraftInvoiceItem>) => void;
-    onRemoveItem?: (itemId: string) => void;
     onUpdatePaidAmount?: (amount: number) => void;
 }
 
@@ -45,8 +41,6 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
         printFormat = 'normal',
         locale = 'en',
         isInteractive = false,
-        onUpdateItem,
-        onRemoveItem,
         onUpdatePaidAmount,
     } = props;
 
@@ -92,53 +86,19 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                                 <TableHead className="text-center h-auto p-1">{t('quantity_header')}</TableHead>
                                 <TableHead className="text-center h-auto p-1">{t('rate_header')}</TableHead>
                                 <TableHead className="text-right h-auto p-1">{t('amount_header')}</TableHead>
-                                {isInteractive && <TableHead className="h-auto p-1 w-[40px]"></TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
                             {invoiceItems && invoiceItems.length > 0 ? invoiceItems.map(item => (
                                 <TableRow key={item.id}>
-                                    <TableCell className="p-1">
-                                        {item.name}
-                                        {isInteractive && (
-                                            <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || item.price).toFixed(2)}</p>
-                                        )}
-                                    </TableCell>
-                                    <TableCell className="text-center p-1">
-                                        {isInteractive ? (
-                                            <Input 
-                                                type="number" 
-                                                value={item.quantity} 
-                                                onChange={e => onUpdateItem?.(item.id, { quantity: parseInt(e.target.value) || 0 })} 
-                                                className="w-16 h-8 text-center" 
-                                            />
-                                        ) : item.quantity}
-                                    </TableCell>
-                                    <TableCell className="text-center p-1">
-                                        {isInteractive ? (
-                                             <div className="relative w-24 flex items-center mx-auto">
-                                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                                 <Input 
-                                                    type="number" 
-                                                    value={item.price} 
-                                                    onChange={e => onUpdateItem?.(item.id, { price: parseFloat(e.target.value) || 0 })} 
-                                                    className="pl-5 text-right font-medium h-8" 
-                                                />
-                                            </div>
-                                        ) : `$${item.price.toFixed(2)}`}
-                                    </TableCell>
+                                    <TableCell className="p-1">{item.name}</TableCell>
+                                    <TableCell className="text-center p-1">{item.quantity}</TableCell>
+                                    <TableCell className="text-center p-1">${item.price.toFixed(2)}</TableCell>
                                     <TableCell className="text-right p-1 font-semibold">${(item.price * item.quantity).toFixed(2)}</TableCell>
-                                    {isInteractive && (
-                                        <TableCell className="p-1">
-                                             <Button variant="ghost" size="icon" onClick={() => onRemoveItem?.(item.id)} className="h-8 w-8">
-                                                <Trash2 className="w-4 h-4 text-destructive" />
-                                            </Button>
-                                        </TableCell>
-                                    )}
                                 </TableRow>
                             )) : (
                                 <TableRow>
-                                    <TableCell colSpan={isInteractive ? 5 : 4} className="text-center text-gray-500 py-6">{t('no_items_added')}</TableCell>
+                                    <TableCell colSpan={4} className="text-center text-gray-500 py-6">{t('no_items_added')}</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>

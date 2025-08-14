@@ -31,6 +31,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import type { Product } from '@/lib/types';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 
 
 export default function InvoicePage() {
@@ -273,6 +274,7 @@ export default function InvoicePage() {
 
   return (
     <div className="flex flex-col gap-4 h-[calc(100vh-theme(spacing.24))]">
+        {/* Memo Tabs */}
         <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
@@ -301,9 +303,9 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 flex-1 min-h-0">
-            {/* Left Column: Customer & Product Selection */}
-            <div className="flex flex-col gap-4 h-full min-h-0">
+        <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
+            {/* Left Column */}
+            <div className="flex lg:w-1/2 xl:w-2/5 flex-col gap-4 h-full min-h-0">
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -340,9 +342,9 @@ export default function InvoicePage() {
                         </RadioGroup>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
-                         <div className="flex-1 flex gap-4 min-h-0">
+                         <div className="flex-1 grid grid-cols-3 gap-4 min-h-0">
                             {/* Category List */}
-                            <div className="flex-1 flex flex-col gap-2">
+                            <div className="flex flex-col gap-2">
                                <Label>{t('category_header')}</Label>
                                 <div className="relative">
                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -350,13 +352,13 @@ export default function InvoicePage() {
                                 </div>
                                <ScrollArea className="border rounded-md flex-1">
                                    <div className="p-2 space-y-1">
-                                        <Button variant={!categoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setCategoryFilter('')}>{t('all_categories')}</Button>
-                                        {categories.map(c => <Button key={c} variant={categoryFilter === c ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setCategoryFilter(c)}>{c}</Button>)}
+                                        <Button variant={!categoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setCategoryFilter('')}>{t('all_categories')}</Button>
+                                        {categories.map(c => <Button key={c} variant={categoryFilter === c ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setCategoryFilter(c)}>{c}</Button>)}
                                    </div>
                                </ScrollArea>
                             </div>
                             {/* Sub-Category List */}
-                            <div className="flex-1 flex flex-col gap-2">
+                            <div className="flex flex-col gap-2">
                                 <Label>{t('subcategory_header')}</Label>
                                 <div className="relative">
                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -364,13 +366,13 @@ export default function InvoicePage() {
                                 </div>
                                <ScrollArea className="border rounded-md flex-1">
                                     <div className="p-2 space-y-1">
-                                         <Button variant={!subCategoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setSubCategoryFilter('')} disabled={!categoryFilter}>{t('all_subcategories')}</Button>
-                                         {categoryFilter && subCategories.map(sc => <Button key={sc} variant={subCategoryFilter === sc ? 'secondary' : 'ghost'} className="w-full justify-start" onClick={() => setSubCategoryFilter(sc)}>{sc}</Button>)}
+                                         <Button variant={!subCategoryFilter ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setSubCategoryFilter('')} disabled={!categoryFilter}>{t('all_subcategories')}</Button>
+                                         {categoryFilter && subCategories.map(sc => <Button key={sc} variant={subCategoryFilter === sc ? 'secondary' : 'ghost'} className="w-full justify-start h-8 text-xs" onClick={() => setSubCategoryFilter(sc)}>{sc}</Button>)}
                                     </div>
                                </ScrollArea>
                             </div>
                             {/* Product List */}
-                             <div className="flex-1 flex flex-col gap-2">
+                             <div className="flex flex-col gap-2">
                                 <Label>{t('products_sidebar')}</Label>
                                 <div className="relative">
                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -378,7 +380,7 @@ export default function InvoicePage() {
                                 </div>
                                <ScrollArea className="border rounded-md flex-1">
                                     <div className="p-2 space-y-1">
-                                         {filteredProducts.map(p => <Button key={p.id} variant="ghost" className="w-full justify-start" onClick={() => handleAddProduct(p)}>{p.name}</Button>)}
+                                         {filteredProducts.map(p => <Button key={p.id} variant="ghost" className="w-full justify-start h-8 text-xs" onClick={() => handleAddProduct(p)}>{p.name}</Button>)}
                                     </div>
                                </ScrollArea>
                             </div>
@@ -387,40 +389,89 @@ export default function InvoicePage() {
                 </Card>
             </div>
 
-            {/* Right Column: Invoice Preview & Actions */}
-            <div className="flex flex-col gap-4 h-full min-h-0">
-                <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                    <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
-                    <Button onClick={handlePrint} disabled={!items || items.length === 0}>
-                        <Printer className="mr-2"/> 
-                        {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
-                    </Button>
-                </div>
-                <ScrollArea className={cn("border rounded-lg overflow-hidden flex-1", settings.printFormat === 'pos' ? "max-h-[60vh]" : "max-h-[80vh]")}>
-                    <div className="bg-muted/50 p-4">
-                        <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "max-w-xs" : "")}>
-                            {/* This is the live interactive preview */}
-                            <InvoicePrintLayout 
-                                isInteractive
-                                invoiceId={draftId}
-                                currentDate={new Date().toLocaleDateString()}
-                                customerName={customerName}
-                                customerAddress={customerAddress}
-                                customerPhone={customerPhone}
-                                invoiceItems={items}
-                                subtotal={subtotal}
-                                paidAmount={paidAmount}
-                                dueAmount={dueAmount}
-                                printFormat={settings.printFormat}
-                                locale={settings.locale}
-                                onUpdateItem={updateInvoiceItem}
-                                onRemoveItem={removeInvoiceItem}
-                                onUpdatePaidAmount={(amount) => updateActiveDraft({ paidAmount: amount })}
-                            />
-                        </div>
-                    </div>
-                </ScrollArea>
-                {/* This is the hidden div for actual printing */}
+            {/* Right Column */}
+            <div className="flex lg:w-1/2 xl:w-3/5 flex-col gap-4 h-full min-h-0">
+                <Card className="flex flex-col">
+                    <CardHeader>
+                        <CardTitle>Invoice Items</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ScrollArea className="max-h-64">
+                            <Table>
+                                <TableHeader>
+                                    <TableRow>
+                                        <TableHead>Item</TableHead>
+                                        <TableHead className="w-24">Qty</TableHead>
+                                        <TableHead className="w-32">Price</TableHead>
+                                        <TableHead className="text-right w-32">Total</TableHead>
+                                        <TableHead className="w-12"></TableHead>
+                                    </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                    {items && items.length > 0 ? items.map(item => (
+                                        <TableRow key={item.id}>
+                                            <TableCell>
+                                                <p className="font-medium">{item.name}</p>
+                                                <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || item.price).toFixed(2)}</p>
+                                            </TableCell>
+                                            <TableCell>
+                                                <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="h-9" />
+                                            </TableCell>
+                                            <TableCell>
+                                                 <div className="relative flex items-center">
+                                                     <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                                     <Input type="number" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium h-9" />
+                                                </div>
+                                            </TableCell>
+                                            <TableCell className="text-right font-semibold">${(item.price * item.quantity).toFixed(2)}</TableCell>
+                                            <TableCell>
+                                                 <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)} className="h-9 w-9">
+                                                    <Trash2 className="w-4 h-4 text-destructive" />
+                                                </Button>
+                                            </TableCell>
+                                        </TableRow>
+                                    )) : (
+                                        <TableRow><TableCell colSpan={5} className="text-center py-6 text-muted-foreground">No items added yet.</TableCell></TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </ScrollArea>
+                    </CardContent>
+                </Card>
+                
+                <Card className="flex-1 flex flex-col min-h-0">
+                   <CardHeader className="flex-row items-center justify-between">
+                       <CardTitle>{t('live_print_preview_title')}</CardTitle>
+                       <Button onClick={handlePrint} disabled={!items || items.length === 0}>
+                            <Printer className="mr-2"/> 
+                            {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
+                        </Button>
+                   </CardHeader>
+                   <CardContent className="flex-1 min-h-0">
+                       <ScrollArea className="border rounded-lg h-full">
+                            <div className="bg-muted/50 p-4">
+                                <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "max-w-xs" : "w-full")}>
+                                    <InvoicePrintLayout 
+                                        isInteractive
+                                        invoiceId={draftId}
+                                        currentDate={new Date().toLocaleDateString()}
+                                        customerName={customerName}
+                                        customerAddress={customerAddress}
+                                        customerPhone={customerPhone}
+                                        invoiceItems={items}
+                                        subtotal={subtotal}
+                                        paidAmount={paidAmount}
+                                        dueAmount={dueAmount}
+                                        printFormat={settings.printFormat}
+                                        locale={settings.locale}
+                                        onUpdatePaidAmount={(amount) => updateActiveDraft({ paidAmount: amount })}
+                                    />
+                                </div>
+                            </div>
+                        </ScrollArea>
+                   </CardContent>
+                </Card>
+                 {/* This is the hidden div for actual printing */}
                 <div className="hidden">
                     <div ref={componentToPrintRef} className="print-container">
                         <InvoicePrintLayout 
