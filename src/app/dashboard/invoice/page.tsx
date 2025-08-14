@@ -305,7 +305,7 @@ export default function InvoicePage() {
 
         <div className="flex flex-col lg:flex-row gap-4 flex-1 min-h-0">
             {/* Left Column */}
-            <div className="flex lg:w-1/2 xl:w-2/5 flex-col gap-4 h-full min-h-0">
+            <div className="flex w-full lg:w-1/3 flex-col gap-4">
                 <Card>
                     <CardHeader>
                         <CardTitle>{t('create_invoice_title')} #{activeDraftIndex+1}</CardTitle>
@@ -389,14 +389,14 @@ export default function InvoicePage() {
                 </Card>
             </div>
 
-            {/* Right Column */}
-            <div className="flex lg:w-1/2 xl:w-3/5 flex-col gap-4 h-full min-h-0">
-                <Card className="flex flex-col">
+            {/* Middle Column */}
+            <div className="flex w-full lg:w-1/3 flex-col gap-4">
+                <Card className="flex-1 flex flex-col min-h-0">
                     <CardHeader>
                         <CardTitle>Invoice Items</CardTitle>
                     </CardHeader>
-                    <CardContent>
-                        <ScrollArea className="max-h-64">
+                    <CardContent className='flex-1 overflow-hidden p-0'>
+                        <ScrollArea className="h-full">
                             <Table>
                                 <TableHeader>
                                     <TableRow>
@@ -438,7 +438,11 @@ export default function InvoicePage() {
                         </ScrollArea>
                     </CardContent>
                 </Card>
-                
+            </div>
+
+
+            {/* Right Column */}
+            <div className="flex w-full lg:w-1/3 flex-col gap-4">
                 <Card className="flex-1 flex flex-col min-h-0">
                    <CardHeader className="flex-row items-center justify-between">
                        <CardTitle>{t('live_print_preview_title')}</CardTitle>
@@ -508,3 +512,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
