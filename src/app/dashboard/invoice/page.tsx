@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef, useMemo, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -387,95 +387,55 @@ export default function InvoicePage() {
                 </Card>
             </div>
 
-            {/* Right Column: Invoice Items & Print Preview */}
+            {/* Right Column: Invoice Preview & Actions */}
             <div className="flex flex-col gap-4 h-full min-h-0">
-                <Card className="flex-1 flex flex-col min-h-0">
-                    <CardHeader>
-                        <CardTitle>Invoice Items</CardTitle>
-                    </CardHeader>
-                    <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
-                        <ScrollArea className="flex-1 -mr-6 pr-6">
-                            <div className="space-y-2">
-                                {items && items.length === 0 ? (
-                                    <div className="text-center text-muted-foreground py-10">Select products to add them here.</div>
-                                ) : (
-                                    items && items.map(item => (
-                                        <div key={item.id} className="flex items-center gap-2 p-2 rounded-md hover:bg-muted">
-                                            <div className='flex-1'>
-                                                <p className="font-medium">{item.name}</p>
-                                                <p className='text-xs text-muted-foreground'>Suggested: ${(item.originalPrice || item.price).toFixed(2)}</p>
-                                            </div>
-                                            <Input type="number" value={item.quantity} onChange={e => updateInvoiceItem(item.id, { quantity: parseInt(e.target.value) || 0 })} className="w-20" />
-                                            <div className="relative w-28 flex items-center gap-1">
-                                                 <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                                 <Input type="number" value={item.price} onChange={e => updateInvoiceItem(item.id, { price: parseFloat(e.target.value) || 0 })} className="pl-5 text-right font-medium" />
-                                            </div>
-                                            <span className="w-24 text-right font-semibold">${(item.price * item.quantity).toFixed(2)}</span>
-                                            <Button variant="ghost" size="icon" onClick={() => removeInvoiceItem(item.id)}>
-                                                <Trash2 className="w-4 h-4 text-destructive" />
-                                            </Button>
-                                        </div>
-                                    ))
-                                )}
-                            </div>
-                        </ScrollArea>
-                        
-                        {items && items.length > 0 && (
-                            <div className="mt-auto pt-4 border-t flex items-end justify-end">
-                                <div className="space-y-2 text-right w-64">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium">{t('subtotal_label')}:</span>
-                                        <span className="font-bold w-28">${subtotal.toFixed(2)}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-medium">{t('paid_label')}:</span>
-                                        <div className="relative w-28 flex items-center gap-1">
-                                            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                            <Input
-                                                type="number"
-                                                value={paidAmount}
-                                                onChange={(e) => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })}
-                                                className="font-bold pl-5 text-right"
-                                                placeholder="0.00"
-                                            />
-                                        </div>
-                                    </div>
-                                    <div className="flex justify-between items-center text-primary">
-                                        <span className="font-medium">{t('due_label')}:</span>
-                                        <span className="font-bold w-28">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
-
-                <div className="flex flex-col gap-4">
-                    <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
-                        <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
-                        <Button onClick={handlePrint} disabled={!items || items.length === 0}>
-                            <Printer className="mr-2"/> 
-                            {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
-                        </Button>
+                <div className="flex flex-col sm:flex-row gap-2 justify-between items-center">
+                    <h2 className="text-lg font-semibold">{t('live_print_preview_title')}</h2>
+                    <Button onClick={handlePrint} disabled={!items || items.length === 0}>
+                        <Printer className="mr-2"/> 
+                        {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
+                    </Button>
+                </div>
+                <ScrollArea className={cn("border rounded-lg overflow-hidden flex-1", settings.printFormat === 'pos' ? "max-h-[60vh]" : "max-h-[80vh]")}>
+                    <div className="bg-muted/50 p-4">
+                        <div className="bg-white mx-auto">
+                            {/* This is the live interactive preview */}
+                            <InvoicePrintLayout 
+                                isInteractive
+                                invoiceId={draftId}
+                                currentDate={new Date().toLocaleDateString()}
+                                customerName={customerName}
+                                customerAddress={customerAddress}
+                                customerPhone={customerPhone}
+                                invoiceItems={items}
+                                subtotal={subtotal}
+                                paidAmount={paidAmount}
+                                dueAmount={dueAmount}
+                                printFormat={settings.printFormat}
+                                locale={settings.locale}
+                                onUpdateItem={updateInvoiceItem}
+                                onRemoveItem={removeInvoiceItem}
+                                onUpdatePaidAmount={(amount) => updateActiveDraft({ paidAmount: amount })}
+                            />
+                        </div>
                     </div>
-                    <div className={cn("border rounded-lg overflow-hidden flex-1", settings.printFormat === 'pos' ? "max-h-[60vh]" : "max-h-[50vh]")}>
-                        <ScrollArea className="h-full bg-muted/50 p-4">
-                           <div ref={componentToPrintRef} className="print-container bg-white mx-auto">
-                                <InvoicePrintLayout 
-                                    invoiceId={draftId}
-                                    currentDate={new Date().toLocaleDateString()}
-                                    customerName={customerName}
-                                    customerAddress={customerAddress}
-                                    customerPhone={customerPhone}
-                                    invoiceItems={items}
-                                    subtotal={subtotal}
-                                    paidAmount={paidAmount}
-                                    dueAmount={dueAmount}
-                                    printFormat={settings.printFormat}
-                                    locale={settings.locale}
-                                />
-                           </div>
-                        </ScrollArea>
+                </ScrollArea>
+                {/* This is the hidden div for actual printing */}
+                <div className="hidden">
+                    <div ref={componentToPrintRef} className="print-container">
+                        <InvoicePrintLayout 
+                            invoiceId={draftId}
+                            currentDate={new Date().toLocaleDateString()}
+                            customerName={customerName}
+                            customerAddress={customerAddress}
+                            customerPhone={customerPhone}
+                            invoiceItems={items}
+                            subtotal={subtotal}
+                            paidAmount={paidAmount}
+                            dueAmount={dueAmount}
+                            printFormat={settings.printFormat}
+                            locale={settings.locale}
+                        />
                     </div>
                 </div>
             </div>
@@ -497,3 +457,5 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
