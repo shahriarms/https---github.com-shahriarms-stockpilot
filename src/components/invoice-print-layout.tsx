@@ -188,5 +188,3 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 );
 
 InvoicePrintLayout.displayName = 'InvoicePrintLayout';
-
-    

@@ -398,7 +398,7 @@ export default function InvoicePage() {
                 </div>
                 <ScrollArea className={cn("border rounded-lg overflow-hidden flex-1", settings.printFormat === 'pos' ? "max-h-[60vh]" : "max-h-[80vh]")}>
                     <div className="bg-muted/50 p-4">
-                        <div className="bg-white mx-auto">
+                        <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "max-w-xs" : "")}>
                             {/* This is the live interactive preview */}
                             <InvoicePrintLayout 
                                 isInteractive
@@ -457,5 +457,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
