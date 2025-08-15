@@ -109,6 +109,33 @@ export default function InvoicePage() {
     if (!validateInvoice() || !activeDraft) return;
     if (componentToPrintRef.current) {
         const isPos = settings.printFormat === 'pos';
+        
+        const pageStyles = isPos ? `
+            @page {
+                size: 80mm auto;
+                margin: 2mm;
+            }
+            body {
+                font-size: 10pt;
+                line-height: 1.4;
+            }
+            .print-card {
+                padding: 0 !important;
+            }
+            h1 { font-size: 14pt; }
+            h2 { font-size: 12pt; }
+            p, span, div { font-size: 10pt; }
+            th, td { padding: 2px 1px; font-size: 9pt; }
+        ` : `
+            @page {
+                size: A4;
+                margin: 20mm;
+            }
+            body {
+                font-size: 12pt;
+            }
+        `;
+
         const printStyles = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
@@ -162,31 +189,7 @@ export default function InvoicePage() {
             .flex { display: flex; }
             .justify-between { justify-content: space-between; }
             
-            ${isPos ? `
-                @page {
-                    size: 80mm auto;
-                    margin: 2mm;
-                }
-                body {
-                    font-size: 10pt;
-                    line-height: 1.4;
-                }
-                .print-card {
-                    padding: 0 !important;
-                }
-                h1 { font-size: 14pt; }
-                h2 { font-size: 12pt; }
-                p, span, div { font-size: 10pt; }
-                th, td { padding: 2px 1px; font-size: 9pt; }
-            ` : `
-                @page {
-                    size: A4;
-                    margin: 20mm;
-                }
-                 body {
-                    font-size: 12pt;
-                }
-            `}
+            ${pageStyles}
         `;
 
         printJS({
@@ -273,9 +276,9 @@ export default function InvoicePage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 h-[calc(100vh-theme(spacing.24))]">
+    <div className="flex flex-col h-full">
         {/* Memo Tabs */}
-        <div className="flex items-center gap-2 border-b pb-2 flex-wrap">
+        <div className="flex-shrink-0 flex items-center gap-2 border-b pb-2 flex-wrap">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
                     <Button 
@@ -303,7 +306,9 @@ export default function InvoicePage() {
             </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
+        {/* Main Content Area */}
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-4 py-4 min-h-0">
+
             {/* Column 1: Customer Info & Product Search */}
             <div className="flex flex-col gap-4 lg:col-span-1">
                 <Card>
@@ -342,9 +347,9 @@ export default function InvoicePage() {
                         </RadioGroup>
                     </CardHeader>
                     <CardContent className="flex-1 flex flex-col gap-4 min-h-0">
-                         <div className="flex-1 grid grid-cols-3 gap-4 min-h-0">
+                         <div className="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 overflow-hidden">
                             {/* Category List */}
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 min-h-0">
                                <Label>{t('category_header')}</Label>
                                 <div className="relative">
                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -358,7 +363,7 @@ export default function InvoicePage() {
                                </ScrollArea>
                             </div>
                             {/* Sub-Category List */}
-                            <div className="flex flex-col gap-2">
+                            <div className="flex flex-col gap-2 min-h-0">
                                 <Label>{t('subcategory_header')}</Label>
                                 <div className="relative">
                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -372,7 +377,7 @@ export default function InvoicePage() {
                                </ScrollArea>
                             </div>
                             {/* Product List */}
-                             <div className="flex flex-col gap-2">
+                             <div className="flex flex-col gap-2 min-h-0">
                                 <Label>{t('products_sidebar')}</Label>
                                 <div className="relative">
                                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -389,8 +394,8 @@ export default function InvoicePage() {
                 </Card>
             </div>
 
-            {/* Column 2: Invoice Items */}
-            <div className="flex flex-col gap-4 lg:col-span-1">
+            {/* Column 2: Invoice Items & Live Preview */}
+            <div className="lg:col-span-2 flex flex-col gap-4">
                 <Card className="flex-1 flex flex-col min-h-0">
                     <CardHeader>
                         <CardTitle>Invoice Items</CardTitle>
@@ -438,11 +443,8 @@ export default function InvoicePage() {
                         </ScrollArea>
                     </CardContent>
                 </Card>
-            </div>
 
-            {/* Column 3: Live Preview */}
-            <div className="flex flex-col gap-4 lg:col-span-1">
-                <Card className="flex-1 flex flex-col min-h-0">
+                 <Card className="flex-1 flex flex-col min-h-0">
                    <CardHeader className="flex-row items-center justify-between">
                        <CardTitle>{t('live_print_preview_title')}</CardTitle>
                        <Button onClick={handlePrint} disabled={!items || items.length === 0}>
@@ -454,44 +456,28 @@ export default function InvoicePage() {
                        <ScrollArea className="border rounded-lg h-full">
                             <div className="bg-muted/50 p-4">
                                 <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
-                                    <InvoicePrintLayout 
-                                        isInteractive
-                                        invoiceId={draftId}
-                                        currentDate={new Date().toLocaleDateString()}
-                                        customerName={customerName}
-                                        customerAddress={customerAddress}
-                                        customerPhone={customerPhone}
-                                        invoiceItems={items}
-                                        subtotal={subtotal}
-                                        paidAmount={paidAmount}
-                                        dueAmount={dueAmount}
-                                        printFormat={settings.printFormat}
-                                        locale={settings.locale}
-                                        onUpdatePaidAmount={(amount) => updateActiveDraft({ paidAmount: amount })}
-                                    />
+                                     <div ref={componentToPrintRef}>
+                                        <InvoicePrintLayout 
+                                            isInteractive
+                                            invoiceId={draftId}
+                                            currentDate={new Date().toLocaleDateString()}
+                                            customerName={customerName}
+                                            customerAddress={customerAddress}
+                                            customerPhone={customerPhone}
+                                            invoiceItems={items}
+                                            subtotal={subtotal}
+                                            paidAmount={paidAmount}
+                                            dueAmount={dueAmount}
+                                            printFormat={settings.printFormat}
+                                            locale={settings.locale}
+                                            onUpdatePaidAmount={(amount) => updateActiveDraft({ paidAmount: amount })}
+                                        />
+                                     </div>
                                 </div>
                             </div>
                         </ScrollArea>
                    </CardContent>
                 </Card>
-                 {/* This is the hidden div for actual printing */}
-                <div className="hidden">
-                    <div ref={componentToPrintRef} className="print-container">
-                        <InvoicePrintLayout 
-                            invoiceId={draftId}
-                            currentDate={new Date().toLocaleDateString()}
-                            customerName={customerName}
-                            customerAddress={customerAddress}
-                            customerPhone={customerPhone}
-                            invoiceItems={items}
-                            subtotal={subtotal}
-                            paidAmount={paidAmount}
-                            dueAmount={dueAmount}
-                            printFormat={settings.printFormat}
-                            locale={settings.locale}
-                        />
-                    </div>
-                </div>
             </div>
         </div>
         <AlertDialog open={!!draftToDelete} onOpenChange={() => setDraftToDelete(null)}>
@@ -511,5 +497,7 @@ export default function InvoicePage() {
     </div>
   );
 }
+
+    
 
     
