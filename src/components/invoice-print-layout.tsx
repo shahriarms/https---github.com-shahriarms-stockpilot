@@ -104,34 +104,38 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                         </TableBody>
                     </Table>
                     
-                    <div className="mt-6 flex justify-end">
-                        <div className={cn("space-y-2", isPos ? "w-full text-xs space-y-1" : "w-64")}>
-                            <div className="flex justify-between items-center">
-                                <span>{t('subtotal_label')}:</span>
-                                <span className='font-bold'>${subtotal.toFixed(2)}</span>
-                            </div>
-                            <div className="flex justify-between items-center">
-                                <span>{t('paid_label')}:</span>
-                                {isInteractive ? (
-                                     <div className="relative w-28 flex items-center gap-1">
-                                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                        <Input
-                                            type="number"
-                                            value={paidAmount}
-                                            onChange={(e) => onUpdatePaidAmount?.(parseFloat(e.target.value) || 0)}
-                                            className="font-bold pl-5 text-right h-8"
-                                            placeholder="0.00"
-                                        />
-                                    </div>
-                                ) : (
-                                    <span>${paidAmount.toFixed(2)}</span>
-                                )}
-                            </div>
-                            <div className="flex justify-between font-bold border-t pt-2">
-                                <span>{t('due_label')}:</span>
-                                <span>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</span>
-                            </div>
-                        </div>
+                    <div className={cn("mt-4 flex flex-col items-end", isBn ? "font-bangla" : "")}>
+                         <table className={cn("w-auto", isPos ? "w-full text-xs" : "w-64")}>
+                            <tbody>
+                                <tr>
+                                    <td className="text-right py-1 pr-4">{t('subtotal_label')}:</td>
+                                    <td className="text-right py-1 font-bold">${subtotal.toFixed(2)}</td>
+                                </tr>
+                                 <tr>
+                                    <td className="text-right py-1 pr-4">{t('paid_label')}:</td>
+                                    <td className="text-right py-1">
+                                        {isInteractive ? (
+                                            <div className="relative inline-flex items-center gap-1">
+                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                                <Input
+                                                    type="number"
+                                                    value={paidAmount}
+                                                    onChange={(e) => onUpdatePaidAmount?.(parseFloat(e.target.value) || 0)}
+                                                    className="font-bold pl-5 text-right h-8 w-24"
+                                                    placeholder="0.00"
+                                                />
+                                            </div>
+                                        ) : (
+                                            <span>${paidAmount.toFixed(2)}</span>
+                                        )}
+                                    </td>
+                                </tr>
+                                 <tr className="border-t">
+                                    <td className="text-right pt-2 pr-4 font-bold">{t('due_label')}:</td>
+                                    <td className="text-right pt-2 font-bold">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</td>
+                                </tr>
+                            </tbody>
+                         </table>
                     </div>
                     
                     {!isPos && (
@@ -148,5 +152,3 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 );
 
 InvoicePrintLayout.displayName = 'InvoicePrintLayout';
-
-    
