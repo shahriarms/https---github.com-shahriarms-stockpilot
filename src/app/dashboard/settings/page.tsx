@@ -5,13 +5,44 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useSettings } from '@/hooks/use-settings';
-import type { PrintFormat, Locale, PrintMethod } from '@/lib/types';
+import type { PrintFormat, Locale, PrintMethod, ConnectedPrinter } from '@/lib/types';
 import { Printer, Receipt, Usb, Globe, LinkIcon, XCircle, Bluetooth, Wifi } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { usePrinter } from '@/hooks/use-printer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+
+const ConnectionStatus = ({ printer, type, onDisconnect, onConnect, isConnecting }: { printer: ConnectedPrinter | null, type: 'webusb' | 'bluetooth', onDisconnect: () => void, onConnect: () => void, isConnecting: boolean }) => {
+    if (printer && printer.type === type) {
+        return (
+            <>
+                <div className="p-4 rounded-lg bg-green-100 dark:bg-green-900/50 w-full">
+                    <p className="text-green-800 dark:text-green-300">Connected to:</p>
+                    <p className="font-semibold text-lg text-green-900 dark:text-green-200">{printer.productName}</p>
+                    {printer.vendorId && printer.productId && (
+                         <Badge variant="secondary" className="mt-2">Vendor ID: {printer.vendorId} | Product ID: {printer.productId}</Badge>
+                    )}
+                </div>
+                <Button variant="destructive" onClick={onDisconnect}>
+                    <XCircle className="mr-2 h-4 w-4"/>
+                    Disconnect Printer
+                </Button>
+            </>
+        );
+    }
+
+    return (
+        <>
+            <p className="text-muted-foreground">No printer connected. Click the button to select and connect your printer.</p>
+            <Button onClick={onConnect} disabled={isConnecting}>
+                {type === 'webusb' ? <LinkIcon className="mr-2 h-4 w-4" /> : <Bluetooth className="mr-2 h-4 w-4" />}
+                {isConnecting ? 'Connecting...' : `Connect to ${type === 'webusb' ? 'USB' : 'Bluetooth'} Printer`}
+            </Button>
+        </>
+    );
+};
+
 
 export default function SettingsPage() {
     const { settings, updateSettings } = useSettings();
@@ -86,27 +117,13 @@ export default function SettingsPage() {
                         <CardDescription>Connect and manage your USB thermal printer.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center justify-center space-y-4 text-center">
-                        {connectedPrinter ? (
-                            <>
-                                <div className="p-4 rounded-lg bg-green-100 dark:bg-green-900/50 w-full">
-                                    <p className="text-green-800 dark:text-green-300">Connected to:</p>
-                                    <p className="font-semibold text-lg text-green-900 dark:text-green-200">{connectedPrinter.productName}</p>
-                                    <Badge variant="secondary" className="mt-2">Vendor ID: {connectedPrinter.vendorId} | Product ID: {connectedPrinter.productId}</Badge>
-                                </div>
-                                <Button variant="destructive" onClick={disconnectPrinter}>
-                                    <XCircle className="mr-2 h-4 w-4"/>
-                                    Disconnect Printer
-                                </Button>
-                            </>
-                        ) : (
-                             <>
-                                <p className="text-muted-foreground">No printer connected. Click the button to select and connect your printer.</p>
-                                <Button onClick={requestAndConnectPrinter} disabled={isConnecting}>
-                                    <LinkIcon className="mr-2 h-4 w-4" />
-                                    {isConnecting ? 'Connecting...' : 'Connect to Printer'}
-                                </Button>
-                             </>
-                        )}
+                        <ConnectionStatus 
+                            printer={connectedPrinter}
+                            type="webusb"
+                            onConnect={() => requestAndConnectPrinter('webusb')}
+                            onDisconnect={disconnectPrinter}
+                            isConnecting={isConnecting}
+                        />
                     </CardContent>
                 </Card>
             )}
@@ -137,7 +154,6 @@ export default function SettingsPage() {
                             onChange={(e) => handleNetworkSettingsChange('port', parseInt(e.target.value, 10))}
                          />
                        </div>
-                        <p className="text-xs text-muted-foreground">Note: This feature requires a backend service to be running. The save button is for show and will be implemented in a future update.</p>
                     </CardContent>
                 </Card>
             )}
@@ -149,11 +165,13 @@ export default function SettingsPage() {
                         <CardDescription>Connect to a Bluetooth printer. (Highly Experimental)</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4 text-center">
-                        <p className="text-muted-foreground">Web Bluetooth API has limited support for classic thermal printers. This feature is experimental and may not work with your device.</p>
-                        <Button disabled>
-                            <Bluetooth className="mr-2 h-4 w-4" />
-                            Scan for Bluetooth Printers
-                        </Button>
+                         <ConnectionStatus 
+                            printer={connectedPrinter}
+                            type="bluetooth"
+                            onConnect={() => requestAndConnectPrinter('bluetooth')}
+                            onDisconnect={disconnectPrinter}
+                            isConnecting={isConnecting}
+                        />
                     </CardContent>
                 </Card>
             )}

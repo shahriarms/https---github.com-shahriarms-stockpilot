@@ -116,7 +116,8 @@ export interface ReceiptData {
 }
 
 export interface ConnectedPrinter {
+    type: 'webusb' | 'bluetooth';
     productName: string;
-    vendorId: number;
-    productId: number;
+    vendorId?: number;
+    productId?: number;
 }

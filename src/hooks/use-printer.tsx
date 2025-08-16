@@ -1,15 +1,16 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import type { ConnectedPrinter } from '@/lib/types';
+import { useState, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import type { ConnectedPrinter, PrintMethod } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { WebUsbDriver } from '@/services/print-drivers/web-usb-driver';
+import { bluetoothDriver } from '@/services/print-drivers/bluetooth-driver';
 
 interface PrinterContextType {
   connectedPrinter: ConnectedPrinter | null;
   isConnecting: boolean;
-  requestAndConnectPrinter: () => Promise<void>;
+  requestAndConnectPrinter: (method: 'webusb' | 'bluetooth') => Promise<void>;
   disconnectPrinter: () => Promise<void>;
 }
 
@@ -20,34 +21,35 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
-  // Removed the problematic useEffect that was trying to access USB devices on load.
-  // The connection should only be initiated by a user gesture.
-
-  const requestAndConnectPrinter = useCallback(async () => {
+  const requestAndConnectPrinter = useCallback(async (method: 'webusb' | 'bluetooth') => {
     setIsConnecting(true);
     try {
-      const printer = await WebUsbDriver.requestAndConnectPrinter();
-      if (printer) {
-        setConnectedPrinter({
-            productName: printer.productName || 'Unknown Printer',
-            vendorId: printer.vendorId,
-            productId: printer.productId,
-        });
+      let device;
+      if (method === 'webusb') {
+        device = await WebUsbDriver.requestAndConnectPrinter();
+      } else {
+        device = await bluetoothDriver.requestAndConnectPrinter();
+      }
+      
+      if (device) {
+        const printerInfo: ConnectedPrinter = {
+          type: method,
+          productName: device.name || (device as USBDevice).productName || 'Unknown Printer',
+          vendorId: (device as USBDevice).vendorId,
+          productId: (device as USBDevice).productId,
+        };
+        setConnectedPrinter(printerInfo);
         toast({
           title: "Printer Connected",
-          description: `Successfully connected to ${printer.productName}.`,
+          description: `Successfully connected to ${printerInfo.productName}.`,
         });
-      } else {
-        // This case might occur if the user closes the permission dialog without selecting a device.
-        // A toast is not always necessary here, as it's a user-driven action.
-        console.log("No printer selected by the user.");
       }
     } catch (error: any) {
-      console.error("Failed to connect to printer", error);
+      console.error(`Failed to connect to ${method} printer`, error);
       toast({
         variant: "destructive",
         title: "Printer Connection Error",
-        description: error.message || "Could not connect to the printer.",
+        description: error.message || `Could not connect to the ${method} printer.`,
       });
     } finally {
       setIsConnecting(false);
@@ -55,8 +57,15 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
   }, [toast]);
   
   const disconnectPrinter = useCallback(async () => {
+    if (!connectedPrinter) return;
+
     try {
-        await WebUsbDriver.disconnectPrinter();
+        if (connectedPrinter.type === 'webusb') {
+            await WebUsbDriver.disconnectPrinter();
+        } else if (connectedPrinter.type === 'bluetooth') {
+            await bluetoothDriver.disconnectPrinter();
+        }
+        
         setConnectedPrinter(null);
         toast({
             title: "Printer Disconnected",
@@ -70,7 +79,7 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
             description: error.message || "Could not disconnect the printer.",
         });
     }
-  }, [toast]);
+  }, [toast, connectedPrinter]);
 
   const value = useMemo(() => ({
     connectedPrinter,
