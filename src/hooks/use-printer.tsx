@@ -20,20 +20,8 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
   const [isConnecting, setIsConnecting] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    // Check for a previously connected printer on load
-    const checkConnection = async () => {
-      const printer = await WebUsbDriver.getConnectedPrinter();
-      if (printer) {
-        setConnectedPrinter({
-            productName: printer.productName || 'Unknown Printer',
-            vendorId: printer.vendorId,
-            productId: printer.productId,
-        });
-      }
-    };
-    checkConnection();
-  }, []);
+  // Removed the problematic useEffect that was trying to access USB devices on load.
+  // The connection should only be initiated by a user gesture.
 
   const requestAndConnectPrinter = useCallback(async () => {
     setIsConnecting(true);
@@ -50,11 +38,9 @@ export function PrinterProvider({ children }: { children: ReactNode }) {
           description: `Successfully connected to ${printer.productName}.`,
         });
       } else {
-        toast({
-            variant: "destructive",
-            title: "Connection Failed",
-            description: "No printer was selected or an error occurred.",
-        });
+        // This case might occur if the user closes the permission dialog without selecting a device.
+        // A toast is not always necessary here, as it's a user-driven action.
+        console.log("No printer selected by the user.");
       }
     } catch (error: any) {
       console.error("Failed to connect to printer", error);

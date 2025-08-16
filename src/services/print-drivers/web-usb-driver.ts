@@ -47,25 +47,9 @@ export const WebUsbDriver = {
             return device;
         } catch (error) {
             console.error("WebUSB connection failed:", error);
+            // Return null if user cancels the prompt or an error occurs
             return null;
         }
-    },
-
-    async getConnectedPrinter(): Promise<USBDevice | null> {
-        const devices = await navigator.usb.getDevices();
-        if (devices.length > 0) {
-            const device = devices[0];
-            await device.open();
-            await device.selectConfiguration(1);
-             const foundEndpoint = await findEndpoint(device);
-            if (foundEndpoint) {
-                endpoint = foundEndpoint;
-                await device.claimInterface(endpoint.interfaceNumber);
-                connectedDevice = device;
-                return device;
-            }
-        }
-        return null;
     },
 
     async disconnectPrinter(): Promise<void> {
