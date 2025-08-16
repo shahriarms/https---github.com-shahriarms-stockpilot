@@ -12,6 +12,7 @@ import { EmployeeProvider } from '@/hooks/use-employees';
 import { SalaryProvider } from '@/hooks/use-salaries';
 import { SettingsProvider } from '@/hooks/use-settings';
 import { TranslationProvider } from '@/hooks/use-translation';
+import { PrinterProvider } from '@/hooks/use-printer';
 
 export default function DashboardLayout({
   children,
@@ -29,7 +30,9 @@ export default function DashboardLayout({
                   <ExpenseProvider>
                     <EmployeeProvider>
                       <SalaryProvider>
+                        <PrinterProvider>
                           <Providers header={<SiteHeader />}>{children}</Providers>
+                        </PrinterProvider>
                       </SalaryProvider>
                     </EmployeeProvider>
                   </ExpenseProvider>

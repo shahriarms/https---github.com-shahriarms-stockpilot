@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import type { AppSettings, PrintFormat, Locale } from '@/lib/types';
+import type { AppSettings, PrintFormat, Locale, PrintMethod } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 
 const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
@@ -10,6 +10,7 @@ const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
 const defaultSettings: AppSettings = {
     printFormat: 'normal',
     locale: 'en',
+    printMethod: 'html',
 };
 
 interface SettingsContextType {
@@ -26,6 +27,8 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // This effect runs only on the client side
+    setIsLoading(true);
     try {
       const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (savedSettings) {

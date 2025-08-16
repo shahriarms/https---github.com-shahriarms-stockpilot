@@ -81,8 +81,36 @@ export interface SalaryPayment {
 
 export type PrintFormat = 'normal' | 'pos';
 export type Locale = 'en' | 'bn';
+export type PrintMethod = 'html' | 'webusb';
 
 export interface AppSettings {
     printFormat: PrintFormat;
     locale: Locale;
+    printMethod: PrintMethod;
+}
+
+export interface ReceiptData {
+    shopName: string;
+    shopDescription: string;
+    email: string;
+    invoiceId: string;
+    date: string;
+    customerName: string;
+    customerAddress: string;
+    customerPhone: string;
+    items: {
+        name: string;
+        quantity: number;
+        price: number;
+    }[];
+    subtotal: number;
+    paidAmount: number;
+    dueAmount: number;
+    amountInWords?: string;
+}
+
+export interface ConnectedPrinter {
+    productName: string;
+    vendorId: number;
+    productId: number;
 }
