@@ -52,7 +52,8 @@ const createNewDraft = (): DraftInvoice => ({
 
 const calculateTotals = (items: DraftInvoiceItem[], paidAmount: number) => {
     const subtotal = items.reduce((acc, item) => acc + item.price * item.quantity, 0);
-    const dueAmount = subtotal - paidAmount;
+    // If a valid payment is made (greater than 0), calculate due. Otherwise, due is 0.
+    const dueAmount = paidAmount > 0 ? subtotal - paidAmount : 0;
     return { subtotal, dueAmount };
 }
 
