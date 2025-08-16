@@ -56,7 +56,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 
     return (
         <div ref={ref}>
-            <Card className={cn("w-full shadow-none border-0 bg-white", isPos ? "mx-auto" : "p-4 border-2 border-dashed border-gray-300")}>
+            <Card className={cn("w-full shadow-none border-0 bg-white", isPos ? "mx-auto" : "p-4 border-2 border-dashed border-gray-300 print:border-2")}>
                 <CardContent className={cn("bg-white text-black", isPos ? "p-1 font-sans text-xs" : "p-6 font-serif")}>
                     <header className="text-center mb-6 border-b-2 border-gray-200 pb-4">
                         <h1 className={cn("font-bold", isBn ? 'font-bangla' : '', isPos ? "text-lg" : "text-3xl uppercase")}>{t('memo_title')}</h1>
