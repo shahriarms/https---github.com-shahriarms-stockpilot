@@ -11,6 +11,10 @@ const defaultSettings: AppSettings = {
     printFormat: 'normal',
     locale: 'en',
     printMethod: 'html',
+    networkPrinter: {
+        ip: '',
+        port: 9100,
+    }
 };
 
 // This function can be used by other client-side services to get settings without needing the hook
@@ -19,7 +23,12 @@ export const getSettings = (): AppSettings | null => {
         return null;
     }
     const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
-    return savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+    if (savedSettings) {
+        // Merge saved settings with defaults to ensure all keys are present
+        const parsed = JSON.parse(savedSettings);
+        return { ...defaultSettings, ...parsed };
+    }
+    return defaultSettings;
 }
 
 

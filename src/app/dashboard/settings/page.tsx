@@ -29,6 +29,15 @@ export default function SettingsPage() {
     const handleLocaleChange = (value: string) => {
         updateSettings({ locale: value as Locale });
     }
+    
+    const handleNetworkSettingsChange = (field: 'ip' | 'port', value: string | number) => {
+        updateSettings({
+            networkPrinter: {
+                ...settings.networkPrinter,
+                [field]: value,
+            },
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -55,17 +64,16 @@ export default function SettingsPage() {
                             <Usb className="mb-3 h-6 w-6" />
                             WebUSB Thermal
                         </Label>
-                         <Label htmlFor="bluetooth" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer opacity-50 cursor-not-allowed">
-                            <RadioGroupItem value="bluetooth" id="bluetooth" className="sr-only" disabled/>
+                         <Label htmlFor="bluetooth" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer">
+                            <RadioGroupItem value="bluetooth" id="bluetooth" className="sr-only"/>
                             <Bluetooth className="mb-3 h-6 w-6" />
                             Bluetooth
-                            <Badge variant="outline" className="mt-2">Coming Soon</Badge>
+                             <Badge variant="outline" className="mt-2">Experimental</Badge>
                         </Label>
-                         <Label htmlFor="network" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer opacity-50 cursor-not-allowed">
-                            <RadioGroupItem value="network" id="network" className="sr-only" disabled/>
+                         <Label htmlFor="network" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer">
+                            <RadioGroupItem value="network" id="network" className="sr-only"/>
                             <Wifi className="mb-3 h-6 w-6" />
                             Network / IP
-                            <Badge variant="outline" className="mt-2">Coming Soon</Badge>
                         </Label>
                     </RadioGroup>
                 </CardContent>
@@ -107,18 +115,46 @@ export default function SettingsPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>Network Printer Setup</CardTitle>
-                        <CardDescription>Configure your IP-based network printer. (Feature coming soon)</CardDescription>
+                        <CardDescription>Configure your IP-based network printer. Requires server-side setup.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                        <div className="space-y-2">
                          <Label htmlFor="ip-address">Printer IP Address</Label>
-                         <Input id="ip-address" placeholder="e.g., 192.168.1.100" disabled />
+                         <Input 
+                            id="ip-address" 
+                            placeholder="e.g., 192.168.1.100" 
+                            value={settings.networkPrinter?.ip || ''}
+                            onChange={(e) => handleNetworkSettingsChange('ip', e.target.value)}
+                         />
                        </div>
                         <div className="space-y-2">
                          <Label htmlFor="port">Port</Label>
-                         <Input id="port" placeholder="e.g., 9100" disabled />
+                         <Input 
+                            id="port" 
+                            placeholder="e.g., 9100"
+                            type="number"
+                            value={settings.networkPrinter?.port || ''}
+                            onChange={(e) => handleNetworkSettingsChange('port', parseInt(e.target.value, 10))}
+                         />
                        </div>
-                        <Button disabled>Save Network Settings</Button>
+                        <Button disabled>Save & Test Connection</Button>
+                        <p className="text-xs text-muted-foreground">Note: This feature requires a backend service to be running.</p>
+                    </CardContent>
+                </Card>
+            )}
+            
+            {settings.printMethod === 'bluetooth' && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Bluetooth Printer Setup</CardTitle>
+                        <CardDescription>Connect to a Bluetooth printer. (Highly Experimental)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4 text-center">
+                        <p className="text-muted-foreground">Web Bluetooth API has limited support for classic thermal printers. This feature is experimental and may not work with your device.</p>
+                        <Button disabled>
+                            <Bluetooth className="mr-2 h-4 w-4" />
+                            Scan for Bluetooth Printers
+                        </Button>
                     </CardContent>
                 </Card>
             )}

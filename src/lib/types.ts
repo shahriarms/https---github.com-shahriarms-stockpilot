@@ -81,7 +81,7 @@ export interface SalaryPayment {
 
 export type PrintFormat = 'normal' | 'pos';
 export type Locale = 'en' | 'bn';
-export type PrintMethod = 'html' | 'webusb' | 'bluetooth' | 'network' | 'server';
+export type PrintMethod = 'html' | 'webusb' | 'bluetooth' | 'network';
 
 export interface AppSettings {
     printFormat: PrintFormat;
@@ -90,7 +90,7 @@ export interface AppSettings {
     networkPrinter?: {
         ip: string;
         port: number;
-    }
+    };
 }
 
 export interface ReceiptData {
