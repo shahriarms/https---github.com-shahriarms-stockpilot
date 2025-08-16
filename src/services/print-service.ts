@@ -5,11 +5,14 @@ import { AppSettings, ReceiptData } from '@/lib/types';
 import { getSettings } from '@/hooks/use-settings';
 import { htmlDriver } from './print-drivers/html-driver';
 import { WebUsbDriver } from './print-drivers/web-usb-driver';
+import { networkDriver } from './print-drivers/network-driver';
 
 const getDriver = (settings: AppSettings) => {
     switch (settings.printMethod) {
         case 'webusb':
             return WebUsbDriver;
+        case 'network':
+            return networkDriver;
         case 'html':
         default:
             return htmlDriver;
@@ -30,7 +33,8 @@ export const printService = {
             };
 
             const driver = getDriver(settings);
-            await driver.print(receiptPayload);
+            // Pass settings to the driver, as some drivers (like network) might need it
+            await (driver as any).print(receiptPayload, settings);
 
         } catch (error: any) {
             console.error("Printing failed:", error);

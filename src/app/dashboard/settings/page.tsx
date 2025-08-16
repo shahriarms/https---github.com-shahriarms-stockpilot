@@ -115,7 +115,7 @@ export default function SettingsPage() {
                  <Card>
                     <CardHeader>
                         <CardTitle>Network Printer Setup</CardTitle>
-                        <CardDescription>Configure your IP-based network printer. Requires server-side setup.</CardDescription>
+                        <CardDescription>Configure your IP-based network printer. Requires a server-side setup.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                        <div className="space-y-2">
@@ -138,7 +138,7 @@ export default function SettingsPage() {
                          />
                        </div>
                         <Button disabled>Save & Test Connection</Button>
-                        <p className="text-xs text-muted-foreground">Note: This feature requires a backend service to be running.</p>
+                        <p className="text-xs text-muted-foreground">Note: This feature requires a backend service to be running in your local network.</p>
                     </CardContent>
                 </Card>
             )}
