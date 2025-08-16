@@ -19,7 +19,6 @@ import {
 import { useProducts } from '@/hooks/use-products.tsx';
 import { useInvoices } from '@/hooks/use-invoices';
 import { Plus, Trash2, Printer, X, Loader2, Search } from 'lucide-react';
-import { useRouter } from 'next/navigation';
 import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
@@ -35,9 +34,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 
 export default function InvoicePage() {
   const { products } = useProducts();
-  const { saveInvoice } = useInvoices();
+  const { saveAndPrintInvoice } = useInvoices();
   const { settings } = useSettings();
-  const router = useRouter();
   const { toast } = useToast();
   const { t } = useTranslation();
   const componentToPrintRef = useRef<HTMLDivElement>(null);
@@ -53,10 +51,12 @@ export default function InvoicePage() {
     updateInvoiceItem,
     removeInvoiceItem,
     addInvoiceItem,
-    isFormLoading
+    isFormLoading,
+    resetActiveDraft
   } = useInvoiceForm();
   
   const [draftToDelete, setDraftToDelete] = useState<DraftInvoice | null>(null);
+  const [isPrinting, setIsPrinting] = useState(false);
 
   const [mainCategoryFilter, setMainCategoryFilter] = useState<'Material' | 'Hardware'>('Material');
   const [categoryFilter, setCategoryFilter] = useState('');
@@ -79,34 +79,29 @@ export default function InvoicePage() {
     }
     return true;
   };
-
-  const performSave = () => {
-    if (!validateInvoice() || !activeDraft) return;
-
-    const newId = `INV-${Date.now()}`;
-    saveInvoice({
-      id: newId,
-      customerName: activeDraft.customerName,
-      customerAddress: activeDraft.customerAddress,
-      customerPhone: activeDraft.customerPhone,
-      items: activeDraft.items.map(({ originalPrice, ...item }) => item), // Remove originalPrice before saving
-      subtotal: activeDraft.subtotal,
-      paidAmount: activeDraft.paidAmount,
-      dueAmount: activeDraft.dueAmount,
-    });
-    
-    toast({
-        title: t('invoice_saved_toast_title'),
-        description: t('invoice_saved_toast_description', { invoiceId: newId.slice(-6) }),
-    });
-
-    removeDraft(activeDraft.id);
-    router.push('/dashboard/pos-terminal'); // Redirect to POS terminal for printing
-  };
   
-  const handleSaveAndGoToPOS = () => {
+  const handleSaveAndPrint = async () => {
      if (!validateInvoice() || !activeDraft) return;
-     performSave();
+
+     setIsPrinting(true);
+     try {
+       await saveAndPrintInvoice(activeDraft);
+       toast({
+        title: t('invoice_saved_toast_title'),
+        description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
+       });
+       // Reset the current draft to a fresh state for the next invoice
+       resetActiveDraft();
+
+     } catch (error: any) {
+        toast({
+            variant: 'destructive',
+            title: 'Print Error',
+            description: error.message || 'Failed to print the invoice.',
+        });
+     } finally {
+        setIsPrinting(false);
+     }
   }
 
   const resetFilters = () => {
@@ -353,9 +348,9 @@ export default function InvoicePage() {
                  <Card className="flex-1 flex flex-col min-h-0">
                    <CardHeader className="flex-row items-center justify-between">
                        <CardTitle>{t('live_print_preview_title')}</CardTitle>
-                       <Button onClick={handleSaveAndGoToPOS} disabled={!items || items.length === 0}>
-                            <Printer className="mr-2"/> 
-                            Save &amp; Go to POS Terminal
+                       <Button onClick={handleSaveAndPrint} disabled={!items || items.length === 0 || isPrinting}>
+                            {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
+                            {isPrinting ? 'Printing...' : t('save_and_print_button')}
                         </Button>
                    </CardHeader>
                    <CardContent className="flex-1 min-h-0">
@@ -403,7 +398,3 @@ export default function InvoicePage() {
     </div>
   );
 }
-
-    
-
-    

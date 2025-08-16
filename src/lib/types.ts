@@ -81,8 +81,12 @@ export interface SalaryPayment {
 
 export type PrintFormat = 'normal' | 'pos';
 export type Locale = 'en' | 'bn';
+export type POSPrinterType = 'disabled' | 'usb' | 'tcp';
 
 export interface AppSettings {
     printFormat: PrintFormat;
     locale: Locale;
+    posPrinterType: POSPrinterType;
+    posPrinterHost: string;
+    posPrinterPort: number;
 }

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import type { AppSettings, PrintFormat, Locale } from '@/lib/types';
+import type { AppSettings, PrintFormat, Locale, POSPrinterType } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 
 const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
@@ -10,6 +10,9 @@ const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
 const defaultSettings: AppSettings = {
     printFormat: 'normal',
     locale: 'en',
+    posPrinterType: 'disabled',
+    posPrinterHost: '',
+    posPrinterPort: 9100,
 };
 
 interface SettingsContextType {
@@ -29,7 +32,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     try {
       const savedSettings = localStorage.getItem(SETTINGS_STORAGE_KEY);
       if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
+        // Merge saved settings with defaults to ensure all keys are present
+        const parsedSettings = JSON.parse(savedSettings);
+        setSettings({ ...defaultSettings, ...parsedSettings });
       } else {
         setSettings(defaultSettings);
       }

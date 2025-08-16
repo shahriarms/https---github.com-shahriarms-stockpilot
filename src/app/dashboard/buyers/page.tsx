@@ -36,8 +36,8 @@ export default function BuyersPage() {
   const componentToPrintRef = useRef<HTMLDivElement>(null);
 
   const handlePrint = () => {
-    // NOTE: This now uses the browser's print functionality for HTML receipts.
-    // For direct POS printing, use the POS Terminal page.
+    // This uses the browser's print functionality as it's for viewing past invoices,
+    // which are typically printed on A4. The main invoice creation uses the universal print system.
     const printContents = componentToPrintRef.current?.innerHTML;
     if (printContents) {
       const originalContents = document.body.innerHTML;
@@ -202,7 +202,8 @@ export default function BuyersPage() {
                         subtotal={selectedInvoice.subtotal}
                         paidAmount={selectedInvoice.paidAmount}
                         dueAmount={selectedInvoice.dueAmount}
-                        printFormat={settings.printFormat}
+                        // Always use normal print for past invoices from this page
+                        printFormat={'normal'} 
                         locale={settings.locale}
                      />
                    </div>

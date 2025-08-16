@@ -2,13 +2,15 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import type { Invoice, Buyer } from '@/lib/types';
+import type { Invoice, Buyer, AppSettings } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import type { DraftInvoice } from './use-invoice-form';
+import { useSettings } from './use-settings';
 
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveInvoice: (invoice: Omit<Invoice, 'items' | 'id' | 'payments' | 'date'> & { items: any[], id: string }) => void;
+  saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<void>;
   updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
@@ -16,11 +18,42 @@ interface InvoiceContextType {
 
 const InvoiceContext = createContext<InvoiceContextType | undefined>(undefined);
 
+async function printPosReceipt(settings: AppSettings, orderData: any) {
+    const printerConfig = {
+        type: settings.posPrinterType,
+        options: {
+            host: settings.posPrinterHost,
+            port: settings.posPrinterPort,
+        }
+    };
+
+    const response = await fetch('/api/print', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          printer: printerConfig,
+          data: orderData,
+        }),
+      });
+
+    if (!response.ok) {
+        const result = await response.json();
+        throw new Error(result.message || 'An unknown error occurred during printing.');
+    }
+}
+
+function printNormalReceipt() {
+    // This uses the browser's native print functionality for A4/normal printing
+    // The InvoicePrintLayout is already rendered on the page, so we just trigger print.
+    setTimeout(() => window.print(), 100);
+}
+
 export function InvoiceProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [buyers, setBuyers] = useState<Buyer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { settings } = useSettings();
 
   useEffect(() => {
     try {
@@ -45,36 +78,57 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   }, [invoices, buyers, isLoading]);
 
-  const saveInvoice = useCallback((invoiceData: Omit<Invoice, 'payments' | 'items' | 'id' | 'date'> & { items: any[], id: string }) => {
-    const fullInvoice: Invoice = {...invoiceData, date: new Date().toISOString() };
+  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice) => {
+    const newId = `INV-${Date.now()}`;
+    const invoiceToSave: Invoice = {
+      id: newId,
+      customerName: draftInvoice.customerName,
+      customerAddress: draftInvoice.customerAddress,
+      customerPhone: draftInvoice.customerPhone,
+      items: draftInvoice.items.map(({ originalPrice, ...item }) => item),
+      subtotal: draftInvoice.subtotal,
+      paidAmount: draftInvoice.paidAmount,
+      dueAmount: draftInvoice.dueAmount,
+      date: new Date().toISOString(),
+    };
     
-    setInvoices(prev => [...prev, fullInvoice]);
-    
+    // Save data to state and localStorage
+    setInvoices(prev => [invoiceToSave, ...prev]);
     setBuyers(prevBuyers => {
-      const existingBuyerIndex = prevBuyers.findIndex(b => b.name === invoiceData.customerName && b.phone === invoiceData.customerPhone);
+      const existingBuyerIndex = prevBuyers.findIndex(b => b.name === invoiceToSave.customerName && b.phone === invoiceToSave.customerPhone);
       
       if (existingBuyerIndex > -1) {
         const updatedBuyers = [...prevBuyers];
         const existingBuyer = updatedBuyers[existingBuyerIndex];
-        existingBuyer.invoiceIds.push(invoiceData.id);
+        existingBuyer.invoiceIds.push(newId);
         return updatedBuyers;
       } else {
         const newBuyer: Buyer = {
           id: `buyer-${Date.now()}`,
-          name: invoiceData.customerName,
-          address: invoiceData.customerAddress,
-          phone: invoiceData.customerPhone,
-          invoiceIds: [invoiceData.id],
+          name: invoiceToSave.customerName,
+          address: invoiceToSave.customerAddress,
+          phone: invoiceToSave.customerPhone,
+          invoiceIds: [newId],
         };
         return [...prevBuyers, newBuyer];
       }
     });
 
-    toast({
-      title: "Invoice Saved",
-      description: `Invoice for ${invoiceData.customerName} has been saved successfully.`,
-    });
-  }, [toast]);
+    // Handle printing based on settings
+    if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
+        const orderData = {
+            orderId: newId,
+            customerName: invoiceToSave.customerName,
+            items: invoiceToSave.items,
+            subtotal: invoiceToSave.subtotal,
+            tax: 0, // Assuming 0 tax for now
+            total: invoiceToSave.subtotal,
+        };
+        await printPosReceipt(settings, orderData);
+    } else {
+        printNormalReceipt();
+    }
+  }, [settings]);
   
   const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
     setInvoices(prevInvoices => 
@@ -97,20 +151,16 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     const buyer = buyers.find(b => b.id === buyerId);
     if (!buyer) return [];
     
-    // Create a map for quick invoice lookup
     const invoiceMap = new Map(invoices.map(inv => [inv.id, inv]));
-    
-    // Use Set to get unique invoice IDs
     const uniqueInvoiceIds = [...new Set(buyer.invoiceIds)];
 
     return uniqueInvoiceIds
         .map(id => invoiceMap.get(id))
-        .filter((inv): inv is Invoice => !!inv) // Type guard to filter out undefined
+        .filter((inv): inv is Invoice => !!inv)
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
   }, [buyers, invoices]);
 
-  const value = useMemo(() => ({ invoices, buyers, saveInvoice, getInvoicesForBuyer, updateInvoiceDue, isLoading }), [invoices, buyers, saveInvoice, getInvoicesForBuyer, updateInvoiceDue, isLoading]);
+  const value = useMemo(() => ({ invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, updateInvoiceDue, isLoading }), [invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, updateInvoiceDue, isLoading]);
 
   return (
     <InvoiceContext.Provider value={value}>

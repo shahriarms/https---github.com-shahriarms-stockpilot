@@ -31,6 +31,7 @@ interface InvoiceFormContextType {
     addInvoiceItem: (product: Product) => void;
     updateInvoiceItem: (itemId: string, update: Partial<DraftInvoiceItem>) => void;
     removeInvoiceItem: (itemId: string) => void;
+    resetActiveDraft: () => void;
     isFormLoading: boolean;
 }
 
@@ -166,6 +167,15 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         }));
     }, [activeDraftIndex]);
 
+    const resetActiveDraft = useCallback(() => {
+        setDrafts(prev => prev.map((draft, index) => {
+            if (index === activeDraftIndex) {
+                return createNewDraft();
+            }
+            return draft;
+        }));
+    }, [activeDraftIndex]);
+
 
     const value = useMemo(() => ({
         drafts,
@@ -178,8 +188,9 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
         addInvoiceItem,
         updateInvoiceItem,
         removeInvoiceItem,
+        resetActiveDraft,
         isFormLoading,
-    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, isFormLoading]);
+    }), [drafts, activeDraftIndex, activeDraft, addNewDraft, removeDraft, setActiveDraftIndex, updateActiveDraft, addInvoiceItem, updateInvoiceItem, removeInvoiceItem, resetActiveDraft, isFormLoading]);
 
     return (
         <InvoiceFormContext.Provider value={value}>
