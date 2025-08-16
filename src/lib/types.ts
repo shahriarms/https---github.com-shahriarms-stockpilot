@@ -81,12 +81,16 @@ export interface SalaryPayment {
 
 export type PrintFormat = 'normal' | 'pos';
 export type Locale = 'en' | 'bn';
-export type PrintMethod = 'html' | 'webusb';
+export type PrintMethod = 'html' | 'webusb' | 'bluetooth' | 'network' | 'server';
 
 export interface AppSettings {
     printFormat: PrintFormat;
     locale: Locale;
     printMethod: PrintMethod;
+    networkPrinter?: {
+        ip: string;
+        port: number;
+    }
 }
 
 export interface ReceiptData {
@@ -102,11 +106,13 @@ export interface ReceiptData {
         name: string;
         quantity: number;
         price: number;
+        total: number;
     }[];
     subtotal: number;
     paidAmount: number;
     dueAmount: number;
     amountInWords?: string;
+    footerText?: string;
 }
 
 export interface ConnectedPrinter {

@@ -6,11 +6,12 @@ import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useSettings } from '@/hooks/use-settings';
 import type { PrintFormat, Locale, PrintMethod } from '@/lib/types';
-import { Printer, Receipt, Usb, Globe, LinkIcon, XCircle } from 'lucide-react';
+import { Printer, Receipt, Usb, Globe, LinkIcon, XCircle, Bluetooth, Wifi } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 import { usePrinter } from '@/hooks/use-printer';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
 
 export default function SettingsPage() {
     const { settings, updateSettings } = useSettings();
@@ -36,25 +37,35 @@ export default function SettingsPage() {
             <Card>
                 <CardHeader>
                     <CardTitle>Printing Method</CardTitle>
-                    <CardDescription>Choose how receipts are printed.</CardDescription>
+                    <CardDescription>Choose how receipts are printed. Select a method to see its setup options below.</CardDescription>
                 </CardHeader>
                 <CardContent>
                      <RadioGroup
                         value={settings.printMethod}
                         onValueChange={handlePrintMethodChange}
-                        className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                        className="grid grid-cols-2 md:grid-cols-4 gap-4"
                     >
-                        <Label htmlFor="html" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer">
+                        <Label htmlFor="html" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer">
                             <RadioGroupItem value="html" id="html" className="sr-only"/>
                             <Globe className="mb-3 h-6 w-6" />
-                            Browser Print (HTML)
-                            <p className="text-xs text-muted-foreground mt-1 text-center">Standard print preview dialog. Works with any printer.</p>
+                            Browser Print
                         </Label>
-                        <Label htmlFor="webusb" className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer">
+                        <Label htmlFor="webusb" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer">
                             <RadioGroupItem value="webusb" id="webusb" className="sr-only" />
                             <Usb className="mb-3 h-6 w-6" />
-                            Direct Thermal Print (WebUSB)
-                            <p className="text-xs text-muted-foreground mt-1 text-center">Fast, direct printing without a preview. Requires compatible thermal printer.</p>
+                            WebUSB Thermal
+                        </Label>
+                         <Label htmlFor="bluetooth" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer opacity-50 cursor-not-allowed">
+                            <RadioGroupItem value="bluetooth" id="bluetooth" className="sr-only" disabled/>
+                            <Bluetooth className="mb-3 h-6 w-6" />
+                            Bluetooth
+                            <Badge variant="outline" className="mt-2">Coming Soon</Badge>
+                        </Label>
+                         <Label htmlFor="network" className="flex flex-col items-center justify-center rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary w-full cursor-pointer opacity-50 cursor-not-allowed">
+                            <RadioGroupItem value="network" id="network" className="sr-only" disabled/>
+                            <Wifi className="mb-3 h-6 w-6" />
+                            Network / IP
+                            <Badge variant="outline" className="mt-2">Coming Soon</Badge>
                         </Label>
                     </RadioGroup>
                 </CardContent>
@@ -63,7 +74,7 @@ export default function SettingsPage() {
             {settings.printMethod === 'webusb' && (
                  <Card>
                     <CardHeader>
-                        <CardTitle>Thermal Printer Setup (WebUSB)</CardTitle>
+                        <CardTitle>WebUSB Thermal Printer Setup</CardTitle>
                         <CardDescription>Connect and manage your USB thermal printer.</CardDescription>
                     </CardHeader>
                     <CardContent className="flex flex-col items-center justify-center space-y-4 text-center">
@@ -88,6 +99,26 @@ export default function SettingsPage() {
                                 </Button>
                              </>
                         )}
+                    </CardContent>
+                </Card>
+            )}
+            
+             {settings.printMethod === 'network' && (
+                 <Card>
+                    <CardHeader>
+                        <CardTitle>Network Printer Setup</CardTitle>
+                        <CardDescription>Configure your IP-based network printer. (Feature coming soon)</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                       <div className="space-y-2">
+                         <Label htmlFor="ip-address">Printer IP Address</Label>
+                         <Input id="ip-address" placeholder="e.g., 192.168.1.100" disabled />
+                       </div>
+                        <div className="space-y-2">
+                         <Label htmlFor="port">Port</Label>
+                         <Input id="port" placeholder="e.g., 9100" disabled />
+                       </div>
+                        <Button disabled>Save Network Settings</Button>
                     </CardContent>
                 </Card>
             )}
