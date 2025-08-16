@@ -14,7 +14,7 @@ import {
   SidebarInset,
 } from '@/components/ui/sidebar';
 import { StockPilotLogo } from './stock-pilot-logo';
-import { LayoutDashboard, Package, FileText, Users, HandCoins, Receipt, UserCog, Wallet, Settings } from 'lucide-react';
+import { LayoutDashboard, Package, FileText, Users, HandCoins, Receipt, UserCog, Wallet, Settings, Printer } from 'lucide-react';
 import { useTranslation } from '@/hooks/use-translation';
 
 export function Providers({
@@ -97,6 +97,17 @@ export function Providers({
                 >
                    <HandCoins className="h-6 w-6" />
                   <span>{t('buyers_due_sidebar')}</span>
+                </SidebarMenuButton>
+              </Link>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <Link href="/dashboard/pos-terminal">
+                <SidebarMenuButton
+                  isActive={pathname.startsWith('/dashboard/pos-terminal')}
+                  tooltip={{ children: 'POS Terminal' }}
+                >
+                   <Printer className="h-6 w-6" />
+                  <span>POS Terminal</span>
                 </SidebarMenuButton>
               </Link>
             </SidebarMenuItem>

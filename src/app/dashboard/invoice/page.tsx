@@ -24,7 +24,6 @@ import { useInvoiceForm } from '@/hooks/use-invoice-form';
 import { useToast } from '@/hooks/use-toast';
 import { InvoicePrintLayout } from '@/components/invoice-print-layout';
 import { useSettings } from '@/hooks/use-settings';
-import printJS from 'print-js';
 import { useTranslation } from '@/hooks/use-translation';
 import type { DraftInvoice, DraftInvoiceItem } from '@/hooks/use-invoice-form';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -102,106 +101,13 @@ export default function InvoicePage() {
     });
 
     removeDraft(activeDraft.id);
-    router.push('/dashboard/buyers');
+    router.push('/dashboard/pos-terminal'); // Redirect to POS terminal for printing
   };
-
-  const handlePrint = () => {
-    if (!validateInvoice() || !activeDraft) return;
-    if (componentToPrintRef.current) {
-        const isPos = settings.printFormat === 'pos';
-        
-        const pageStyles = isPos ? `
-            @page {
-                size: 80mm auto;
-                margin: 2mm;
-            }
-            body {
-                font-size: 10pt;
-                line-height: 1.4;
-            }
-            .print-card {
-                padding: 0 !important;
-            }
-            h1 { font-size: 14pt; }
-            h2 { font-size: 12pt; }
-            p, span, div { font-size: 10pt; }
-            th, td { padding: 2px 1px; font-size: 9pt; }
-        ` : `
-            @page {
-                size: A4;
-                margin: 20mm;
-            }
-            body {
-                font-size: 12pt;
-            }
-        `;
-
-        const printStyles = `
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
-            
-            body { 
-                font-family: 'Inter', sans-serif; 
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
-            }
-            @media print {
-              body {
-                background-color: #fff !important;
-              }
-              .print-container { 
-                  margin: 0; 
-                  padding: 0;
-                  background-color: #fff !important;
-              }
-              .print-card { 
-                  border: none !important; 
-                  box-shadow: none !important; 
-                  background-color: white !important;
-                  color: black !important;
-              }
-              .print-card * {
-                  color: black !important;
-              }
-            }
-            table {
-                width: 100%;
-                border-collapse: collapse;
-            }
-            th, td {
-                border-bottom: 1px solid #ccc;
-                padding: 4px 2px;
-                text-align: left;
-            }
-            th {
-                font-weight: bold;
-            }
-            .text-right { text-align: right; }
-            .font-bold { font-weight: bold; }
-            .font-bangla { font-family: 'Tiro Bangla', serif; }
-            .mb-2 { margin-bottom: 0.5rem; }
-            .mb-4 { margin-bottom: 1rem; }
-            .mb-6 { margin-bottom: 1.5rem; }
-            .pb-2 { padding-bottom: 0.5rem; }
-            .pt-2 { padding-top: 0.5rem; }
-            .border-b { border-bottom: 1px solid #ccc; }
-            .text-center { text-align: center; }
-            .flex { display: flex; }
-            .justify-between { justify-content: space-between; }
-            
-            ${pageStyles}
-        `;
-
-        printJS({
-            printable: componentToPrintRef.current.innerHTML,
-            type: 'raw-html',
-            style: printStyles,
-            scanStyles: false,
-            documentTitle: `${t('invoice_title')} - ${draftId!.slice(-6)}`,
-            onPrintDialogClose: performSave,
-        });
-    }
-  };
+  
+  const handleSaveAndGoToPOS = () => {
+     if (!validateInvoice() || !activeDraft) return;
+     performSave();
+  }
 
   const resetFilters = () => {
     setCategoryFilter('');
@@ -447,9 +353,9 @@ export default function InvoicePage() {
                  <Card className="flex-1 flex flex-col min-h-0">
                    <CardHeader className="flex-row items-center justify-between">
                        <CardTitle>{t('live_print_preview_title')}</CardTitle>
-                       <Button onClick={handlePrint} disabled={!items || items.length === 0}>
+                       <Button onClick={handleSaveAndGoToPOS} disabled={!items || items.length === 0}>
                             <Printer className="mr-2"/> 
-                            {settings.printFormat === 'pos' ? t('save_and_pos_print_button') : t('save_and_print_button')}
+                            Save &amp; Go to POS Terminal
                         </Button>
                    </CardHeader>
                    <CardContent className="flex-1 min-h-0">

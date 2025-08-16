@@ -13,6 +13,7 @@ StockPilot is a modern, responsive inventory management application designed to 
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
 - **Local Database**: Browser's `localStorage` for offline support and persistence.
+- **POS Printing**: [Node.js Backend API](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) with `node-thermal-printer`.
 
 ---
 
@@ -62,48 +63,97 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ---
 
+## Fully Functional POS Printing System
+
+This application includes a powerful backend printing system that communicates directly with thermal printers, bypassing browser limitations.
+
+### How It Works
+- The React frontend (e.g., the **POS Terminal** page) sends order data as JSON to a Next.js API route (`/api/print`).
+- The Node.js backend receives the JSON, formats a receipt using `node-thermal-printer`, and sends ESC/POS commands to the printer.
+- This allows for printing text, images, barcodes, QR codes, and controlling the cash drawer and cutter.
+
+### Setting Up Your Printer
+
+The printer configuration is located in the **`/src/app/dashboard/pos-terminal/page.tsx`** file. You must edit the `printerConfig` object to match your printer's connection type.
+
+#### **Option 1: USB Printer (Recommended)**
+This is the default and simplest method for many printers.
+
+```javascript
+const printerConfig = {
+  type: 'usb', 
+  // For the first detected USB printer, no options are needed.
+  // To target a specific printer, find its vendor and product ID:
+  // options: { vendorId: '0x...', productId: '0x...' }
+};
+```
+**Troubleshooting USB on Windows:**
+1.  Connect your thermal printer via USB. Windows may install its own driver.
+2.  Download **Zadig** ([https://zadig.akeo.ie/](https://zadig.akeo.ie/)).
+3.  In Zadig, go to `Options > List All Devices` and select your printer from the dropdown (e.g., "POS-80", "TM-T20II", or "Unknown Device").
+4.  Select the **libusb-win32** or **WinUSB** driver from the list on the right.
+5.  Click "Replace Driver". This allows Node.js to communicate directly with the printer.
+
+**Troubleshooting USB on Linux/macOS:**
+- You might need to grant Node.js permission to access the USB device. Create a file at `/etc/udev/rules.d/99-usb-thermal.rules` and add the following line, replacing `VENDOR_ID` and `PRODUCT_ID` with your printer's IDs (use `lsusb` to find them):
+  ```
+  SUBSYSTEM=="usb", ATTRS{idVendor}=="VENDOR_ID", ATTRS{idProduct}=="PRODUCT_ID", MODE="0666", GROUP="dialout"
+  ```
+- Run `sudo udevadm control --reload-rules` and unplug/replug the printer.
+
+#### **Option 2: Network (TCP/IP) Printer**
+For printers connected to your router via Ethernet or WiFi.
+
+```javascript
+const printerConfig = {
+  type: 'tcp',
+  options: {
+    host: '192.168.1.123', // IMPORTANT: Replace with your printer's IP address
+    port: 9100,           // 9100 is the default for most raw printing
+  },
+};
+```
+
+#### **Option 3: Serial Printer**
+For older printers connected via a serial port.
+
+```javascript
+const printerConfig = {
+    type: 'serial',
+    options: {
+        port: '/dev/ttyS0', // For Linux
+        // port: 'COM3',    // For Windows
+        baudRate: 9600,     // Check your printer's manual for the correct baud rate
+    }
+}
+```
+
+### Testing the Printer
+1.  Configure your printer in `/src/app/dashboard/pos-terminal/page.tsx`.
+2.  Run the application (`npm run dev`).
+3.  Navigate to the **POS Terminal** page from the sidebar.
+4.  Click the **"Print Receipt"** button.
+
+If everything is set up correctly, your thermal printer should print a detailed receipt with a logo, QR code, and barcode, and then cut the paper and open the cash drawer. If it fails, check the terminal where you are running `npm run dev` for detailed error messages.
+
+---
+
 ## How to Push Your Code to GitHub (সম্পূর্ণ প্রজেক্ট পুশ করার নিয়ম)
 
-If you are starting a new project in Firebase Studio and want to push it to your own GitHub repository for the first time, follow these steps very carefully. This will solve the problem of missing files/folders when you clone.
-
-**Step 1: Open Terminal in Your Project Folder**
-Make sure your terminal is open inside your project's root folder (the folder that contains `src`, `package.json`, etc.).
-
-**Step 2: Run These Commands One By One**
+If you are starting a new project in Firebase Studio and want to push it to your own GitHub repository for the first time, follow these steps very carefully.
 
 ```bash
 # Initialize a new Git repository
-# (এটি শুধুমাত্র প্রথমবার করতে হবে)
 git init
-
 # Add ALL files to Git's tracking
-# (এখানে ডট (.) চিহ্নটি খুবই গুরুত্বপূর্ণ)
 git add .
-
 # Create a "commit" - a snapshot of your entire project
 git commit -m "Initial project commit with all files"
-
 # Set the default branch name to 'main'
 git branch -M main
-
 # Connect your local project to your GitHub repository
 # (আপনার রিপোজিটরির URL এখানে ব্যবহার করুন)
-git remote add origin https://github.com/shahriarms/stockpilot.git
-
+git remote add origin https://github.com/your-username/your-repo-name.git
 # IMPORTANT: Push all your code to GitHub
-# (-u flag sets it as the default for future pushes)
 git push -u origin main
 ```
-
-After running these commands, your entire project, including the `src` folder, will be uploaded to GitHub. Then, anyone can clone it without any issues.
-
----
-## How Offline Mode Works (অফলাইন মোড)
-
-This application is designed to work even without an internet connection after the first load.
-
-- **Data Storage**: All your inventory data (products, invoices, buyers, expenses, etc.) is stored in your web browser's `localStorage`.
-- **Functionality**: You can add, edit, and view all data completely offline. The application logic runs entirely in the browser.
-- **Authentication**: Logging in, signing up, or resetting your password requires an active internet connection to communicate with Firebase. Once you are logged in, you can go offline and continue working. Your login session will persist.
-
-This ensures that you can manage your inventory anytime, anywhere, regardless of your internet connectivity.

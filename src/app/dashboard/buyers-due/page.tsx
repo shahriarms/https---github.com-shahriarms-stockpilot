@@ -2,7 +2,6 @@
 'use client';
 
 import React, { useState, useMemo, useRef, useCallback } from 'react';
-import printJS from 'print-js';
 import { useInvoices } from '@/hooks/use-invoices';
 import { usePayments } from '@/hooks/use-payments';
 import type { Buyer, Invoice, Payment } from '@/lib/types';
@@ -116,19 +115,19 @@ export default function BuyersDuePage() {
         });
         return;
     }
-    
-    if (componentToPrintRef.current) {
-         printJS({
-            printable: (componentToPrintRef.current as any).innerHTML,
-            type: 'raw-html',
-            onPrintDialogClose: completePaymentTransaction,
-            style: `
-                @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-                @import url('https://fonts.googleapis.com/css2?family=Tiro+Bangla&display=swap');
-                body { font-family: 'Tiro Bangla', serif; }
-                .print-card * { color: black !important; }
-            `
-        });
+
+    // NOTE: This uses browser printing. For direct POS, use the POS Terminal page.
+    const printContents = (componentToPrintRef.current as any)?.innerHTML;
+    if (printContents) {
+        const originalContents = document.body.innerHTML;
+        document.body.innerHTML = printContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        completePaymentTransaction(); // Complete after printing
+        window.location.reload();
+    } else {
+        // If printing fails, still process payment
+        completePaymentTransaction();
     }
   };
 
