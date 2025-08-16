@@ -10,7 +10,7 @@ import { useSettings } from './use-settings';
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<boolean>;
+  saveAndPrintInvoice: (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>) => Promise<boolean>;
   updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
@@ -42,26 +42,56 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
     }
 }
 
-function printNormalReceipt(): Promise<boolean> {
+function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<boolean> {
     return new Promise((resolve) => {
-        let printed = false;
-        const handleAfterPrint = () => {
-            printed = true;
-            window.removeEventListener('afterprint', handleAfterPrint);
-            resolve(true); // Assume user printed
-        };
+        const printContents = printRef.current?.innerHTML;
+        if (!printContents) {
+            resolve(false);
+            return;
+        }
 
-        window.addEventListener('afterprint', handleAfterPrint);
-        window.print();
+        const originalContents = document.body.innerHTML;
+        const printWindow = window.open('', '', 'height=600,width=800');
 
-        // This is a trick: if the print dialog is cancelled, afterprint doesn't fire.
-        // We resolve as false if it hasn't fired after a short delay.
-        setTimeout(() => {
-            if (!printed) {
-                 window.removeEventListener('afterprint', handleAfterPrint);
-                 resolve(false);
-            }
-        }, 1000);
+        if (printWindow) {
+            printWindow.document.write('<html><head><title>Print Invoice</title>');
+            // Link to the main stylesheet to get print styles
+            const styles = Array.from(document.styleSheets)
+                .map(s => s.href ? `<link rel="stylesheet" href="${s.href}">` : '')
+                .join('');
+            printWindow.document.write(styles);
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(printContents);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            
+            let printed = false;
+            const handleAfterPrint = () => {
+                printed = true;
+                printWindow.close();
+                resolve(true);
+            };
+
+            printWindow.addEventListener('afterprint', handleAfterPrint);
+            
+            // Use a timeout to detect if the print dialog was cancelled
+            setTimeout(() => {
+                if (!printed) {
+                    printWindow.close();
+                    resolve(false); // Assume cancelled
+                }
+            }, 500);
+
+            printWindow.focus();
+            printWindow.print();
+        } else {
+            // Fallback for browsers that block popups
+            document.body.innerHTML = printContents;
+            window.print();
+            document.body.innerHTML = originalContents;
+            window.location.reload(); // To restore scripts and styles
+            resolve(true);
+        }
     });
 }
 
@@ -132,7 +162,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     });
   };
 
-  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice): Promise<boolean> => {
+  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>): Promise<boolean> => {
     if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
       const orderData = {
         orderId: `INV-${Date.now()}`,
@@ -142,18 +172,25 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         tax: 0,
         total: draftInvoice.subtotal,
       };
-      await printPosReceipt(settings, orderData);
+      // POS printing is fire-and-forget, save data first
       saveInvoiceData(draftInvoice);
-      return true; // POS printing is fire-and-forget, assume success if no error.
+      await printPosReceipt(settings, orderData);
+      return true; 
     } else {
-      const printed = await printNormalReceipt();
+      // Normal print: only save if print is confirmed
+      const printed = await printNormalReceipt(printRef);
       if (printed) {
         saveInvoiceData(draftInvoice);
         return true;
       }
+      toast({
+        variant: "destructive",
+        title: "Print Cancelled",
+        description: "The invoice was not saved because the print process was cancelled.",
+      });
       return false; // User cancelled the print dialog
     }
-  }, [settings]);
+  }, [settings, toast]);
   
   const updateInvoiceDue = useCallback((invoiceId: string, amountPaid: number) => {
     setInvoices(prevInvoices => 

@@ -85,7 +85,7 @@ export default function InvoicePage() {
 
      setIsPrinting(true);
      try {
-       const printSuccess = await saveAndPrintInvoice(activeDraft);
+       const printSuccess = await saveAndPrintInvoice(activeDraft, componentToPrintRef);
 
        if (printSuccess) {
           toast({
@@ -383,8 +383,8 @@ export default function InvoicePage() {
                    <CardContent className="flex-1 min-h-0">
                        <ScrollArea className="border rounded-lg h-full">
                             <div className="bg-muted/50 p-4">
-                                <div className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
-                                     <div ref={componentToPrintRef}>
+                                <div ref={componentToPrintRef} className="print-source">
+                                    <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
                                         <InvoicePrintLayout 
                                             invoiceId={draftId}
                                             currentDate={new Date().toLocaleDateString()}
@@ -398,7 +398,7 @@ export default function InvoicePage() {
                                             printFormat={settings.printFormat}
                                             locale={settings.locale}
                                         />
-                                     </div>
+                                    </div>
                                 </div>
                             </div>
                         </ScrollArea>
