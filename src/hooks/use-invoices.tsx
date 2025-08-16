@@ -50,18 +50,27 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
             return;
         }
 
-        const originalContents = document.body.innerHTML;
-        const printWindow = window.open('', '', 'height=600,width=800');
+        const printWindow = window.open('', '', 'height=800,width=800');
 
         if (printWindow) {
             printWindow.document.write('<html><head><title>Print Invoice</title>');
-            // Link to the main stylesheet to get print styles
-            const styles = Array.from(document.styleSheets)
-                .map(s => s.href ? `<link rel="stylesheet" href="${s.href}">` : '')
+            
+            // --- Crucial Step: Inject all stylesheets from the main document ---
+            const stylesheets = Array.from(document.styleSheets)
+                .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : '')
                 .join('');
-            printWindow.document.write(styles);
+            printWindow.document.write(stylesheets);
+            
+            // --- Also inject inline styles if any, especially for fonts ---
+             const inlineStyles = Array.from(document.querySelectorAll('style'));
+             inlineStyles.forEach(style => {
+                printWindow.document.head.appendChild(style.cloneNode(true));
+             });
+
             printWindow.document.write('</head><body>');
+            printWindow.document.write('<div class="print-source">');
             printWindow.document.write(printContents);
+            printWindow.document.write('</div>');
             printWindow.document.write('</body></html>');
             printWindow.document.close();
             
@@ -71,26 +80,28 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
                 printWindow.close();
                 resolve(true);
             };
-
-            printWindow.addEventListener('afterprint', handleAfterPrint);
             
-            // Use a timeout to detect if the print dialog was cancelled
-            setTimeout(() => {
-                if (!printed) {
-                    printWindow.close();
-                    resolve(false); // Assume cancelled
-                }
-            }, 500);
+            printWindow.onafterprint = handleAfterPrint;
 
-            printWindow.focus();
-            printWindow.print();
+            const handleCancel = () => {
+                 if (!printed) {
+                    printWindow.close();
+                    resolve(false);
+                }
+            }
+
+            // A short delay to allow the content and styles to load before printing
+            setTimeout(() => {
+                printWindow.focus();
+                printWindow.print();
+                // If the print dialog is closed without printing, `onafterprint` might not fire.
+                // We use a timeout to check if it was likely cancelled.
+                setTimeout(handleCancel, 500); 
+            }, 250);
+
         } else {
-            // Fallback for browsers that block popups
-            document.body.innerHTML = printContents;
-            window.print();
-            document.body.innerHTML = originalContents;
-            window.location.reload(); // To restore scripts and styles
-            resolve(true);
+            alert("Your browser is blocking popups. Please allow popups for this site to print.");
+            resolve(false);
         }
     });
 }
@@ -172,12 +183,12 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         tax: 0,
         total: draftInvoice.subtotal,
       };
-      // POS printing is fire-and-forget, save data first
+      // For POS, we assume success and save immediately. The error will be caught and shown to the user.
       saveInvoiceData(draftInvoice);
       await printPosReceipt(settings, orderData);
       return true; 
     } else {
-      // Normal print: only save if print is confirmed
+      // For Normal print, we wait for confirmation from the print dialog.
       const printed = await printNormalReceipt(printRef);
       if (printed) {
         saveInvoiceData(draftInvoice);
@@ -188,7 +199,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         title: "Print Cancelled",
         description: "The invoice was not saved because the print process was cancelled.",
       });
-      return false; // User cancelled the print dialog
+      return false;
     }
   }, [settings, toast]);
   
