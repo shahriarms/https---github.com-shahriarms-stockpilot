@@ -5,7 +5,7 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -85,7 +85,7 @@ export default function InvoicePage() {
 
      setIsPrinting(true);
      try {
-       await saveAndPrintInvoice(activeDraft);
+       await saveAndPrintInvoice(activeDraft, componentToPrintRef);
        toast({
         title: t('invoice_saved_toast_title'),
         description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
@@ -179,7 +179,7 @@ export default function InvoicePage() {
   return (
     <div className="flex flex-col h-full">
         {/* Memo Tabs */}
-        <div className="flex-shrink-0 flex items-center gap-2 border-b pb-2 flex-wrap">
+        <div className="flex-shrink-0 flex items-center gap-2 border-b pb-2 flex-wrap no-print">
             {drafts.map((draft, index) => (
                 <div key={draft.id} className="relative group">
                     <Button 
@@ -343,6 +343,31 @@ export default function InvoicePage() {
                             </Table>
                         </ScrollArea>
                     </CardContent>
+                    <CardFooter className="flex-col items-end space-y-2 pt-4">
+                        <div className="w-full md:w-64 space-y-2">
+                           <div className="flex justify-between text-sm">
+                               <span>{t('subtotal_label')}</span>
+                               <span className="font-medium">${subtotal.toFixed(2)}</span>
+                           </div>
+                           <div className="flex justify-between items-center text-sm">
+                               <Label htmlFor='paidAmount' className="shrink-0">{t('paid_label')}</Label>
+                               <div className="relative w-28">
+                                    <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
+                                    <Input 
+                                        id='paidAmount' 
+                                        type="number" 
+                                        value={paidAmount} 
+                                        onChange={e => updateActiveDraft({ paidAmount: parseFloat(e.target.value) || 0 })} 
+                                        className="h-8 pl-5 text-right font-medium"
+                                    />
+                               </div>
+                           </div>
+                           <div className="flex justify-between font-bold text-base">
+                               <span>{t('due_label')}</span>
+                               <span>${dueAmount.toFixed(2)}</span>
+                           </div>
+                        </div>
+                    </CardFooter>
                 </Card>
 
                  <Card className="flex-1 flex flex-col min-h-0">
@@ -355,11 +380,11 @@ export default function InvoicePage() {
                    </CardHeader>
                    <CardContent className="flex-1 min-h-0">
                        <ScrollArea className="border rounded-lg h-full">
-                            <div className="bg-muted/50 p-4">
+                            <div className="bg-muted/50 p-4 printable-area">
                                 <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
                                      <div ref={componentToPrintRef}>
                                         <InvoicePrintLayout 
-                                            isInteractive
+                                            isInteractive={false}
                                             invoiceId={draftId}
                                             currentDate={new Date().toLocaleDateString()}
                                             customerName={customerName}
@@ -371,7 +396,6 @@ export default function InvoicePage() {
                                             dueAmount={dueAmount}
                                             printFormat={settings.printFormat}
                                             locale={settings.locale}
-                                            onUpdatePaidAmount={(amount) => updateActiveDraft({ paidAmount: amount })}
                                         />
                                      </div>
                                 </div>

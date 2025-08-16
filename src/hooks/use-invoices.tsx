@@ -10,7 +10,7 @@ import { useSettings } from './use-settings';
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<void>;
+  saveAndPrintInvoice: (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>) => Promise<void>;
   updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
@@ -42,10 +42,10 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
     }
 }
 
-function printNormalReceipt() {
-    // This uses the browser's native print functionality for A4/normal printing
-    // The InvoicePrintLayout is already rendered on the page, so we just trigger print.
-    setTimeout(() => window.print(), 100);
+function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>) {
+    // This uses the browser's native print functionality for A4/normal printing.
+    // The print-specific CSS will ensure only the correct component is printed.
+    window.print();
 }
 
 export function InvoiceProvider({ children }: { children: ReactNode }) {
@@ -78,7 +78,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   }, [invoices, buyers, isLoading]);
 
-  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice) => {
+  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>) => {
     const newId = `INV-${Date.now()}`;
     const invoiceToSave: Invoice = {
       id: newId,
@@ -126,7 +126,8 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         };
         await printPosReceipt(settings, orderData);
     } else {
-        printNormalReceipt();
+        // Use a short delay to ensure the state update has rendered before printing
+        setTimeout(() => printNormalReceipt(printRef), 100);
     }
   }, [settings]);
   

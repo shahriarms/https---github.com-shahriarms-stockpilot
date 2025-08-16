@@ -113,22 +113,7 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
                                 </tr>
                                  <tr>
                                     <td className="text-right py-1 pr-4">{t('paid_label')}:</td>
-                                    <td className="text-right py-1">
-                                        {isInteractive ? (
-                                            <div className="relative inline-flex items-center gap-1">
-                                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-sm">$</span>
-                                                <Input
-                                                    type="number"
-                                                    value={paidAmount}
-                                                    onChange={(e) => onUpdatePaidAmount?.(parseFloat(e.target.value) || 0)}
-                                                    className="font-bold pl-5 text-right h-8 w-24"
-                                                    placeholder="0.00"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <span>${paidAmount.toFixed(2)}</span>
-                                        )}
-                                    </td>
+                                    <td className="text-right py-1 font-bold">${paidAmount.toFixed(2)}</td>
                                 </tr>
                                  <tr className="border-t">
                                     <td className="text-right pt-2 pr-4 font-bold">{t('due_label')}:</td>

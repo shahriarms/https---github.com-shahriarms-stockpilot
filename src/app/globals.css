@@ -59,13 +59,22 @@
   }
 }
 
-/* Styles for print-js */
+/* Styles for browser printing */
 @media print {
-    #print-modal .modal-box {
-        border: none !important;
-        box-shadow: none !important;
-    }
-    .print-header {
-        display: none !important;
-    }
+  body * {
+    visibility: hidden;
+  }
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+  }
+  .no-print {
+    display: none;
+  }
 }
