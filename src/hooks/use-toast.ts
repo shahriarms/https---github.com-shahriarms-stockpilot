@@ -1,6 +1,7 @@
+
 "use client"
 
-// Inspired by react-hot-toast library
+// Inspired by react-hot-toast and use-sync-external-store
 import * as React from "react"
 
 import type {
@@ -9,7 +10,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_REMOVE_DELAY = 5000 // 5 seconds
 
 type ToasterToast = ToastProps & {
   id: string
@@ -74,7 +75,7 @@ const addToRemoveQueue = (toastId: string) => {
   toastTimeouts.set(toastId, timeout)
 }
 
-export const reducer = (state: State, action: Action): State => {
+const reducer = (state: State, action: Action): State => {
   switch (action.type) {
     case "ADD_TOAST":
       return {
@@ -93,8 +94,6 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -135,9 +134,9 @@ let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
   memoryState = reducer(memoryState, action)
-  listeners.forEach((listener) => {
+  for (const listener of listeners) {
     listener(memoryState)
-  })
+  }
 }
 
 type Toast = Omit<ToasterToast, "id">
@@ -164,6 +163,11 @@ function toast({ ...props }: Toast) {
     },
   })
 
+  // Automatically dismiss after a timeout
+  setTimeout(() => {
+    dismiss()
+  }, TOAST_REMOVE_DELAY - 500) // Slightly less than remove delay to allow for animation
+
   return {
     id: id,
     dismiss,
@@ -182,7 +186,7 @@ function useToast() {
         listeners.splice(index, 1)
       }
     }
-  }, [state])
+  }, []) // No dependency on `state`
 
   return {
     ...state,
