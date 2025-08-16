@@ -64,17 +64,16 @@
   body * {
     visibility: hidden;
   }
-  .printable-area, .printable-area * {
+  .print-source, .print-source * {
     visibility: visible;
   }
-  .printable-area {
+  .print-source {
     position: absolute;
     left: 0;
     top: 0;
     width: 100%;
-    height: 100%;
   }
   .no-print {
-    display: none;
+    display: none !important;
   }
 }

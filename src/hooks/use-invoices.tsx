@@ -10,7 +10,7 @@ import { useSettings } from './use-settings';
 interface InvoiceContextType {
   invoices: Invoice[];
   buyers: Buyer[];
-  saveAndPrintInvoice: (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>) => Promise<void>;
+  saveAndPrintInvoice: (draftInvoice: DraftInvoice) => Promise<boolean>;
   updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   isLoading: boolean;
@@ -42,11 +42,29 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
     }
 }
 
-function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>) {
-    // This uses the browser's native print functionality for A4/normal printing.
-    // The print-specific CSS will ensure only the correct component is printed.
-    window.print();
+function printNormalReceipt(): Promise<boolean> {
+    return new Promise((resolve) => {
+        let printed = false;
+        const handleAfterPrint = () => {
+            printed = true;
+            window.removeEventListener('afterprint', handleAfterPrint);
+            resolve(true); // Assume user printed
+        };
+
+        window.addEventListener('afterprint', handleAfterPrint);
+        window.print();
+
+        // This is a trick: if the print dialog is cancelled, afterprint doesn't fire.
+        // We resolve as false if it hasn't fired after a short delay.
+        setTimeout(() => {
+            if (!printed) {
+                 window.removeEventListener('afterprint', handleAfterPrint);
+                 resolve(false);
+            }
+        }, 1000);
+    });
 }
+
 
 export function InvoiceProvider({ children }: { children: ReactNode }) {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -78,7 +96,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   }, [invoices, buyers, isLoading]);
 
-  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>) => {
+  const saveInvoiceData = (draftInvoice: DraftInvoice) => {
     const newId = `INV-${Date.now()}`;
     const invoiceToSave: Invoice = {
       id: newId,
@@ -92,7 +110,6 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
       date: new Date().toISOString(),
     };
     
-    // Save data to state and localStorage
     setInvoices(prev => [invoiceToSave, ...prev]);
     setBuyers(prevBuyers => {
       const existingBuyerIndex = prevBuyers.findIndex(b => b.name === invoiceToSave.customerName && b.phone === invoiceToSave.customerPhone);
@@ -113,21 +130,28 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         return [...prevBuyers, newBuyer];
       }
     });
+  };
 
-    // Handle printing based on settings
+  const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice): Promise<boolean> => {
     if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
-        const orderData = {
-            orderId: newId,
-            customerName: invoiceToSave.customerName,
-            items: invoiceToSave.items,
-            subtotal: invoiceToSave.subtotal,
-            tax: 0, // Assuming 0 tax for now
-            total: invoiceToSave.subtotal,
-        };
-        await printPosReceipt(settings, orderData);
+      const orderData = {
+        orderId: `INV-${Date.now()}`,
+        customerName: draftInvoice.customerName,
+        items: draftInvoice.items,
+        subtotal: draftInvoice.subtotal,
+        tax: 0,
+        total: draftInvoice.subtotal,
+      };
+      await printPosReceipt(settings, orderData);
+      saveInvoiceData(draftInvoice);
+      return true; // POS printing is fire-and-forget, assume success if no error.
     } else {
-        // Use a short delay to ensure the state update has rendered before printing
-        setTimeout(() => printNormalReceipt(printRef), 100);
+      const printed = await printNormalReceipt();
+      if (printed) {
+        saveInvoiceData(draftInvoice);
+        return true;
+      }
+      return false; // User cancelled the print dialog
     }
   }, [settings]);
   

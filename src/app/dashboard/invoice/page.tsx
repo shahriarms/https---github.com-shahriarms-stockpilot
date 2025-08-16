@@ -85,14 +85,18 @@ export default function InvoicePage() {
 
      setIsPrinting(true);
      try {
-       await saveAndPrintInvoice(activeDraft, componentToPrintRef);
-       toast({
-        title: t('invoice_saved_toast_title'),
-        description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
-       });
-       // Reset the current draft to a fresh state for the next invoice
-       resetActiveDraft();
+       const printSuccess = await saveAndPrintInvoice(activeDraft);
 
+       if (printSuccess) {
+          toast({
+           title: t('invoice_saved_toast_title'),
+           description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
+          });
+          // Reset the current draft to a fresh state for the next invoice
+          resetActiveDraft();
+       }
+       // If printSuccess is false, it means the user cancelled, and no toast or reset is needed.
+       
      } catch (error: any) {
         toast({
             variant: 'destructive',
@@ -102,7 +106,7 @@ export default function InvoicePage() {
      } finally {
         setIsPrinting(false);
      }
-  }
+  };
 
   const resetFilters = () => {
     setCategoryFilter('');
@@ -371,7 +375,7 @@ export default function InvoicePage() {
                 </Card>
 
                  <Card className="flex-1 flex flex-col min-h-0">
-                   <CardHeader className="flex-row items-center justify-between">
+                   <CardHeader className="flex-row items-center justify-between no-print">
                        <CardTitle>{t('live_print_preview_title')}</CardTitle>
                        <Button onClick={handleSaveAndPrint} disabled={!items || items.length === 0 || isPrinting}>
                             {isPrinting ? <Loader2 className="mr-2 animate-spin"/> : <Printer className="mr-2"/>} 
@@ -380,11 +384,10 @@ export default function InvoicePage() {
                    </CardHeader>
                    <CardContent className="flex-1 min-h-0">
                        <ScrollArea className="border rounded-lg h-full">
-                            <div className="bg-muted/50 p-4 printable-area">
-                                <div className={cn("bg-white mx-auto", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
-                                     <div ref={componentToPrintRef}>
+                            <div className="bg-muted/50 p-4">
+                                <div className={cn("bg-white mx-auto printable-area", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
+                                     <div ref={componentToPrintRef} className="print-source">
                                         <InvoicePrintLayout 
-                                            isInteractive={false}
                                             invoiceId={draftId}
                                             currentDate={new Date().toLocaleDateString()}
                                             customerName={customerName}
@@ -411,7 +414,7 @@ export default function InvoicePage() {
                     <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
                     <AlertDialogDescription>
                        Are you sure you want to delete this memo? This action cannot be undone.
-                    </AlertDialogDescription>
+                    </d_AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
