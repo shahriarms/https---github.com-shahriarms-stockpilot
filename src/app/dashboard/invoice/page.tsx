@@ -92,10 +92,8 @@ export default function InvoicePage() {
            title: t('invoice_saved_toast_title'),
            description: t('invoice_saved_toast_description', { invoiceId: activeDraft.id.slice(-6) }),
           });
-          // Reset the current draft to a fresh state for the next invoice
           resetActiveDraft();
        }
-       // If printSuccess is false, it means the user cancelled, and no toast or reset is needed.
        
      } catch (error: any) {
         toast({
@@ -177,7 +175,7 @@ export default function InvoicePage() {
         <div className="flex justify-center items-center h-full">
             <Loader2 className="w-8 h-8 animate-spin" />
         </div>
-    )
+    );
   }
 
   return (
@@ -385,8 +383,8 @@ export default function InvoicePage() {
                    <CardContent className="flex-1 min-h-0">
                        <ScrollArea className="border rounded-lg h-full">
                             <div className="bg-muted/50 p-4">
-                                <div className={cn("bg-white mx-auto printable-area", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
-                                     <div ref={componentToPrintRef} className="print-source">
+                                <div className={cn("bg-white mx-auto print-source", settings.printFormat === 'pos' ? "w-[80mm]" : "w-full")}>
+                                     <div ref={componentToPrintRef}>
                                         <InvoicePrintLayout 
                                             invoiceId={draftId}
                                             currentDate={new Date().toLocaleDateString()}
@@ -414,7 +412,7 @@ export default function InvoicePage() {
                     <AlertDialogTitle>{t('are_you_sure_title')}</AlertDialogTitle>
                     <AlertDialogDescription>
                        Are you sure you want to delete this memo? This action cannot be undone.
-                    </d_AlertDialogDescription>
+                    </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                     <AlertDialogCancel>{t('cancel_button')}</AlertDialogCancel>
