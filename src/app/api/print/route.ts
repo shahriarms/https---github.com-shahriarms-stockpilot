@@ -1,6 +1,6 @@
 // src/app/api/print/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { ThermalPrinter, PrinterTypes, BreakLineType } from 'node-thermal-printer';
+import { ThermalPrinter, PrinterTypes } from 'node-thermal-printer';
 import getPixels from 'get-pixels';
 import { join } from 'path';
 
@@ -41,7 +41,6 @@ async function getPrinter(config: any): Promise<ThermalPrinter> {
         characterSet: 'PC437_USA',
         removeSpecialCharacters: false,
         lineCharacter: "=",
-        breakLine: BreakLineType.WORD,
         options: {
             timeout: 5000,
             ...config.options
