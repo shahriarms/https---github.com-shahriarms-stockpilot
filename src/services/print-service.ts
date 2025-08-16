@@ -6,6 +6,7 @@ import { getSettings } from '@/hooks/use-settings';
 import { htmlDriver } from './print-drivers/html-driver';
 import { WebUsbDriver } from './print-drivers/web-usb-driver';
 import { networkDriver } from './print-drivers/network-driver';
+import { bluetoothDriver } from './print-drivers/bluetooth-driver';
 
 const getDriver = (settings: AppSettings) => {
     switch (settings.printMethod) {
@@ -13,6 +14,8 @@ const getDriver = (settings: AppSettings) => {
             return WebUsbDriver;
         case 'network':
             return networkDriver;
+        case 'bluetooth':
+            return bluetoothDriver;
         case 'html':
         default:
             return htmlDriver;

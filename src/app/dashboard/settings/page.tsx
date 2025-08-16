@@ -137,8 +137,7 @@ export default function SettingsPage() {
                             onChange={(e) => handleNetworkSettingsChange('port', parseInt(e.target.value, 10))}
                          />
                        </div>
-                        <Button disabled>Save & Test Connection</Button>
-                        <p className="text-xs text-muted-foreground">Note: This feature requires a backend service to be running in your local network.</p>
+                        <p className="text-xs text-muted-foreground">Note: This feature requires a backend service to be running. The save button is for show and will be implemented in a future update.</p>
                     </CardContent>
                 </Card>
             )}
