@@ -54,17 +54,10 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
 
         if (printWindow) {
             try {
-                // Fetch the dedicated print CSS file
-                const cssResponse = await fetch('/print-styles.css');
-                if (!cssResponse.ok) throw new Error('Print styles not found.');
-                const printCss = await cssResponse.text();
-
                 printWindow.document.write('<html><head><title>Print Invoice</title>');
-                printWindow.document.write(`<style>${printCss}</style>`);
+                // Inject styles directly
                 printWindow.document.write('</head><body>');
-                printWindow.document.write('<div class="print-source">');
                 printWindow.document.write(printContents);
-                printWindow.document.write('</div>');
                 printWindow.document.write('</body></html>');
                 printWindow.document.close();
 
@@ -74,15 +67,8 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
                     printWindow.close();
                     resolve(true);
                 };
-
-                const handleCancel = () => {
-                    if (!printed) {
-                        printWindow.close();
-                        resolve(false);
-                    }
-                }
                 
-                printWindow.onafterprint = handleAfterPrint;
+                printWindow.addEventListener('afterprint', handleAfterPrint);
 
                 // A short delay to ensure content is fully rendered before printing
                 setTimeout(() => {
@@ -90,12 +76,17 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
                     printWindow.print();
                     // If the print dialog is closed without printing, `onafterprint` might not fire.
                     // We use a timeout to check if it was likely cancelled.
-                    setTimeout(handleCancel, 500); 
+                    setTimeout(() => {
+                       if (!printed) {
+                           printWindow.close();
+                           resolve(false);
+                       }
+                    }, 500); 
                 }, 250);
 
             } catch (error) {
                 console.error("Error preparing print window:", error);
-                alert("Could not load print styles. Please try again.");
+                alert("Could not prepare print window. Please try again.");
                 printWindow.close();
                 resolve(false);
             }

@@ -52,85 +52,166 @@ export const InvoicePrintLayout = React.forwardRef<HTMLDivElement, InvoicePrintL
 
     const amountInWords = isBn ? numberToWordsBn(subtotal) : numberToWords(subtotal);
 
+    const memoStyles: React.CSSProperties = {
+        background: '#fff',
+        fontFamily: 'sans-serif',
+        fontSize: '14px',
+        color: '#333',
+        maxWidth: '800px',
+        margin: 'auto',
+        padding: '2rem',
+        border: '2px dashed #ccc',
+        boxSizing: 'border-box',
+    };
+
+    const headerStyles: React.CSSProperties = {
+        textAlign: 'center',
+        marginBottom: '2rem',
+    };
+    
+    const h1Styles: React.CSSProperties = {
+      fontSize: '2rem',
+      fontWeight: 'bold',
+      color: '#000',
+      margin: '0 0 0.5rem 0',
+    };
+
+    const h2Styles: React.CSSProperties = {
+      fontSize: '1.5rem',
+      fontWeight: 600,
+      color: '#158a67',
+      margin: 0,
+    }
+
+    const customerDetailsStyles: React.CSSProperties = {
+        display: 'flex',
+        justifyContent: 'space-between',
+        marginBottom: '2rem',
+        borderTop: '1px solid #eee',
+        borderBottom: '1px solid #eee',
+        padding: '1rem 0',
+    };
+
+    const tableStyles: React.CSSProperties = {
+        width: '100%',
+        borderCollapse: 'collapse',
+        marginBottom: '2rem',
+    };
+
+    const thStyles: React.CSSProperties = {
+        borderBottom: '2px solid #ccc',
+        padding: '0.75rem',
+        textAlign: 'left',
+        fontWeight: 600,
+    };
+
+    const tdStyles: React.CSSProperties = {
+        borderBottom: '1px solid #eee',
+        padding: '0.75rem',
+    };
+
+    const totalsSectionStyles: React.CSSProperties = {
+        display: 'flex',
+        justifyContent: 'flex-end',
+        marginBottom: '1rem',
+    };
+    
+    const totalsTableStyles: React.CSSProperties = {
+        width: '250px',
+    };
+
+    const totalRowStyles: React.CSSProperties = {
+        fontWeight: 'bold',
+        fontSize: '1.1rem',
+        borderTop: '2px solid #333',
+    };
+
+    const footerStyles: React.CSSProperties = {
+        textAlign: 'center',
+        marginTop: '3rem',
+        paddingTop: '1rem',
+        borderTop: '1px solid #eee',
+        fontSize: '12px',
+        color: '#666',
+    };
+
     return (
         <div ref={ref}>
-            <div className="card">
-                <div className="card-content">
-                    <header className="header">
-                        <h1>{t('memo_title')}</h1>
-                        <h2>{t('shop_name')}</h2>
-                        <p className={cn(isBn ? 'font-bangla' : '')}>{t('shop_description')}</p>
-                        <p>Email: engmahmud.mm@gmail.com</p>
-                    </header>
-                    
-                    <div className="customer-details">
-                        <div>
-                             <p><span className="font-semibold">{t('customer_name_label')}:</span> {customerName || '..................'}</p>
-                             <p><span className="font-semibold">{t('customer_address_label')}:</span> {customerAddress || '..................'}</p>
-                             <p><span className="font-semibold">{t('customer_phone_label')}:</span> {customerPhone || '..................'}</p>
-                        </div>
-                        <div className="text-right">
-                            <p><span className="font-semibold">{t('invoice_no_label')}:</span> {invoiceId ? invoiceId.slice(-6) : '...'}</p>
-                            <p><span className="font-semibold">{t('date_label')}:</span> {currentDate || '...'}</p>
-                        </div>
+            <div style={memoStyles} className="print-source">
+                <header style={headerStyles}>
+                    <h1 style={h1Styles}>{t('memo_title')}</h1>
+                    <h2 style={h2Styles}>{t('shop_name')}</h2>
+                    <p className={cn(isBn ? 'font-bangla' : '')} style={{ margin: '0.25rem 0' }}>{t('shop_description')}</p>
+                    <p style={{ margin: '0.25rem 0' }}>Email: engmahmud.mm@gmail.com</p>
+                </header>
+                
+                <div style={customerDetailsStyles}>
+                    <div>
+                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_name_label')}:</strong> {customerName || '..................'}</p>
+                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_address_label')}:</strong> {customerAddress || '..................'}</p>
+                         <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('customer_phone_label')}:</strong> {customerPhone || '..................'}</p>
                     </div>
-
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>{t('item_header')}</th>
-                                <th className="text-center">{t('quantity_header')}</th>
-                                <th className="text-right">{t('rate_header')}</th>
-                                <th className="text-right">{t('amount_header')}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {invoiceItems && invoiceItems.length > 0 ? invoiceItems.map(item => (
-                                <tr key={item.id}>
-                                    <td>{item.name}</td>
-                                    <td className="text-center">{item.quantity}</td>
-                                    <td className="text-right">${item.price.toFixed(2)}</td>
-                                    <td className="text-right font-medium">${(item.price * item.quantity).toFixed(2)}</td>
-                                </tr>
-                            )) : (
-                                <tr>
-                                    <td colSpan={4} className="text-center" style={{padding: '1.5rem', color: '#6b7280'}}>{t('no_items_added')}</td>
-                                </tr>
-                            )}
-                        </tbody>
-                    </table>
-                    
-                    <div className="totals-section">
-                         <table className="totals-table">
-                            <tbody>
-                                <tr>
-                                    <td className="text-right font-semibold">{t('subtotal_label')}:</td>
-                                    <td className="text-right font-semibold">${subtotal.toFixed(2)}</td>
-                                </tr>
-                                 <tr>
-                                    <td className="text-right">{t('paid_label')}:</td>
-                                    <td className="text-right">${paidAmount.toFixed(2)}</td>
-                                </tr>
-                                 <tr className="total-row">
-                                    <td className="text-right">{t('due_label')}:</td>
-                                    <td className="text-right">${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</td>
-                                </tr>
-                            </tbody>
-                         </table>
+                    <div style={{ textAlign: 'right' }}>
+                        <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('invoice_no_label')}:</strong> {invoiceId ? invoiceId.slice(-6) : '...'}</p>
+                        <p style={{ margin: '0.25rem 0' }}><strong style={{ fontWeight: 600 }}>{t('date_label')}:</strong> {currentDate || '...'}</p>
                     </div>
-                    
-                    {!isPos && (
-                        <div className={cn("in-words", isBn ? "font-bangla" : "")}>
-                            <p><span className="font-semibold">{t('in_words_label')}:</span> {amountInWords}</p>
-                        </div>
-                    )}
-                    
-                    <footer className="footer">
-                        <p>Thank you for your business!</p>
-                        <p>This is a computer generated invoice.</p>
-                    </footer>
-
                 </div>
+
+                <table style={tableStyles}>
+                    <thead>
+                        <tr>
+                            <th style={thStyles}>{t('item_header')}</th>
+                            <th style={{...thStyles, textAlign: 'center'}}>{t('quantity_header')}</th>
+                            <th style={{...thStyles, textAlign: 'right'}}>{t('rate_header')}</th>
+                            <th style={{...thStyles, textAlign: 'right'}}>{t('amount_header')}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {invoiceItems && invoiceItems.length > 0 ? invoiceItems.map(item => (
+                            <tr key={item.id}>
+                                <td style={tdStyles}>{item.name}</td>
+                                <td style={{...tdStyles, textAlign: 'center'}}>{item.quantity}</td>
+                                <td style={{...tdStyles, textAlign: 'right'}}>${item.price.toFixed(2)}</td>
+                                <td style={{...tdStyles, textAlign: 'right', fontWeight: 500}}>${(item.price * item.quantity).toFixed(2)}</td>
+                            </tr>
+                        )) : (
+                            <tr>
+                                <td colSpan={4} style={{...tdStyles, textAlign: 'center', padding: '1.5rem', color: '#6b7280'}}>{t('no_items_added')}</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+                
+                <div style={totalsSectionStyles}>
+                     <table style={totalsTableStyles}>
+                        <tbody>
+                            <tr>
+                                <td style={{ textAlign: 'right', padding: '0.25rem' }}>{t('subtotal_label')}:</td>
+                                <td style={{ textAlign: 'right', padding: '0.25rem', fontWeight: 600 }}>${subtotal.toFixed(2)}</td>
+                            </tr>
+                             <tr>
+                                <td style={{ textAlign: 'right', padding: '0.25rem' }}>{t('paid_label')}:</td>
+                                <td style={{ textAlign: 'right', padding: '0.25rem' }}>${paidAmount.toFixed(2)}</td>
+                            </tr>
+                             <tr style={totalRowStyles}>
+                                <td style={{ textAlign: 'right', padding: '0.5rem 0.25rem' }}>{t('due_label')}:</td>
+                                <td style={{ textAlign: 'right', padding: '0.5rem 0.25rem' }}>${dueAmount < 0 ? '($' + Math.abs(dueAmount).toFixed(2) + ')' : '$' + dueAmount.toFixed(2)}</td>
+                            </tr>
+                        </tbody>
+                     </table>
+                </div>
+                
+                {!isPos && (
+                    <div className={cn("in-words", isBn ? "font-bangla" : "")} style={{ marginTop: '2rem' }}>
+                        <p><strong style={{ fontWeight: 600 }}>{t('in_words_label')}:</strong> {amountInWords}</p>
+                    </div>
+                )}
+                
+                <footer style={footerStyles}>
+                    <p>Thank you for your business!</p>
+                    <p>This is a computer generated invoice.</p>
+                </footer>
+
             </div>
         </div>
     );
