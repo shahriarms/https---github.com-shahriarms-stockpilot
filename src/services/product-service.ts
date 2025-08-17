@@ -34,9 +34,9 @@ const initialProducts: Product[] = [
 
 /**
  * This service class abstracts the data source for products.
- * Currently, it uses localStorage. To switch to a different data source
- * like PostgreSQL, you would only need to modify this file.
- * The rest of the application (hooks, components) will remain unchanged.
+ * Currently, it uses localStorage but mimics an async API (like a database)
+ * by returning Promises. To switch to a real database (e.g., PostgreSQL),
+ * you would only need to modify the implementation of these methods.
  */
 class ProductService {
     private static getProductsFromStorage(): Product[] {
@@ -48,7 +48,6 @@ class ProductService {
             if (savedProducts) {
                 return JSON.parse(savedProducts);
             } else {
-                // Initialize with default data if nothing is in storage
                 localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(initialProducts));
                 return initialProducts;
             }
@@ -63,16 +62,18 @@ class ProductService {
         localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
     }
 
-    static getAllProducts(): Product[] {
-        return this.getProductsFromStorage();
-    }
-
-    static getProductById(productId: string): Product | undefined {
+    static async getAllProducts(): Promise<Product[]> {
         const products = this.getProductsFromStorage();
-        return products.find(p => p.id === productId);
+        return Promise.resolve(products);
     }
 
-    static addProduct(productData: Omit<Product, 'id'>): Product {
+    static async getProductById(productId: string): Promise<Product | undefined> {
+        const products = this.getProductsFromStorage();
+        const product = products.find(p => p.id === productId);
+        return Promise.resolve(product);
+    }
+
+    static async addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
         const products = this.getProductsFromStorage();
         const newProduct: Product = {
             ...productData,
@@ -80,10 +81,10 @@ class ProductService {
         };
         const updatedProducts = [...products, newProduct];
         this.saveProductsToStorage(updatedProducts);
-        return newProduct;
+        return Promise.resolve(newProduct);
     }
     
-    static addMultipleProducts(productsData: Omit<Product, 'id'>[]): Product[] {
+    static async addMultipleProducts(productsData: Omit<Product, 'id'>[]): Promise<Product[]> {
         const products = this.getProductsFromStorage();
         const newProducts: Product[] = productsData.map(p => ({
             ...p,
@@ -91,10 +92,10 @@ class ProductService {
         }));
         const updatedProducts = [...products, ...newProducts];
         this.saveProductsToStorage(updatedProducts);
-        return newProducts;
+        return Promise.resolve(newProducts);
     }
 
-    static updateProduct(productId: string, updatedData: Omit<Product, 'id'>): Product | null {
+    static async updateProduct(productId: string, updatedData: Omit<Product, 'id'>): Promise<Product | null> {
         let products = this.getProductsFromStorage();
         let updatedProduct: Product | null = null;
         const updatedProducts = products.map(p => {
@@ -108,18 +109,18 @@ class ProductService {
         if(updatedProduct) {
             this.saveProductsToStorage(updatedProducts);
         }
-        return updatedProduct;
+        return Promise.resolve(updatedProduct);
     }
 
-    static deleteProduct(productId: string): string | null {
+    static async deleteProduct(productId: string): Promise<string | null> {
         let products = this.getProductsFromStorage();
         const productToDelete = products.find(p => p.id === productId);
         
-        if (!productToDelete) return null;
+        if (!productToDelete) return Promise.resolve(null);
 
         const updatedProducts = products.filter(p => p.id !== productId);
         this.saveProductsToStorage(updatedProducts);
-        return productToDelete.name;
+        return Promise.resolve(productToDelete.name);
     }
 }
 

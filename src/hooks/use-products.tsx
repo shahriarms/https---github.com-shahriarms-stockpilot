@@ -7,10 +7,10 @@ import ProductService from '@/services/product-service';
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, 'id'>) => void;
-  addMultipleProducts: (products: Omit<Product, 'id'>[]) => void;
-  updateProduct: (productId: string, updatedData: Omit<Product, 'id'>) => void;
-  deleteProduct: (productId: string) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  addMultipleProducts: (products: Omit<Product, 'id'>[]) => Promise<void>;
+  updateProduct: (productId: string, updatedData: Omit<Product, 'id'>) => Promise<void>;
+  deleteProduct: (productId: string) => Promise<void>;
   getProductById: (productId: string) => Product | undefined;
   isLoading: boolean;
 }
@@ -23,10 +23,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const loadProducts = () => {
+    const loadProducts = async () => {
         setIsLoading(true);
         try {
-            const allProducts = ProductService.getAllProducts();
+            const allProducts = await ProductService.getAllProducts();
             setProducts(allProducts);
         } catch (error) {
             console.error("Failed to load products", error);
@@ -43,9 +43,9 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }, [toast]);
 
 
-  const addProduct = useCallback((productData: Omit<Product, 'id'>) => {
+  const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
     try {
-        const newProduct = ProductService.addProduct(productData);
+        const newProduct = await ProductService.addProduct(productData);
         setProducts(prev => [...prev, newProduct]);
         toast({
             title: "Product Added",
@@ -57,9 +57,9 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
   
-  const addMultipleProducts = useCallback((productsData: Omit<Product, 'id'>[]) => {
+  const addMultipleProducts = useCallback(async (productsData: Omit<Product, 'id'>[]) => {
     try {
-        const newProducts = ProductService.addMultipleProducts(productsData);
+        const newProducts = await ProductService.addMultipleProducts(productsData);
         setProducts(prev => [...prev, ...newProducts]);
         toast({
             title: "Upload Successful",
@@ -71,9 +71,9 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
 
-  const updateProduct = useCallback((productId: string, updatedData: Omit<Product, 'id'>) => {
+  const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id'>) => {
     try {
-        const updatedProduct = ProductService.updateProduct(productId, updatedData);
+        const updatedProduct = await ProductService.updateProduct(productId, updatedData);
         if (updatedProduct) {
              setProducts(prev =>
                 prev.map(p => (p.id === productId ? updatedProduct : p))
@@ -89,9 +89,9 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
     
-  const deleteProduct = useCallback((productId: string) => {
+  const deleteProduct = useCallback(async (productId: string) => {
     try {
-        const deletedProductName = ProductService.deleteProduct(productId);
+        const deletedProductName = await ProductService.deleteProduct(productId);
         if(deletedProductName) {
             setProducts(prev => prev.filter(p => p.id !== productId));
             toast({
