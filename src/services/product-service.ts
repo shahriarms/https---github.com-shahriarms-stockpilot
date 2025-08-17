@@ -1,5 +1,6 @@
 
 import type { Product } from '@/lib/types';
+import { Pool } from 'pg';
 
 const PRODUCTS_STORAGE_KEY = 'stockpilot-products';
 
@@ -32,17 +33,24 @@ const initialProducts: Product[] = [
     { id: 'prod-26', name: 'Flatbar 2"', price: 20, sku: "FBAR-2", stock: 80, mainCategory: 'Material', category: 'Flatbar', subCategory: '28' },
 ];
 
+const usePostgres = !!process.env.POSTGRES_URL;
+
+let pool: Pool;
+if (usePostgres) {
+    pool = new Pool({
+        connectionString: process.env.POSTGRES_URL,
+    });
+}
+
 /**
  * This service class abstracts the data source for products.
- * Currently, it uses localStorage but mimics an async API (like a database)
- * by returning Promises. To switch to a real database (e.g., PostgreSQL),
- * you would only need to modify the implementation of these methods.
+ * If POSTGRES_URL environment variable is set, it connects to a PostgreSQL database.
+ * Otherwise, it falls back to using localStorage, acting as an emulator for development.
  */
 class ProductService {
+    // --- LocalStorage "Emulator" Methods ---
     private static getProductsFromStorage(): Product[] {
-        if (typeof window === 'undefined') {
-            return [];
-        }
+        if (typeof window === 'undefined') return [];
         try {
             const savedProducts = localStorage.getItem(PRODUCTS_STORAGE_KEY);
             if (savedProducts) {
@@ -61,66 +69,132 @@ class ProductService {
         if (typeof window === 'undefined') return;
         localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
     }
+    
+    // --- Universal Public Methods ---
 
     static async getAllProducts(): Promise<Product[]> {
-        const products = this.getProductsFromStorage();
-        return Promise.resolve(products);
+        if (!usePostgres) {
+            const products = this.getProductsFromStorage();
+            return Promise.resolve(products);
+        }
+        
+        const { rows } = await pool.query('SELECT * FROM products ORDER BY name ASC');
+        return rows.map(row => ({
+            ...row,
+            mainCategory: row.mainCategory,
+            subCategory: row.subCategory
+        }));
     }
 
     static async getProductById(productId: string): Promise<Product | undefined> {
-        const products = this.getProductsFromStorage();
-        const product = products.find(p => p.id === productId);
-        return Promise.resolve(product);
+        if (!usePostgres) {
+            const products = this.getProductsFromStorage();
+            return Promise.resolve(products.find(p => p.id === productId));
+        }
+
+        const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
+        return rows[0] ? {
+            ...rows[0],
+            mainCategory: rows[0].mainCategory,
+            subCategory: rows[0].subCategory
+        } : undefined;
     }
 
     static async addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
-        const products = this.getProductsFromStorage();
-        const newProduct: Product = {
-            ...productData,
-            id: `prod-${Date.now()}`,
-        };
-        const updatedProducts = [...products, newProduct];
-        this.saveProductsToStorage(updatedProducts);
-        return Promise.resolve(newProduct);
+        const newId = `prod-${Date.now()}`;
+        const newProduct: Product = { ...productData, id: newId };
+
+        if (!usePostgres) {
+            const products = this.getProductsFromStorage();
+            const updatedProducts = [...products, newProduct];
+            this.saveProductsToStorage(updatedProducts);
+            return Promise.resolve(newProduct);
+        }
+
+        await pool.query(
+            'INSERT INTO products (id, name, sku, price, stock, "mainCategory", category, "subCategory") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+            [newProduct.id, newProduct.name, newProduct.sku, newProduct.price, newProduct.stock, newProduct.mainCategory, newProduct.category, newProduct.subCategory]
+        );
+        return newProduct;
     }
     
     static async addMultipleProducts(productsData: Omit<Product, 'id'>[]): Promise<Product[]> {
-        const products = this.getProductsFromStorage();
-        const newProducts: Product[] = productsData.map(p => ({
-            ...p,
-            id: `prod-${Date.now()}-${Math.random()}`
-        }));
-        const updatedProducts = [...products, ...newProducts];
-        this.saveProductsToStorage(updatedProducts);
-        return Promise.resolve(newProducts);
+        if (!usePostgres) {
+            const products = this.getProductsFromStorage();
+            const newProducts: Product[] = productsData.map(p => ({
+                ...p,
+                id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+            }));
+            const updatedProducts = [...products, ...newProducts];
+            this.saveProductsToStorage(updatedProducts);
+            return Promise.resolve(newProducts);
+        }
+
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+            const newProducts = await Promise.all(productsData.map(async p => {
+                const newId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+                const newProduct: Product = { ...p, id: newId };
+                await client.query(
+                    'INSERT INTO products (id, name, sku, price, stock, "mainCategory", category, "subCategory") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+                    [newProduct.id, newProduct.name, newProduct.sku, newProduct.price, newProduct.stock, newProduct.mainCategory, newProduct.category, newProduct.subCategory]
+                );
+                return newProduct;
+            }));
+            await client.query('COMMIT');
+            return newProducts;
+        } catch (e) {
+            await client.query('ROLLBACK');
+            throw e;
+        } finally {
+            client.release();
+        }
     }
 
     static async updateProduct(productId: string, updatedData: Omit<Product, 'id'>): Promise<Product | null> {
-        let products = this.getProductsFromStorage();
-        let updatedProduct: Product | null = null;
-        const updatedProducts = products.map(p => {
-            if (p.id === productId) {
-                updatedProduct = { ...p, ...updatedData };
-                return updatedProduct;
-            }
-            return p;
-        });
+        if (!usePostgres) {
+            let products = this.getProductsFromStorage();
+            let updatedProduct: Product | null = null;
+            const updatedProducts = products.map(p => {
+                if (p.id === productId) {
+                    updatedProduct = { ...p, ...updatedData };
+                    return updatedProduct;
+                }
+                return p;
+            });
 
-        if(updatedProduct) {
-            this.saveProductsToStorage(updatedProducts);
+            if (updatedProduct) {
+                this.saveProductsToStorage(updatedProducts);
+            }
+            return Promise.resolve(updatedProduct);
         }
-        return Promise.resolve(updatedProduct);
+        
+        const { name, sku, price, stock, mainCategory, category, subCategory } = updatedData;
+        const result = await pool.query(
+            'UPDATE products SET name = $1, sku = $2, price = $3, stock = $4, "mainCategory" = $5, category = $6, "subCategory" = $7 WHERE id = $8 RETURNING *',
+            [name, sku, price, stock, mainCategory, category, subCategory, productId]
+        );
+        return result.rows[0] ? {
+             ...result.rows[0],
+            mainCategory: result.rows[0].mainCategory,
+            subCategory: result.rows[0].subCategory
+        } : null;
     }
 
     static async deleteProduct(productId: string): Promise<string | null> {
-        let products = this.getProductsFromStorage();
-        const productToDelete = products.find(p => p.id === productId);
-        
-        if (!productToDelete) return Promise.resolve(null);
+        if (!usePostgres) {
+            let products = this.getProductsFromStorage();
+            const productToDelete = products.find(p => p.id === productId);
+            if (!productToDelete) return Promise.resolve(null);
+            
+            const updatedProducts = products.filter(p => p.id !== productId);
+            this.saveProductsToStorage(updatedProducts);
+            return Promise.resolve(productToDelete.name);
+        }
 
-        const updatedProducts = products.filter(p => p.id !== productId);
-        this.saveProductsToStorage(updatedProducts);
-        return Promise.resolve(productToDelete.name);
+        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING name', [productId]);
+        return result.rows[0]?.name || null;
     }
 }
 
