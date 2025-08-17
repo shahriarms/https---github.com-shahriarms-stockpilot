@@ -1,0 +1,157 @@
+
+/* 
+This file contains dedicated styles for the A4 print format.
+It's fetched and injected directly into the print window to ensure
+consistent and accurate styling, avoiding browser inconsistencies.
+*/
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Inter', sans-serif;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+}
+
+.print-source {
+    padding: 1rem;
+}
+
+.card {
+    width: 100%;
+    background-color: white;
+    border: 2px dashed #d1d5db; /* gray-300 */
+    padding: 1.5rem; /* p-6 */
+    color: black;
+}
+
+.card-content {
+    background-color: white;
+    color: black;
+}
+
+.header {
+    text-align: center;
+    margin-bottom: 1.5rem; /* mb-6 */
+    border-bottom: 2px solid #e5e7eb; /* border-gray-200 */
+    padding-bottom: 1rem; /* pb-4 */
+}
+
+.header h1 {
+    font-weight: 700; /* font-bold */
+    font-size: 1.875rem; /* text-3xl */
+    text-transform: uppercase;
+    color: #1f2937; /* Equivalent to text-black for print */
+}
+
+.header h2 {
+    font-weight: 700; /* font-bold */
+    font-size: 1.5rem; /* text-2xl */
+    color: #79A3B1; /* primary color */
+}
+
+.header p {
+    font-size: 0.875rem; /* text-sm */
+    color: #4b5563; /* text-gray-600 */
+}
+
+.customer-details {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 1rem; /* mb-4 */
+    font-size: 0.875rem; /* text-sm */
+}
+
+.customer-details > div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem; /* space-y-1 */
+}
+
+.text-right {
+    text-align: right;
+}
+
+.font-semibold {
+    font-weight: 600;
+}
+
+.font-bold {
+    font-weight: 700;
+}
+
+.font-medium {
+    font-weight: 500;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem; /* text-sm */
+}
+
+thead tr {
+    background-color: #f3f4f6; /* bg-gray-100 */
+}
+
+th, td {
+    padding: 0.5rem; /* p-2 */
+    color: #1f2937; /* text-black */
+    border-bottom: 1px solid #e5e7eb; /* border-b */
+}
+
+th {
+    text-align: left;
+    height: auto;
+}
+
+td.text-center { text-align: center; }
+td.text-right { text-align: right; }
+th.text-center { text-align: center; }
+th.text-right { text-align: right; }
+
+.totals-section {
+    margin-top: 1rem; /* mt-4 */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.totals-table {
+    width: 18rem; /* w-72 */
+    font-size: 0.875rem; /* text-sm */
+}
+
+.totals-table tr td {
+    padding-top: 0.25rem; /* py-1 */
+    padding-bottom: 0.25rem;
+    padding-right: 1rem; /* pr-4 */
+    border: none;
+}
+
+.totals-table tr.total-row {
+    border-top: 2px solid #6b7280; /* border-gray-400 */
+    font-weight: 700; /* font-bold */
+}
+
+.totals-table tr.total-row td {
+    padding-top: 0.5rem; /* pt-2 */
+}
+
+.in-words {
+    margin-top: 1.5rem; /* mt-6 */
+    border-top: 1px solid #e5e7eb; /* border-t */
+    padding-top: 0.5rem; /* pt-2 */
+    font-size: 0.875rem; /* text-sm */
+}
+
+.footer {
+    text-align: center;
+    color: #6b7280; /* text-gray-500 */
+    margin-top: 2rem; /* mt-8 */
+    padding-top: 1rem; /* pt-4 */
+    border-top: 1px solid #e5e7eb; /* border-t */
+    font-size: 0.75rem; /* text-xs */
+}

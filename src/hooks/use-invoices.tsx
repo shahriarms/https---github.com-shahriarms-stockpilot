@@ -43,7 +43,7 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
 }
 
 function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<boolean> {
-    return new Promise((resolve) => {
+    return new Promise(async (resolve) => {
         const printContents = printRef.current?.innerHTML;
         if (!printContents) {
             resolve(false);
@@ -53,51 +53,52 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
         const printWindow = window.open('', '', 'height=800,width=800');
 
         if (printWindow) {
-            printWindow.document.write('<html><head><title>Print Invoice</title>');
-            
-            // --- Crucial Step: Inject all stylesheets from the main document ---
-            const stylesheets = Array.from(document.styleSheets)
-                .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : '')
-                .join('');
-            printWindow.document.write(stylesheets);
-            
-            // --- Also inject inline styles if any, especially for fonts ---
-             const inlineStyles = Array.from(document.querySelectorAll('style'));
-             inlineStyles.forEach(style => {
-                printWindow.document.head.appendChild(style.cloneNode(true));
-             });
+            try {
+                // Fetch the dedicated print CSS file
+                const cssResponse = await fetch('/print-styles.css');
+                if (!cssResponse.ok) throw new Error('Print styles not found.');
+                const printCss = await cssResponse.text();
 
-            printWindow.document.write('</head><body>');
-            printWindow.document.write('<div class="print-source">');
-            printWindow.document.write(printContents);
-            printWindow.document.write('</div>');
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            
-            let printed = false;
-            const handleAfterPrint = () => {
-                printed = true;
-                printWindow.close();
-                resolve(true);
-            };
-            
-            printWindow.onafterprint = handleAfterPrint;
+                printWindow.document.write('<html><head><title>Print Invoice</title>');
+                printWindow.document.write(`<style>${printCss}</style>`);
+                printWindow.document.write('</head><body>');
+                printWindow.document.write('<div class="print-source">');
+                printWindow.document.write(printContents);
+                printWindow.document.write('</div>');
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
 
-            const handleCancel = () => {
-                 if (!printed) {
+                let printed = false;
+                const handleAfterPrint = () => {
+                    printed = true;
                     printWindow.close();
-                    resolve(false);
-                }
-            }
+                    resolve(true);
+                };
 
-            // A short delay to allow the content and styles to load before printing
-            setTimeout(() => {
-                printWindow.focus();
-                printWindow.print();
-                // If the print dialog is closed without printing, `onafterprint` might not fire.
-                // We use a timeout to check if it was likely cancelled.
-                setTimeout(handleCancel, 500); 
-            }, 250);
+                const handleCancel = () => {
+                    if (!printed) {
+                        printWindow.close();
+                        resolve(false);
+                    }
+                }
+                
+                printWindow.onafterprint = handleAfterPrint;
+
+                // A short delay to ensure content is fully rendered before printing
+                setTimeout(() => {
+                    printWindow.focus();
+                    printWindow.print();
+                    // If the print dialog is closed without printing, `onafterprint` might not fire.
+                    // We use a timeout to check if it was likely cancelled.
+                    setTimeout(handleCancel, 500); 
+                }, 250);
+
+            } catch (error) {
+                console.error("Error preparing print window:", error);
+                alert("Could not load print styles. Please try again.");
+                printWindow.close();
+                resolve(false);
+            }
 
         } else {
             alert("Your browser is blocking popups. Please allow popups for this site to print.");
