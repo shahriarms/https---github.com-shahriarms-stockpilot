@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useProducts } from '@/hooks/use-products.tsx';
@@ -27,14 +27,17 @@ import type { Product } from '@/lib/types';
 import { useEffect } from 'react';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { useTranslation } from '@/hooks/use-translation';
+import { useSettings } from '@/hooks/use-settings';
 
 const productSchema = z.object({
   name: z.string().min(2, { message: 'Product name must be at least 2 characters.' }),
   sku: z.string().min(2, { message: 'SKU must be at least 2 characters.' }),
   mainCategory: z.enum(['Material', 'Hardware'], { required_error: 'You must select a main category.' }),
-  category: z.string().min(2, { message: 'Category must be at least 2 characters.'}),
-  subCategory: z.string().min(1, { message: 'Sub-category is required.'}),
-  price: z.coerce.number().positive({ message: 'Price must be a positive number.' }),
+  category: z.string().min(2, { message: 'Category must be at least 2 characters.' }),
+  subCategory: z.string().min(1, { message: 'Sub-category is required.' }),
+  buyingPrice: z.coerce.number().positive({ message: 'Buying price must be a positive number.' }),
+  profitMargin: z.coerce.number().min(0, { message: 'Profit margin cannot be negative.' }),
+  sellingPrice: z.coerce.number(),
   stock: z.coerce.number().int().nonnegative({ message: 'Stock must be a non-negative integer.' }),
 });
 
@@ -53,10 +56,19 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     resolver: zodResolver(productSchema),
     defaultValues: product,
   });
-  
+
+  const mainCategory = useWatch({ control: form.control, name: 'mainCategory' });
+  const buyingPrice = useWatch({ control: form.control, name: 'buyingPrice' });
+  const profitMargin = useWatch({ control: form.control, name: 'profitMargin' });
+
   useEffect(() => {
     form.reset(product);
   }, [product, form]);
+
+  useEffect(() => {
+    const calculatedPrice = buyingPrice + (buyingPrice * profitMargin / 100);
+    form.setValue('sellingPrice', parseFloat(calculatedPrice.toFixed(2)));
+  }, [buyingPrice, profitMargin, form]);
 
   const onSubmit = (data: ProductFormValues) => {
     updateProduct(product.id, data);
@@ -72,7 +84,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{t('edit_product_dialog_title')}</DialogTitle>
           <DialogDescription>
@@ -80,17 +92,17 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
              <FormField
               control={form.control}
               name="mainCategory"
               render={({ field }) => (
-                <FormItem className="space-y-3">
+                <FormItem className="space-y-3 col-span-2">
                   <FormLabel>{t('main_category_label')}</FormLabel>
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      value={field.value}
                       className="flex space-x-4"
                     >
                       <FormItem className="flex items-center space-x-2 space-y-0">
@@ -115,7 +127,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
               control={form.control}
               name="name"
               render={({ field }) => (
-                <FormItem>
+                <FormItem className="col-span-2">
                   <FormLabel>{t('product_name_label')}</FormLabel>
                   <FormControl>
                     <Input placeholder="e.g., Classic T-Shirt" {...field} />
@@ -124,7 +136,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="category"
@@ -151,8 +162,6 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   </FormItem>
                 )}
               />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
                <FormField
                 control={form.control}
                 name="sku"
@@ -166,26 +175,12 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="price"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>{t('price_label')}</FormLabel>
-                    <FormControl>
-                      <Input type="number" step="0.01" placeholder="25.99" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <FormField
+             <FormField
                 control={form.control}
                 name="stock"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>{t('stock_label')}</FormLabel>
+                    <FormLabel>{t('stock_label')} ({mainCategory === 'Material' ? 'kg' : 'pcs'})</FormLabel>
                     <FormControl>
                       <Input type="number" step="1" placeholder="100" {...field} />
                     </FormControl>
@@ -193,7 +188,46 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   </FormItem>
                 )}
               />
-            <DialogFooter>
+            <FormField
+              control={form.control}
+              name="buyingPrice"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('buying_price_label')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" placeholder="25.99" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="profitMargin"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{t('profit_margin_label')}</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" placeholder="15" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+                control={form.control}
+                name="sellingPrice"
+                render={({ field }) => (
+                    <FormItem className="col-span-2">
+                        <FormLabel>{t('selling_price_label')}</FormLabel>
+                        <FormControl>
+                             <Input type="number" {...field} readOnly className="bg-muted font-bold" />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                )}
+            />
+            <DialogFooter className="col-span-2">
               <Button type="button" variant="outline" onClick={() => handleOpenChange(false)}>
                 {t('cancel_button')}
               </Button>
@@ -205,3 +239,5 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     </Dialog>
   );
 }
+
+    

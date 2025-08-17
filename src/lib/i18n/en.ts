@@ -78,6 +78,9 @@ export const en = {
     'category_header': 'Category',
     'subcategory_header': 'Sub-Category',
     'price_header': 'Price',
+    'buying_price_header': 'Buying Price',
+    'profit_margin_header': 'Profit %',
+    'selling_price_header': 'Selling Price',
     'stock_header': 'Stock',
     'open_menu_sr': 'Open menu',
     'edit_product_button': 'Edit Product',
@@ -109,6 +112,9 @@ export const en = {
     'sku_label': 'SKU',
     'sku_placeholder': 'e.g., ANG-1-4',
     'price_label': 'Price ($)',
+    'buying_price_label': 'Buying Price ($)',
+    'profit_margin_label': 'Profit Margin (%)',
+    'selling_price_label': 'Selling Price ($)',
     'initial_stock_label': 'Initial Stock',
 
     // Invoice Page
@@ -310,3 +316,5 @@ export const en = {
     'language_settings_title': 'Language Settings',
     'language_settings_description': 'Choose your preferred language for the application.',
 };
+
+    

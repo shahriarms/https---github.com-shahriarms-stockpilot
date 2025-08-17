@@ -82,9 +82,9 @@ export default function ProductsPage() {
 
 
   const handleDownload = () => {
-    const headers = ["Main Category,Category,Sub-Category,SKU,Name,Price,Stock\n"];
+    const headers = ["Main Category,Category,Sub-Category,SKU,Name,Buying Price,Profit Margin,Selling Price,Stock\n"];
     const csvContent = filteredProducts
-      .map((p) => `${p.mainCategory},${p.category},${p.subCategory},${p.sku},"${p.name.replace(/"/g, '""')}",${p.price},${p.stock}`)
+      .map((p) => `${p.mainCategory},${p.category},${p.subCategory},${p.sku},"${p.name.replace(/"/g, '""')}",${p.buyingPrice},${p.profitMargin},${p.sellingPrice},${p.stock}`)
       .join("\n");
     
     const blob = new Blob([headers + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -99,7 +99,7 @@ export default function ProductsPage() {
   };
   
   const handleEditClick = (product: Product) => {
-    if (user.role === 'admin') {
+    if (user?.role === 'admin') {
       setEditProduct(product);
     } else {
       setShowAdminAlert(true);
@@ -107,7 +107,7 @@ export default function ProductsPage() {
   };
   
   const handleDeleteClick = (product: Product) => {
-     if (user.role === 'admin') {
+     if (user?.role === 'admin') {
       setProductToDelete(product);
     } else {
       setShowAdminAlert(true);
@@ -115,7 +115,7 @@ export default function ProductsPage() {
   }
 
   const confirmDelete = () => {
-    if(productToDelete) {
+    if(productToDelete && user?.role === 'admin') {
         deleteProduct(productToDelete.id);
         setProductToDelete(null);
     }
@@ -134,10 +134,11 @@ export default function ProductsPage() {
         const worksheet = workbook.Sheets[sheetName];
         const json = XLSX.utils.sheet_to_json(worksheet);
 
-        const newProducts: Omit<Product, 'id'>[] = json.map((row: any) => ({
+        const newProducts: Omit<Product, 'id' | 'sellingPrice'>[] = json.map((row: any) => ({
           name: String(row['Name'] || ''),
           sku: String(row['SKU'] || ''),
-          price: parseFloat(String(row['Price'] || 0)),
+          buyingPrice: parseFloat(String(row['Buying Price'] || 0)),
+          profitMargin: parseFloat(String(row['Profit Margin'] || 0)),
           stock: parseInt(String(row['Stock'] || 0), 10),
           mainCategory: (row['Main Category'] === 'Hardware' ? 'Hardware' : 'Material') as 'Material' | 'Hardware',
           category: String(row['Category'] || ''),
@@ -191,7 +192,7 @@ export default function ProductsPage() {
             className="hidden"
             accept=".xlsx, .xls, .csv"
           />
-          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading}>
+          <Button variant="outline" onClick={() => fileInputRef.current?.click()} disabled={isLoading || user?.role !== 'admin'}>
             <Upload className="mr-2 h-4 w-4" />
             {t('upload_button')}
           </Button>
@@ -258,10 +259,10 @@ export default function ProductsPage() {
                     <TableHeader className="sticky top-0 bg-card z-10">
                     <TableRow>
                         <TableHead>{t('name_header')}</TableHead>
-                        <TableHead>{t('sku_header')}</TableHead>
                         <TableHead>{t('category_header')}</TableHead>
-                        <TableHead>{t('subcategory_header')}</TableHead>
-                        <TableHead className="text-right">{t('price_header')}</TableHead>
+                        <TableHead className="text-right">{t('buying_price_header')}</TableHead>
+                        <TableHead className="text-right">{t('profit_margin_header')}</TableHead>
+                        <TableHead className="text-right">{t('selling_price_header')}</TableHead>
                         <TableHead className="text-right">{t('stock_header')}</TableHead>
                         <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
@@ -270,14 +271,18 @@ export default function ProductsPage() {
                     {filteredProducts.map((product) => (
                         <TableRow key={product.id}>
                         <TableCell className="font-medium">{product.name}</TableCell>
-                        <TableCell>{product.sku}</TableCell>
-                        <TableCell>{product.category}</TableCell>
-                        <TableCell>{product.subCategory}</TableCell>
+                        <TableCell>{product.category} / {product.subCategory}</TableCell>
                         <TableCell className="text-right">
-                            ${parseFloat(product.price as any).toFixed(2)}
+                            ${parseFloat(product.buyingPrice as any).toFixed(2)}
+                        </TableCell>
+                        <TableCell className="text-right">
+                            {parseFloat(product.profitMargin as any).toFixed(2)}%
+                        </TableCell>
+                        <TableCell className="text-right font-semibold">
+                            ${parseFloat(product.sellingPrice as any).toFixed(2)}
                         </TableCell>
                         <TableCell className={`text-right font-medium ${product.stock === 0 ? 'text-destructive' : ''}`}>
-                            {product.stock}
+                            {product.stock} <span className="text-xs text-muted-foreground">{product.mainCategory === 'Material' ? 'kg' : 'pcs'}</span>
                         </TableCell>
                         <TableCell>
                             <DropdownMenu>
@@ -292,11 +297,11 @@ export default function ProductsPage() {
                                 <Pencil className="mr-2 h-4 w-4" />
                                 {t('edit_product_button')}
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleDeleteClick(product)} className="text-destructive">
+                                {user?.role === 'admin' && <DropdownMenuSeparator />}
+                                {user?.role === 'admin' && <DropdownMenuItem onClick={() => handleDeleteClick(product)} className="text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 {t('delete_product_button')}
-                                </DropdownMenuItem>
+                                </DropdownMenuItem>}
                             </DropdownMenuContent>
                             </DropdownMenu>
                         </TableCell>
@@ -326,7 +331,7 @@ export default function ProductsPage() {
       </Tabs>
       
       <AddProductDialog open={isAddDialogOpen} onOpenChange={setAddDialogOpen} />
-      {editProduct && user.role === 'admin' && (
+      {editProduct && (
         <EditProductDialog
             key={editProduct.id}
             open={!!editProduct}
@@ -374,3 +379,5 @@ export default function ProductsPage() {
     </div>
   );
 }
+
+    

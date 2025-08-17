@@ -29,7 +29,9 @@ async function setupDatabase() {
           id TEXT PRIMARY KEY,
           name TEXT NOT NULL,
           sku TEXT NOT NULL UNIQUE,
-          price NUMERIC(10, 2) NOT NULL,
+          "buyingPrice" NUMERIC(10, 2) NOT NULL,
+          "profitMargin" NUMERIC(5, 2) NOT NULL,
+          "sellingPrice" NUMERIC(10, 2) NOT NULL,
           stock INTEGER NOT NULL,
           "mainCategory" TEXT NOT NULL,
           category TEXT NOT NULL,
@@ -59,3 +61,5 @@ async function setupDatabase() {
 }
 
 setupDatabase();
+
+    

@@ -39,3 +39,5 @@ export async function deleteProduct(productId: string): Promise<string | null> {
     if (!usePostgres) throw new Error("Database not connected.");
     return PostgresProductService.deleteProduct(productId);
 }
+
+    

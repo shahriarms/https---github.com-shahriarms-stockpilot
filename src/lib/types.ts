@@ -3,15 +3,20 @@ export interface Product {
   id: string;
   name: string;
   sku: string;
-  price: number;
+  buyingPrice: number;
+  profitMargin: number;
+  sellingPrice: number;
   stock: number;
   mainCategory: 'Material' | 'Hardware';
   category: string;
   subCategory: string;
 }
 
-export interface InvoiceItem extends Product {
+export interface InvoiceItem {
+  id: string; // This will be the product ID
+  name: string;
   quantity: number;
+  price: number; // This will be the sellingPrice at the time of sale
 }
 
 export interface Payment {
@@ -89,4 +94,8 @@ export interface AppSettings {
     posPrinterType: POSPrinterType;
     posPrinterHost: string;
     posPrinterPort: number;
+    materialProfitMargin: number;
+    hardwareProfitMargin: number;
 }
+
+    

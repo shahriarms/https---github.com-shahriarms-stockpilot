@@ -78,6 +78,9 @@ export const bn = {
     'category_header': 'বিভাগ',
     'subcategory_header': 'উপ-বিভাগ',
     'price_header': 'মূল্য',
+    'buying_price_header': 'ক্রয়মূল্য',
+    'profit_margin_header': 'লাভের হার (%)',
+    'selling_price_header': 'বিক্রয়মূল্য',
     'stock_header': 'স্টক',
     'open_menu_sr': 'মেনু খুলুন',
     'edit_product_button': 'পণ্য সম্পাদনা',
@@ -109,6 +112,9 @@ export const bn = {
     'sku_label': 'SKU',
     'sku_placeholder': 'যেমন, ANG-1-4',
     'price_label': 'মূল্য ($)',
+    'buying_price_label': 'ক্রয়মূল্য ($)',
+    'profit_margin_label': 'লাভের হার (%)',
+    'selling_price_label': 'বিক্রয়মূল্য ($)',
     'initial_stock_label': 'প্রাথমিক স্টক',
     
     // Invoice Page
@@ -310,3 +316,5 @@ export const bn = {
     'language_settings_title': 'ভাষা সেটিংস',
     'language_settings_description': 'অ্যাপ্লিকেশনের জন্য আপনার পছন্দের ভাষা বেছে নিন।',
 };
+
+    

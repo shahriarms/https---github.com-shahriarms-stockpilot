@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
-import type { AppSettings, PrintFormat, Locale, POSPrinterType } from '@/lib/types';
+import type { AppSettings } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 
 const SETTINGS_STORAGE_KEY = 'stockpilot-settings';
@@ -13,6 +13,8 @@ const defaultSettings: AppSettings = {
     posPrinterType: 'disabled',
     posPrinterHost: '',
     posPrinterPort: 9100,
+    materialProfitMargin: 15, // Default margin for materials
+    hardwareProfitMargin: 25, // Default margin for hardware
 };
 
 interface SettingsContextType {
@@ -74,3 +76,5 @@ export function useSettings() {
   }
   return context;
 }
+
+    
