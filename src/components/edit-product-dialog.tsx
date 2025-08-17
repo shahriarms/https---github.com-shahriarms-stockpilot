@@ -182,7 +182,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   <FormItem>
                     <FormLabel>{t('stock_label')} ({mainCategory === 'Material' ? 'kg' : 'pcs'})</FormLabel>
                     <FormControl>
-                      <Input type="number" step="1" placeholder="100" {...field} />
+                      <Input type="number" step="1" placeholder="100" {...field} value={isNaN(field.value) ? '' : field.value}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -195,7 +195,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 <FormItem>
                   <FormLabel>{t('buying_price_label')}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="25.99" {...field} />
+                    <Input type="number" step="0.01" placeholder="25.99" {...field} value={isNaN(field.value) ? '' : field.value}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -208,7 +208,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 <FormItem>
                   <FormLabel>{t('profit_margin_label')}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="15" {...field} />
+                    <Input type="number" step="0.01" placeholder="15" {...field} value={isNaN(field.value) ? '' : field.value}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -239,5 +239,3 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
     </Dialog>
   );
 }
-
-    
