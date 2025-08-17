@@ -12,6 +12,17 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [],
   },
+  webpack: (config, { isServer }) => {
+    // This is to fix the "Module not found: Can't resolve 'dns'" error
+    // when using pg in a non-server environment.
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        dns: false,
+      };
+    }
+    return config;
+  },
 };
 
 export default nextConfig;
