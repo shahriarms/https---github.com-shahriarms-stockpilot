@@ -33,6 +33,18 @@ export const en = {
     'role_employee': 'Employee',
 
     // Dashboard Page
+    'monthly_sales_card_title': 'Monthly Sales',
+    'monthly_expenses_card_title': 'Monthly Expenses',
+    'profit_card_title': 'Profit',
+    'todays_expenses_card_title': "Today's Expenses",
+    'today_subtitle': 'For today',
+    'sales_label': 'Sales',
+    'profit_label': 'Profit',
+    'quantity_label': 'Quantity',
+    'daily_sales_chart_title': 'Daily Sales for {{month}}',
+    'daily_sales_chart_description': 'Showing sales data for each day of the month.',
+    'top_selling_products_chart_title': 'Top Selling Products',
+    'no_sales_data_for_month': 'No sales data available for this month.',
     'total_products_card_title': 'Total Products',
     'total_products_card_description': 'Unique products in inventory',
     'total_stock_value_card_title': 'Total Stock Value',

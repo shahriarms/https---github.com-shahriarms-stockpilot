@@ -4,6 +4,7 @@
 import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import type { Expense } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
+import { isSameDay, isWithinInterval } from 'date-fns';
 
 const initialExpenses: Expense[] = [
     { id: 'exp-1', category: 'Rent', description: 'Office rent for July', amount: 1200, date: new Date(2024, 6, 1).toISOString(), paymentMethod: 'Bank' },
@@ -17,6 +18,8 @@ interface ExpenseContextType {
   addExpense: (expense: Omit<Expense, 'id'>) => void;
   updateExpense: (expenseId: string, updatedData: Omit<Expense, 'id'>) => void;
   deleteExpense: (expenseId: string) => void;
+  getExpensesForDateRange: (startDate: Date, endDate: Date) => Expense[];
+  getExpensesForDay: (date: Date) => Expense[];
   isLoading: boolean;
 }
 
@@ -78,8 +81,16 @@ export function ExpenseProvider({ children }: { children: ReactNode }) {
       description: "The expense record has been removed.",
     });
   }, [toast]);
+
+  const getExpensesForDateRange = useCallback((startDate: Date, endDate: Date) => {
+    return expenses.filter(exp => isWithinInterval(new Date(exp.date), { start: startDate, end: endDate }));
+  }, [expenses]);
   
-  const value = useMemo(() => ({ expenses, addExpense, updateExpense, deleteExpense, isLoading }), [expenses, addExpense, updateExpense, deleteExpense, isLoading]);
+  const getExpensesForDay = useCallback((date: Date) => {
+    return expenses.filter(exp => isSameDay(new Date(exp.date), date));
+  }, [expenses]);
+  
+  const value = useMemo(() => ({ expenses, addExpense, updateExpense, deleteExpense, getExpensesForDateRange, getExpensesForDay, isLoading }), [expenses, addExpense, updateExpense, deleteExpense, getExpensesForDateRange, getExpensesForDay, isLoading]);
 
   return (
     <ExpenseContext.Provider value={value}>

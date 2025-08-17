@@ -33,6 +33,18 @@ export const bn = {
     'role_employee': 'কর্মচারী',
 
     // Dashboard Page
+    'monthly_sales_card_title': 'মাসিক বিক্রয়',
+    'monthly_expenses_card_title': 'মাসিক খরচ',
+    'profit_card_title': 'লাভ',
+    'todays_expenses_card_title': 'আজকের খরচ',
+    'today_subtitle': 'আজকের জন্য',
+    'sales_label': 'বিক্রয়',
+    'profit_label': 'লাভ',
+    'quantity_label': 'পরিমাণ',
+    'daily_sales_chart_title': '{{month}} মাসের দৈনিক বিক্রয়',
+    'daily_sales_chart_description': 'মাসের প্রতিটি দিনের বিক্রয় ডেটা দেখানো হচ্ছে।',
+    'top_selling_products_chart_title': 'সবচেয়ে বেশি বিক্রি হওয়া পণ্য',
+    'no_sales_data_for_month': 'এই মাসের জন্য কোনো বিক্রয়ের ডেটা উপলব্ধ নেই।',
     'total_products_card_title': 'মোট পণ্য',
     'total_products_card_description': 'ইনভেন্টরিতে থাকা মোট পণ্য',
     'total_stock_value_card_title': 'মোট স্টক মূল্য',
