@@ -10,39 +10,51 @@ import {
 } from '@/components/ui/chart';
 import { useInvoices } from '@/hooks/use-invoices';
 import { useExpenses } from '@/hooks/use-expenses';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon } from 'lucide-react';
+import { useEmployees } from '@/hooks/use-employees';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
+import { DollarSign, ShoppingCart, TrendingUp, TrendingDown, Calendar as CalendarIcon, UserCheck, Package, HandCoins } from 'lucide-react';
 import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Popover, PopoverTrigger, PopoverContent } from '@/components/ui/popover';
 import { Calendar } from '@/components/ui/calendar';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay } from 'date-fns';
 import { useTranslation } from '@/hooks/use-translation';
-import type { Invoice, InvoiceItem } from '@/lib/types';
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8"];
 
 export default function Dashboard() {
-  const { getInvoicesForDateRange } = useInvoices();
-  const { getExpensesForDateRange, getExpensesForDay } = useExpenses();
+  const { getInvoicesForDateRange, getInvoicesForDay } = useInvoices();
+  const { getExpensesForDateRange } = useExpenses();
+  const { getAttendanceSummaryForDate } = useEmployees();
   const { t } = useTranslation();
 
   const [date, setDate] = useState<Date>(new Date());
   const monthStart = startOfMonth(date);
   const monthEnd = endOfMonth(date);
 
+  // Data for the entire selected month
   const monthlyInvoices = useMemo(() => getInvoicesForDateRange(monthStart, monthEnd), [getInvoicesForDateRange, monthStart, monthEnd]);
   const monthlyExpenses = useMemo(() => getExpensesForDateRange(monthStart, monthEnd), [getExpensesForDateRange, monthStart, monthEnd]);
-  const todayExpenses = useMemo(() => getExpensesForDay(new Date()), [getExpensesForDay]);
+  
+  // Data for today only
+  const todayInvoices = useMemo(() => getInvoicesForDay(new Date()), [getInvoicesForDay]);
+  const todayAttendanceSummary = useMemo(() => getAttendanceSummaryForDate(new Date()), [getAttendanceSummaryForDate]);
 
-  const stats = useMemo(() => {
+
+  const monthlyStats = useMemo(() => {
     const totalSales = monthlyInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
     const totalExpenses = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
     const profit = totalSales - totalExpenses;
-    const todayTotalExpenses = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
-
-    return { totalSales, totalExpenses, profit, todayTotalExpenses };
-  }, [monthlyInvoices, monthlyExpenses, todayExpenses]);
+    return { totalSales, totalExpenses, profit };
+  }, [monthlyInvoices, monthlyExpenses]);
+  
+  const todayStats = useMemo(() => {
+      const totalSales = todayInvoices.reduce((sum, inv) => sum + inv.subtotal, 0);
+      const totalDue = todayInvoices.reduce((sum, inv) => sum + inv.dueAmount, 0);
+      const unitsSold = todayInvoices.reduce((sum, inv) => sum + inv.items.reduce((itemSum, item) => itemSum + item.quantity, 0), 0);
+      const presentEmployees = todayAttendanceSummary.present;
+      return { totalSales, totalDue, unitsSold, presentEmployees };
+  }, [todayInvoices, todayAttendanceSummary]);
   
   const dailySalesChartData = useMemo(() => {
     const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
@@ -83,8 +95,11 @@ export default function Dashboard() {
 
   return (
     <div className="flex flex-col gap-8">
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <h1 className="text-2xl font-bold">{t('dashboard_sidebar')}</h1>
+      <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div>
+            <h1 className="text-2xl font-bold">{t('dashboard_sidebar')}</h1>
+            <p className="text-muted-foreground">Welcome back! Here's a summary for today.</p>
+        </div>
          <Popover>
             <PopoverTrigger asChild>
             <Button
@@ -108,6 +123,50 @@ export default function Dashboard() {
             </PopoverContent>
         </Popover>
       </div>
+      
+      {/* Today's Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Today's Sales</CardTitle>
+                <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">${todayStats.totalSales.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">{todayInvoices.length} invoices</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Today's Due</CardTitle>
+                <HandCoins className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">${todayStats.totalDue.toFixed(2)}</div>
+                <p className="text-xs text-muted-foreground">From today's sales</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Units Sold Today</CardTitle>
+                <Package className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{todayStats.unitsSold}</div>
+                <p className="text-xs text-muted-foreground">Total items from all invoices</p>
+            </CardContent>
+          </Card>
+           <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Present Employees</CardTitle>
+                <UserCheck className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+                <div className="text-2xl font-bold">{todayStats.presentEmployees}</div>
+                <p className="text-xs text-muted-foreground">out of {todayAttendanceSummary.total} total</p>
+            </CardContent>
+          </Card>
+      </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
@@ -116,7 +175,7 @@ export default function Dashboard() {
             <ShoppingCart className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalSales.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${monthlyStats.totalSales.toFixed(2)}</div>
             <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -126,7 +185,7 @@ export default function Dashboard() {
             <TrendingDown className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${stats.totalExpenses.toFixed(2)}</div>
+            <div className="text-2xl font-bold">${monthlyStats.totalExpenses.toFixed(2)}</div>
              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
           </CardContent>
         </Card>
@@ -136,20 +195,10 @@ export default function Dashboard() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className={`text-2xl font-bold ${stats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                ${stats.profit.toFixed(2)}
+            <div className={`text-2xl font-bold ${monthlyStats.profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                ${monthlyStats.profit.toFixed(2)}
             </div>
              <p className="text-xs text-muted-foreground">{format(date, "MMMM yyyy")}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('todays_expenses_card_title')}</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">${stats.todayTotalExpenses.toFixed(2)}</div>
-             <p className="text-xs text-muted-foreground">{t('today_subtitle')}</p>
           </CardContent>
         </Card>
       </div>

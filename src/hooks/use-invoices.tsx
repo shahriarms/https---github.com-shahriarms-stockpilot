@@ -6,7 +6,7 @@ import type { Invoice, Buyer, AppSettings } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import type { DraftInvoice } from './use-invoice-form';
 import { useSettings } from './use-settings';
-import { isWithinInterval } from 'date-fns';
+import { isWithinInterval, isSameDay } from 'date-fns';
 
 interface InvoiceContextType {
   invoices: Invoice[];
@@ -15,6 +15,7 @@ interface InvoiceContextType {
   updateInvoiceDue: (invoiceId: string, amountPaid: number) => void;
   getInvoicesForBuyer: (buyerId: string) => Invoice[];
   getInvoicesForDateRange: (startDate: Date, endDate: Date) => Invoice[];
+  getInvoicesForDay: (date: Date) => Invoice[];
   isLoading: boolean;
 }
 
@@ -232,8 +233,12 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   const getInvoicesForDateRange = useCallback((startDate: Date, endDate: Date) => {
     return invoices.filter(inv => isWithinInterval(new Date(inv.date), { start: startDate, end: endDate }));
   }, [invoices]);
+  
+  const getInvoicesForDay = useCallback((date: Date) => {
+    return invoices.filter(inv => isSameDay(new Date(inv.date), date));
+  }, [invoices]);
 
-  const value = useMemo(() => ({ invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, updateInvoiceDue, isLoading }), [invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, updateInvoiceDue, isLoading]);
+  const value = useMemo(() => ({ invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isLoading }), [invoices, buyers, saveAndPrintInvoice, getInvoicesForBuyer, getInvoicesForDateRange, getInvoicesForDay, updateInvoiceDue, isLoading]);
 
   return (
     <InvoiceContext.Provider value={value}>

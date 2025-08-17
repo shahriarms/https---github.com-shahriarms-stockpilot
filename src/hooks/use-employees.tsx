@@ -20,6 +20,7 @@ interface EmployeeContextType {
   deleteEmployee: (employeeId: string) => void;
   markAttendance: (employeeId: string, date: Date, status: AttendanceStatus) => void;
   getAttendanceForDate: (date: Date) => Attendance[];
+  getAttendanceSummaryForDate: (date: Date) => { present: number; absent: number; leave: number; total: number };
   isLoading: boolean;
 }
 
@@ -72,7 +73,6 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
 
   const markAttendance = useCallback((employeeId: string, date: Date, status: AttendanceStatus) => {
     setAttendance(prev => {
-        const dateStr = date.toISOString().split('T')[0]; // Normalize date for consistent key
         const todayAttendance = prev.filter(a => isSameDay(new Date(a.date), date));
         const existingRecord = todayAttendance.find(a => a.employeeId === employeeId);
 
@@ -94,6 +94,15 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
     return attendance.filter(a => isSameDay(new Date(a.date), date));
   }, [attendance]);
   
+  const getAttendanceSummaryForDate = useCallback((date: Date) => {
+    const dailyRecords = getAttendanceForDate(date);
+    const present = dailyRecords.filter(a => a.status === 'Present').length;
+    const leave = dailyRecords.filter(a => a.status === 'Leave').length;
+    // Absent is total employees minus those present or on leave
+    const absent = employees.length - present - leave;
+    return { present, absent, leave, total: employees.length };
+  }, [getAttendanceForDate, employees.length]);
+
   const value = useMemo(() => ({
       employees,
       attendance,
@@ -102,8 +111,9 @@ export function EmployeeProvider({ children }: { children: ReactNode }) {
       deleteEmployee,
       markAttendance,
       getAttendanceForDate,
+      getAttendanceSummaryForDate,
       isLoading
-  }), [employees, attendance, addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, isLoading]);
+  }), [employees, attendance, addEmployee, updateEmployee, deleteEmployee, markAttendance, getAttendanceForDate, getAttendanceSummaryForDate, isLoading]);
 
   return (
     <EmployeeContext.Provider value={value}>
