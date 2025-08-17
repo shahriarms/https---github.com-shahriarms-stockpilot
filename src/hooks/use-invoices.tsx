@@ -42,7 +42,7 @@ async function printPosReceipt(settings: AppSettings, orderData: any) {
     }
 }
 
-function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<boolean> {
+function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>, invoiceId: string): Promise<boolean> {
     return new Promise(async (resolve) => {
         const printContents = printRef.current?.innerHTML;
         if (!printContents) {
@@ -54,7 +54,8 @@ function printNormalReceipt(printRef: React.RefObject<HTMLDivElement>): Promise<
 
         if (printWindow) {
             try {
-                printWindow.document.write('<html><head><title>Print Invoice</title>');
+                // Use the invoice ID in the title to suggest it as the filename
+                printWindow.document.write(`<html><head><title>${invoiceId}</title>`);
                 // Inject styles directly
                 printWindow.document.write('</head><body>');
                 printWindow.document.write(printContents);
@@ -129,8 +130,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     }
   }, [invoices, buyers, isLoading]);
 
-  const saveInvoiceData = (draftInvoice: DraftInvoice) => {
-    const newId = `INV-${Date.now()}`;
+  const saveInvoiceData = (draftInvoice: DraftInvoice, newId: string) => {
     const invoiceToSave: Invoice = {
       id: newId,
       customerName: draftInvoice.customerName,
@@ -166,9 +166,11 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
   };
 
   const saveAndPrintInvoice = useCallback(async (draftInvoice: DraftInvoice, printRef: React.RefObject<HTMLDivElement>): Promise<boolean> => {
+    const newId = `INV-${Date.now()}`;
+    
     if (settings.printFormat === 'pos' && settings.posPrinterType !== 'disabled') {
       const orderData = {
-        orderId: `INV-${Date.now()}`,
+        orderId: newId,
         customerName: draftInvoice.customerName,
         items: draftInvoice.items,
         subtotal: draftInvoice.subtotal,
@@ -176,14 +178,14 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         total: draftInvoice.subtotal,
       };
       // For POS, we assume success and save immediately. The error will be caught and shown to the user.
-      saveInvoiceData(draftInvoice);
+      saveInvoiceData(draftInvoice, newId);
       await printPosReceipt(settings, orderData);
       return true; 
     } else {
       // For Normal print, we wait for confirmation from the print dialog.
-      const printed = await printNormalReceipt(printRef);
+      const printed = await printNormalReceipt(printRef, newId);
       if (printed) {
-        saveInvoiceData(draftInvoice);
+        saveInvoiceData(draftInvoice, newId);
         return true;
       }
       toast({
