@@ -269,7 +269,7 @@ export default function BuyersDuePage() {
                     <h3 className="text-lg font-semibold">{t('live_receipt_preview_title')}</h3>
                 </div>
                 <div className="p-6 pt-2 flex-1">
-                     <ScrollArea className="h-full border rounded-lg">
+                     <ScrollArea className="h-full border rounded-lg max-h-96 overflow-auto">
                         {selectedBuyer && selectedInvoice ? (
                            <div ref={componentToPrintRef}>
                                 <PaymentReceipt
