@@ -87,26 +87,20 @@ For security, your database connection string should not be hard-coded.
     ```
     The `.gitignore` file is already configured to ignore `.env.local`, so your credentials will not be committed to Git.
 
-### 3. Create the `products` Table
+### 3. Set Up the Database Table
 
-Connect to your PostgreSQL database using a tool like `psql`, DBeaver, or Postico and run the following SQL command to create the necessary `products` table:
+Instead of running SQL commands manually, you can now run a single command to set up your database.
 
-```sql
-CREATE TABLE products (
-    id TEXT PRIMARY KEY,
-    name TEXT NOT NULL,
-    sku TEXT NOT NULL UNIQUE,
-    price NUMERIC(10, 2) NOT NULL,
-    stock INTEGER NOT NULL,
-    "mainCategory" TEXT NOT NULL,
-    category TEXT NOT NULL,
-    "subCategory" TEXT NOT NULL
-);
+In your terminal, run the following command:
+```bash
+npm run db:setup
 ```
+
+This command will connect to your PostgreSQL database using the URL from your `.env.local` file and automatically create the necessary `products` table.
 
 ### 4. Restart and Verify
 
-After creating the table and the `.env.local` file, **restart your development server** (`npm run dev`). The application will now automatically perform all product operations directly on your PostgreSQL database. No other code changes are needed.
+After setting up the `.env.local` file and running the `db:setup` command, **restart your development server** (`npm run dev`). The application will now automatically perform all product operations directly on your PostgreSQL database. No other code changes are needed.
 
 ---
 
