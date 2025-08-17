@@ -13,7 +13,7 @@ StockPilot is a modern, responsive inventory management application designed to 
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
 - **Local Database**: Browser's `localStorage` for offline support and persistence.
-- **POS Printing**: [Node.js Backend API](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) with `node-thermal-printer`.
+- **POS Printing**: [Next.js API Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) with direct device communication.
 
 ---
 
@@ -65,28 +65,24 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
 
 ## Fully Functional POS Printing System
 
-This application includes a powerful backend printing system that communicates directly with thermal printers, bypassing browser limitations.
+This application includes a powerful backend printing system that communicates directly with thermal printers, bypassing browser limitations for a seamless POS experience.
 
 ### How It Works
-- The React frontend (e.g., the **POS Terminal** page) sends order data as JSON to a Next.js API route (`/api/print`).
-- The Node.js backend receives the JSON, formats a receipt using `node-thermal-printer`, and sends ESC/POS commands to the printer.
+- The frontend (the **Invoice** page) sends order data as JSON to a Next.js API route (`/api/print`) when you choose the POS print option.
+- The Node.js backend receives the JSON, formats a receipt, and sends raw ESC/POS commands to the printer.
 - This allows for printing text, images, barcodes, QR codes, and controlling the cash drawer and cutter.
 
 ### Setting Up Your Printer
 
-The printer configuration is located in the **`/src/app/dashboard/pos-terminal/page.tsx`** file. You must edit the `printerConfig` object to match your printer's connection type.
+The printer configuration is managed from within the application on the **Settings** page.
+
+1.  Navigate to the **Settings** page from the sidebar.
+2.  Under **Print Settings**, select **POS Receipt**. This will reveal the POS printer configuration options.
+3.  Choose your printer's connection type (**USB** or **Network**) and provide the necessary details.
 
 #### **Option 1: USB Printer (Recommended)**
-This is the default and simplest method for many printers.
+This is the simplest method for many printers. In the Settings page, simply select "USB".
 
-```javascript
-const printerConfig = {
-  type: 'usb', 
-  // For the first detected USB printer, no options are needed.
-  // To target a specific printer, find its vendor and product ID:
-  // options: { vendorId: '0x...', productId: '0x...' }
-};
-```
 **Troubleshooting USB on Windows:**
 1.  Connect your thermal printer via USB. Windows may install its own driver.
 2.  Download **Zadig** ([https://zadig.akeo.ie/](https://zadig.akeo.ie/)).
@@ -104,37 +100,18 @@ const printerConfig = {
 #### **Option 2: Network (TCP/IP) Printer**
 For printers connected to your router via Ethernet or WiFi.
 
-```javascript
-const printerConfig = {
-  type: 'tcp',
-  options: {
-    host: '192.168.1.123', // IMPORTANT: Replace with your printer's IP address
-    port: 9100,           // 9100 is the default for most raw printing
-  },
-};
-```
-
-#### **Option 3: Serial Printer**
-For older printers connected via a serial port.
-
-```javascript
-const printerConfig = {
-    type: 'serial',
-    options: {
-        port: '/dev/ttyS0', // For Linux
-        // port: 'COM3',    // For Windows
-        baudRate: 9600,     // Check your printer's manual for the correct baud rate
-    }
-}
-```
+1.  In the Settings page, select **Network (TCP)**.
+2.  Enter your printer's IP address in the "Printer IP Address" field (e.g., `192.168.1.123`).
+3.  Enter the port number. `9100` is the default for most raw printing.
 
 ### Testing the Printer
-1.  Configure your printer in `/src/app/dashboard/pos-terminal/page.tsx`.
+1.  Configure your printer in the **Settings** page.
 2.  Run the application (`npm run dev`).
-3.  Navigate to the **POS Terminal** page from the sidebar.
-4.  Click the **"Print Receipt"** button.
+3.  Navigate to the **Invoice** page from the sidebar.
+4.  Add a customer and at least one item to the invoice.
+5.  Click the **"Save & Print"** button.
 
-If everything is set up correctly, your thermal printer should print a detailed receipt with a logo, QR code, and barcode, and then cut the paper and open the cash drawer. If it fails, check the terminal where you are running `npm run dev` for detailed error messages.
+If everything is set up correctly, your thermal printer should print a detailed receipt. If it fails, check the terminal where you are running `npm run dev` for detailed error messages.
 
 ---
 
