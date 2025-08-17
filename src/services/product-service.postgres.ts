@@ -14,8 +14,11 @@ pool = new Pool({
 class PostgresProductService {
     static async getAllProducts(): Promise<Product[]> {
         const { rows } = await pool.query('SELECT * FROM products ORDER BY name ASC');
+        // Ensure numeric types are correctly formatted
         return rows.map(row => ({
             ...row,
+            price: parseFloat(row.price),
+            stock: parseInt(row.stock, 10),
             mainCategory: row.mainCategory,
             subCategory: row.subCategory
         }));
@@ -23,11 +26,15 @@ class PostgresProductService {
 
     static async getProductById(productId: string): Promise<Product | undefined> {
         const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
-        return rows[0] ? {
-            ...rows[0],
-            mainCategory: rows[0].mainCategory,
-            subCategory: rows[0].subCategory
-        } : undefined;
+        if (!rows[0]) return undefined;
+        const row = rows[0];
+        return {
+            ...row,
+            price: parseFloat(row.price),
+            stock: parseInt(row.stock, 10),
+            mainCategory: row.mainCategory,
+            subCategory: row.subCategory
+        };
     }
 
     static async addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
@@ -70,11 +77,15 @@ class PostgresProductService {
             'UPDATE products SET name = $1, sku = $2, price = $3, stock = $4, "mainCategory" = $5, category = $6, "subCategory" = $7 WHERE id = $8 RETURNING *',
             [name, sku, price, stock, mainCategory, category, subCategory, productId]
         );
-        return result.rows[0] ? {
-             ...result.rows[0],
-            mainCategory: result.rows[0].mainCategory,
-            subCategory: result.rows[0].subCategory
-        } : null;
+        if (!result.rows[0]) return null;
+        const row = result.rows[0];
+        return {
+             ...row,
+            price: parseFloat(row.price),
+            stock: parseInt(row.stock, 10),
+            mainCategory: row.mainCategory,
+            subCategory: row.subCategory
+        };
     }
 
     static async deleteProduct(productId: string): Promise<string | null> {

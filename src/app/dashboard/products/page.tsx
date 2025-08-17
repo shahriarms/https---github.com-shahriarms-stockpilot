@@ -274,7 +274,7 @@ export default function ProductsPage() {
                         <TableCell>{product.category}</TableCell>
                         <TableCell>{product.subCategory}</TableCell>
                         <TableCell className="text-right">
-                            ${product.price.toFixed(2)}
+                            ${parseFloat(product.price as any).toFixed(2)}
                         </TableCell>
                         <TableCell className={`text-right font-medium ${product.stock === 0 ? 'text-destructive' : ''}`}>
                             {product.stock}
