@@ -88,7 +88,7 @@ export default function BuyersPage() {
       <div className="grid md:grid-cols-4 gap-6 flex-1">
         {/* Buyers List */}
         <Card className="md:col-span-1 flex flex-col">
-          <CardHeader className="space-y-4">
+          <CardHeader className="space-y-4 flex-shrink-0">
             <CardTitle>{t('all_buyers_title')}</CardTitle>
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -101,7 +101,7 @@ export default function BuyersPage() {
                 />
             </div>
           </CardHeader>
-          <CardContent className="p-0 flex-1">
+          <CardContent className="p-0 flex-1 min-h-0">
             <ScrollArea className="h-full">
               <div className="divide-y">
                 {filteredBuyers.map((buyer) => (
@@ -128,7 +128,7 @@ export default function BuyersPage() {
 
         {/* Invoice Log List */}
         <Card className="md:col-span-1 flex flex-col">
-           <CardHeader className="space-y-4">
+           <CardHeader className="space-y-4 flex-shrink-0">
              <CardTitle className="truncate">{selectedBuyer ? t('buyers_invoices_title', { name: selectedBuyer.name }) : t('invoice_log_title')}</CardTitle>
              <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -142,7 +142,7 @@ export default function BuyersPage() {
                 />
             </div>
            </CardHeader>
-           <CardContent className="p-0 flex-1">
+           <CardContent className="p-0 flex-1 min-h-0">
               <ScrollArea className="h-full">
                  <div className="divide-y">
                   {selectedBuyer ? (

@@ -153,7 +153,7 @@ export default function BuyersDuePage() {
       <div className="grid md:grid-cols-5 gap-6 flex-1">
         {/* Buyers with Due List */}
         <Card className="md:col-span-1 flex flex-col">
-          <CardHeader className="space-y-4">
+          <CardHeader className="space-y-4 flex-shrink-0">
             <CardTitle>{t('buyers_with_due_title')}</CardTitle>
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -166,7 +166,7 @@ export default function BuyersDuePage() {
                 />
             </div>
           </CardHeader>
-          <CardContent className="p-0 flex-1">
+          <CardContent className="p-0 flex-1 min-h-0">
             <ScrollArea className="h-full">
               <div className="divide-y">
                 {filteredBuyersWithDue.length > 0 ? filteredBuyersWithDue.map((buyer) => (
@@ -195,11 +195,11 @@ export default function BuyersDuePage() {
 
         {/* Due Invoices List */}
         <Card className="md:col-span-1 flex flex-col">
-          <CardHeader>
+          <CardHeader className="flex-shrink-0">
             <CardTitle className="truncate">{selectedBuyer ? t('due_invoices_title') : t('select_buyer_title')}</CardTitle>
              <CardDescription>{selectedBuyer ? t('for_buyer_subtitle', { name: selectedBuyer.name }) : t('outstanding_balances_subtitle')}</CardDescription>
           </CardHeader>
-          <CardContent className="p-0 flex-1">
+          <CardContent className="p-0 flex-1 min-h-0">
             <ScrollArea className="h-full">
               <div className="divide-y">
                 {selectedBuyer ? (
