@@ -12,7 +12,7 @@ StockPilot is a modern, responsive inventory management application designed to 
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **UI Components**: [ShadCN UI](https://ui.shadcn.com/)
 - **Authentication**: [Firebase Authentication](https://firebase.google.com/docs/auth)
-- **Local Database**: Browser's `localStorage` for offline support and persistence.
+- **Database**: PostgreSQL (optional, with fallback to `localStorage`)
 - **POS Printing**: [Next.js API Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) with direct device communication.
 
 ---
@@ -59,13 +59,13 @@ Once the installation is complete, you can start the development server with thi
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. You can start editing the page by modifying any file in `src/`. The app will auto-update as you edit the files.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result. The app will initially run using your browser's `localStorage` for data storage. You can start editing the page by modifying any file in `src/`. The app will auto-update as you edit the files.
 
 ---
 
-## Backend Development: PostgreSQL Integration
+## Backend Development: PostgreSQL Integration (Optional)
 
-This project is configured to easily transition from using `localStorage` to a live **PostgreSQL** database. The data service layer (`src/services/product-service.ts`) abstracts the data source, allowing you to switch to a real database by only modifying that file.
+This project is configured to automatically switch from `localStorage` to a live **PostgreSQL** database. The application's server actions will detect if a `POSTGRES_URL` environment variable is present and use it. Otherwise, it will fall back to using `localStorage`.
 
 ### 1. PostgreSQL Prerequisites
 
@@ -104,102 +104,9 @@ CREATE TABLE products (
 );
 ```
 
-### 4. Update the Product Service
+### 4. Restart and Verify
 
-The final step is to modify the `src/services/product-service.ts` file to use the PostgreSQL database instead of `localStorage`. The existing async/await structure makes this transition seamless.
-
-Replace the contents of `src/services/product-service.ts` with the following example code. This code uses the `pg` library (which is already in `package.json`) to connect to your database.
-
-```typescript
-// src/services/product-service.ts
-import { Pool } from 'pg';
-import type { Product } from '@/lib/types';
-
-// The connection pool will use the POSTGRES_URL from your .env.local file
-const pool = new Pool({
-    connectionString: process.env.POSTGRES_URL,
-});
-
-class ProductService {
-    static async getAllProducts(): Promise<Product[]> {
-        const { rows } = await pool.query('SELECT * FROM products ORDER BY name ASC');
-        // The pg library might return snake_case column names, so we map them
-        return rows.map(row => ({
-            ...row,
-            mainCategory: row.mainCategory,
-            subCategory: row.subCategory
-        }));
-    }
-
-    static async getProductById(productId: string): Promise<Product | undefined> {
-        const { rows } = await pool.query('SELECT * FROM products WHERE id = $1', [productId]);
-        return rows[0] ? {
-            ...rows[0],
-            mainCategory: rows[0].mainCategory,
-            subCategory: rows[0].subCategory
-        } : undefined;
-    }
-
-    static async addProduct(productData: Omit<Product, 'id'>): Promise<Product> {
-        const newId = `prod-${Date.now()}`;
-        const newProduct: Product = { ...productData, id: newId };
-        
-        await pool.query(
-            'INSERT INTO products (id, name, sku, price, stock, "mainCategory", category, "subCategory") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-            [newProduct.id, newProduct.name, newProduct.sku, newProduct.price, newProduct.stock, newProduct.mainCategory, newProduct.category, newProduct.subCategory]
-        );
-        return newProduct;
-    }
-    
-    static async addMultipleProducts(productsData: Omit<Product, 'id'>[]): Promise<Product[]> {
-        // For multiple inserts, it's more efficient to use a transaction
-        const client = await pool.connect();
-        try {
-            await client.query('BEGIN');
-            const newProducts = await Promise.all(productsData.map(async p => {
-                const newId = `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-                const newProduct: Product = { ...p, id: newId };
-                await client.query(
-                    'INSERT INTO products (id, name, sku, price, stock, "mainCategory", category, "subCategory") VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-                    [newProduct.id, newProduct.name, newProduct.sku, newProduct.price, newProduct.stock, newProduct.mainCategory, newProduct.category, newProduct.subCategory]
-                );
-                return newProduct;
-            }));
-            await client.query('COMMIT');
-            return newProducts;
-        } catch (e) {
-            await client.query('ROLLBACK');
-            throw e;
-        } finally {
-            client.release();
-        }
-    }
-
-    static async updateProduct(productId: string, updatedData: Omit<Product, 'id'>): Promise<Product | null> {
-        const { name, sku, price, stock, mainCategory, category, subCategory } = updatedData;
-        const result = await pool.query(
-            'UPDATE products SET name = $1, sku = $2, price = $3, stock = $4, "mainCategory" = $5, category = $6, "subCategory" = $7 WHERE id = $8 RETURNING *',
-            [name, sku, price, stock, mainCategory, category, subCategory, productId]
-        );
-        return result.rows[0] ? {
-             ...result.rows[0],
-            mainCategory: result.rows[0].mainCategory,
-            subCategory: result.rows[0].subCategory
-        } : null;
-    }
-
-    static async deleteProduct(productId: string): Promise<string | null> {
-        const result = await pool.query('DELETE FROM products WHERE id = $1 RETURNING name', [productId]);
-        return result.rows[0]?.name || null;
-    }
-}
-
-export default ProductService;
-
-```
-
-After updating the service file, restart your development server (`npm run dev`) for the changes and environment variables to take effect. Your application will now perform all product operations directly on your PostgreSQL database.
-
+After creating the table and the `.env.local` file, **restart your development server** (`npm run dev`). The application will now automatically perform all product operations directly on your PostgreSQL database. No other code changes are needed.
 
 ---
 

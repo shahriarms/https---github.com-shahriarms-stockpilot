@@ -58,12 +58,12 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
         const allProducts = await getAllProducts();
-        setProducts(allProducts);
-        // If we get data, we assume the DB is connected.
+        // If we get data from server action, we assume the DB is connected.
         if (allProducts && allProducts.length > 0) {
+            setProducts(allProducts);
             setIsUsingDB(true);
         } else {
-             // Fallback to localStorage if DB returns nothing or throws an error that results in empty array
+             // Fallback to localStorage if DB returns nothing (or server action isn't connected)
             const savedProducts = localStorage.getItem(PRODUCTS_STORAGE_KEY);
             if (savedProducts) {
                 setProducts(JSON.parse(savedProducts));
@@ -109,7 +109,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         });
     } catch(error) {
         console.error("Failed to add product", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not add product." });
+        toast({ variant: "destructive", title: "Error", description: "Could not add product. Check DB connection." });
     }
   }, [toast]);
   
@@ -123,7 +123,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         });
     } catch(error) {
         console.error("Failed to add multiple products", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not add products from file." });
+        toast({ variant: "destructive", title: "Error", description: "Could not add products from file. Check DB connection." });
     }
   }, [toast]);
 
@@ -141,7 +141,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         }
     } catch(error) {
         console.error("Failed to update product", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not update product." });
+        toast({ variant: "destructive", title: "Error", description: "Could not update product. Check DB connection." });
     }
   }, [toast]);
     
@@ -157,7 +157,7 @@ export function ProductProvider({ children }: { children: ReactNode }) {
         }
     } catch(error) {
         console.error("Failed to delete product", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not delete product." });
+        toast({ variant: "destructive", title: "Error", description: "Could not delete product. Check DB connection." });
     }
   }, [toast]);
 
