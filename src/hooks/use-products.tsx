@@ -18,9 +18,9 @@ const initialProducts: Product[] = [
 
 interface ProductContextType {
   products: Product[];
-  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  addProduct: (product: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
   addMultipleProducts: (products: Omit<Product, 'id'|'sellingPrice'>[]) => Promise<void>;
-  updateProduct: (productId: string, updatedData: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => Promise<void>;
   deleteProduct: (productId: string) => Promise<void>;
   getProductById: (productId: string) => Product | undefined;
   isLoading: boolean;
@@ -38,12 +38,10 @@ export function ProductProvider({ children }: { children: ReactNode }) {
     setIsLoading(true);
     try {
         const allProducts = await getAllProducts();
-        // If we get data from server action, we assume the DB is connected.
         if (allProducts && allProducts.length > 0) {
             setProducts(allProducts);
             setIsUsingDB(true);
         } else {
-             // Fallback to localStorage if DB returns nothing (or server action isn't connected)
             const savedProducts = localStorage.getItem(PRODUCTS_STORAGE_KEY);
             if (savedProducts) {
                 setProducts(JSON.parse(savedProducts));
@@ -72,26 +70,38 @@ export function ProductProvider({ children }: { children: ReactNode }) {
   }, [loadProducts]);
 
   useEffect(() => {
-      // Persist to localStorage only if we are not using the database
       if (!isUsingDB && !isLoading) {
           localStorage.setItem(PRODUCTS_STORAGE_KEY, JSON.stringify(products));
       }
   }, [products, isLoading, isUsingDB]);
 
 
-  const addProduct = useCallback(async (productData: Omit<Product, 'id'>) => {
-    try {
-        const newProduct = await addProductAction(productData);
+  const addProduct = useCallback(async (productData: Omit<Product, 'id' | 'sellingPrice'>) => {
+    const sellingPrice = productData.buyingPrice + (productData.buyingPrice * productData.profitMargin / 100);
+    const productWithPrice = { ...productData, sellingPrice };
+
+    if (isUsingDB) {
+        try {
+            const newProduct = await addProductAction(productWithPrice);
+            setProducts(prev => [newProduct, ...prev]);
+            toast({
+                title: "Product Added",
+                description: `${newProduct.name} has been added to your inventory.`,
+            });
+        } catch(error) {
+            console.error("Failed to add product", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not add product. Check DB connection." });
+        }
+    } else {
+        // LocalStorage mode
+        const newProduct: Product = { ...productWithPrice, id: `prod-${Date.now()}` };
         setProducts(prev => [newProduct, ...prev]);
         toast({
-            title: "Product Added",
-            description: `${newProduct.name} has been added to your inventory.`,
+            title: "Product Added (Local)",
+            description: `${newProduct.name} has been added to your local inventory.`,
         });
-    } catch(error) {
-        console.error("Failed to add product", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not add product. Check DB connection." });
     }
-  }, [toast]);
+  }, [toast, isUsingDB]);
   
   const addMultipleProducts = useCallback(async (productsData: Omit<Product, 'id'| 'sellingPrice'>[]) => {
     const productsWithSellingPrice = productsData.map(p => ({
@@ -99,52 +109,89 @@ export function ProductProvider({ children }: { children: ReactNode }) {
       sellingPrice: p.buyingPrice + (p.buyingPrice * p.profitMargin / 100)
     }))
 
-    try {
-        const newProducts = await addMultipleProductsAction(productsWithSellingPrice);
-        setProducts(prev => [...prev, ...newProducts]);
-        toast({
-            title: "Upload Successful",
-            description: `${newProducts.length} products have been added.`,
-        });
-    } catch(error) {
-        console.error("Failed to add multiple products", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not add products from file. Check DB connection." });
-    }
-  }, [toast]);
-
-  const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id'>) => {
-    try {
-        const updatedProduct = await updateProductAction(productId, updatedData);
-        if (updatedProduct) {
-             setProducts(prev =>
-                prev.map(p => (p.id === productId ? updatedProduct : p))
-            );
+    if (isUsingDB) {
+        try {
+            const newProducts = await addMultipleProductsAction(productsWithSellingPrice);
+            setProducts(prev => [...prev, ...newProducts]);
             toast({
-                title: "Product Updated",
-                description: `Details for ${updatedProduct.name} have been updated.`,
+                title: "Upload Successful",
+                description: `${newProducts.length} products have been added.`,
             });
+        } catch(error) {
+            console.error("Failed to add multiple products", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not add products from file. Check DB connection." });
         }
-    } catch(error) {
-        console.error("Failed to update product", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not update product. Check DB connection." });
+    } else {
+        const newLocalProducts: Product[] = productsWithSellingPrice.map(p => ({
+            ...p,
+            id: `prod-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+        }));
+        setProducts(prev => [...prev, ...newLocalProducts]);
+        toast({
+            title: "Upload Successful (Local)",
+            description: `${newLocalProducts.length} products have been added locally.`,
+        });
     }
-  }, [toast]);
+  }, [toast, isUsingDB]);
+
+  const updateProduct = useCallback(async (productId: string, updatedData: Omit<Product, 'id' | 'sellingPrice'>) => {
+    const sellingPrice = updatedData.buyingPrice + (updatedData.buyingPrice * updatedData.profitMargin / 100);
+    const productWithPrice = { ...updatedData, sellingPrice };
+
+    if (isUsingDB) {
+        try {
+            const updatedProduct = await updateProductAction(productId, productWithPrice);
+            if (updatedProduct) {
+                 setProducts(prev =>
+                    prev.map(p => (p.id === productId ? updatedProduct : p))
+                );
+                toast({
+                    title: "Product Updated",
+                    description: `Details for ${updatedProduct.name} have been updated.`,
+                });
+            }
+        } catch(error) {
+            console.error("Failed to update product", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not update product. Check DB connection." });
+        }
+    } else {
+        // LocalStorage mode
+        const updatedProduct: Product = { ...productWithPrice, id: productId };
+        setProducts(prev => prev.map(p => p.id === productId ? updatedProduct : p));
+        toast({
+            title: "Product Updated (Local)",
+            description: `Details for ${updatedProduct.name} have been updated locally.`,
+        });
+    }
+  }, [toast, isUsingDB]);
     
   const deleteProduct = useCallback(async (productId: string) => {
-    try {
-        const deletedProductName = await deleteProductAction(productId);
-        if(deletedProductName) {
-            setProducts(prev => prev.filter(p => p.id !== productId));
-            toast({
-                title: "Product Deleted",
-                description: `${deletedProductName} has been removed.`,
+    if (isUsingDB) {
+        try {
+            const deletedProductName = await deleteProductAction(productId);
+            if(deletedProductName) {
+                setProducts(prev => prev.filter(p => p.id !== productId));
+                toast({
+                    title: "Product Deleted",
+                    description: `${deletedProductName} has been removed.`,
+                });
+            }
+        } catch(error) {
+            console.error("Failed to delete product", error);
+            toast({ variant: "destructive", title: "Error", description: "Could not delete product. Check DB connection." });
+        }
+    } else {
+        // LocalStorage mode
+        const productToDelete = products.find(p => p.id === productId);
+        setProducts(prev => prev.filter(p => p.id !== productId));
+        if (productToDelete) {
+             toast({
+                title: "Product Deleted (Local)",
+                description: `${productToDelete.name} has been removed locally.`,
             });
         }
-    } catch(error) {
-        console.error("Failed to delete product", error);
-        toast({ variant: "destructive", title: "Error", description: "Could not delete product. Check DB connection." });
     }
-  }, [toast]);
+  }, [toast, isUsingDB, products]);
 
   const getProductById = useCallback((productId: string) => {
     return products.find(p => p.id === productId);
@@ -166,5 +213,3 @@ export function useProducts() {
   }
   return context;
 }
-
-    
