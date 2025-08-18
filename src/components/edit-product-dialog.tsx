@@ -66,8 +66,13 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   }, [product, form]);
 
   useEffect(() => {
-    const calculatedPrice = buyingPrice + (buyingPrice * profitMargin / 100);
-    form.setValue('sellingPrice', parseFloat(calculatedPrice.toFixed(2)));
+    const bp = parseFloat(String(buyingPrice));
+    const pm = parseFloat(String(profitMargin));
+
+    if (isFinite(bp) && isFinite(pm)) {
+        const calculatedPrice = bp + (bp * pm / 100);
+        form.setValue('sellingPrice', parseFloat(calculatedPrice.toFixed(2)));
+    }
   }, [buyingPrice, profitMargin, form]);
 
   const onSubmit = (data: ProductFormValues) => {
