@@ -54,7 +54,17 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   const { t } = useTranslation();
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
-    defaultValues: product,
+    defaultValues: {
+      name: product?.name || '',
+      sku: product?.sku || '',
+      mainCategory: product?.mainCategory || 'Material',
+      category: product?.category || '',
+      subCategory: product?.subCategory || '',
+      buyingPrice: product?.buyingPrice || 0,
+      profitMargin: product?.profitMargin || 0,
+      sellingPrice: product?.sellingPrice || 0,
+      stock: product?.stock || 0,
+    },
   });
 
   const mainCategory = useWatch({ control: form.control, name: 'mainCategory' });
@@ -62,7 +72,17 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
   const profitMargin = useWatch({ control: form.control, name: 'profitMargin' });
 
   useEffect(() => {
-    form.reset(product);
+    form.reset({
+      name: product?.name || '',
+      sku: product?.sku || '',
+      mainCategory: product?.mainCategory || 'Material',
+      category: product?.category || '',
+      subCategory: product?.subCategory || '',
+      buyingPrice: product?.buyingPrice || 0,
+      profitMargin: product?.profitMargin || 0,
+      sellingPrice: product?.sellingPrice || 0,
+      stock: product?.stock || 0,
+    });
   }, [product, form]);
 
   useEffect(() => {
@@ -187,7 +207,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                   <FormItem>
                     <FormLabel>{t('stock_label')} ({mainCategory === 'Material' ? 'kg' : 'pcs'})</FormLabel>
                     <FormControl>
-                      <Input type="number" step="1" placeholder="100" {...field} value={isNaN(field.value) ? '' : field.value}/>
+                      <Input type="number" step="1" placeholder="100" {...field} value={field.value ?? ''}/>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -200,7 +220,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 <FormItem>
                   <FormLabel>{t('buying_price_label')}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="25.99" {...field} value={isNaN(field.value) ? '' : field.value}/>
+                    <Input type="number" step="0.01" placeholder="25.99" {...field} value={field.value ?? ''}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -213,7 +233,7 @@ export function EditProductDialog({ open, onOpenChange, product }: EditProductDi
                 <FormItem>
                   <FormLabel>{t('profit_margin_label')}</FormLabel>
                   <FormControl>
-                    <Input type="number" step="0.01" placeholder="15" {...field} value={isNaN(field.value) ? '' : field.value}/>
+                    <Input type="number" step="0.01" placeholder="15" {...field} value={field.value ?? ''}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
