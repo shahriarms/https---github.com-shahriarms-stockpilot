@@ -14,10 +14,10 @@ pool = new Pool({
 function formatProduct(row: any): Product {
     return {
         ...row,
-        buyingPrice: parseFloat(row.buyingPrice),
-        profitMargin: parseFloat(row.profitMargin),
-        sellingPrice: parseFloat(row.sellingPrice),
-        stock: parseInt(row.stock, 10),
+        buyingPrice: parseFloat(row.buyingPrice) || 0,
+        profitMargin: parseFloat(row.profitMargin) || 0,
+        sellingPrice: parseFloat(row.sellingPrice) || 0,
+        stock: parseInt(row.stock, 10) || 0,
     };
 }
 
