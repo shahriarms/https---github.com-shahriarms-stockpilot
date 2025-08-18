@@ -142,7 +142,13 @@ export function InvoiceFormProvider({ children }: { children: ReactNode }) {
             if (existingItem) {
                 newItems = draft.items.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
             } else {
-                const newItem: DraftInvoiceItem = { ...product, quantity: 1, originalPrice: product.price };
+                const newItem: DraftInvoiceItem = {
+                    id: product.id,
+                    name: product.name,
+                    quantity: 1,
+                    price: product.sellingPrice,
+                    originalPrice: product.sellingPrice,
+                };
                 newItems = [...draft.items, newItem];
             }
             const { subtotal, dueAmount } = calculateTotals(newItems, draft.paidAmount);
